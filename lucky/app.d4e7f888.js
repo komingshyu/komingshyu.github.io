@@ -3766,7 +3766,7 @@
         var _t = new zt["a"].Store({
             state: {
                 config: {
-                    name: "陽明國中教職員模採抽獎活動",
+                    name: "陽明國中教職員模彩抽獎活動",
                     number: 70,
                     firstPrize: 1
                 },
@@ -3780,7 +3780,7 @@
             mutations: {
                 setClearConfig: function(t) {
                     t.config = {
-                        name: "陽明國中教職員模採抽獎活動",
+                        name: "陽明國中教職員模彩抽獎活動",
                         number: 70,
                         firstPrize: 1
                     },
@@ -3799,7 +3799,7 @@
                 },
                 setClearStore: function(t) {
                     t.config = {
-                        name: "陽明國中教職員模採抽獎活動",
+                        name: "陽明國中教職員模彩抽獎活動",
                         number: 70,
                         firstPrize: 1
                     },
