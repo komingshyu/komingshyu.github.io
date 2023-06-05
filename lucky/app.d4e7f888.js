@@ -3687,7 +3687,7 @@
                         textColour: null,
                         initial: t(),
                         dragControl: 1,
-                        textHeight: 20,
+                        textHeight: 30,
                         noSelect: !0,
                         lock: "xy"
                     })
