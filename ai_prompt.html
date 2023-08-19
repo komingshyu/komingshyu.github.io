@@ -286,11 +286,25 @@
 
   <button onclick="generateText()">產生</button>
   </div>
+    <div>
+
+  <button onclick="copyText()">複製提示詞</button>
+  </div>
 
   <div id="result"></div>
  </div>
 
   <script>
+    function copyText(){
+        var result = document.getElementById("result").innerHTML;
+        var aux = document.createElement("input");
+        aux.setAttribute("value", result);
+        document.body.appendChild(aux);
+        aux.select();
+        document.execCommand("copy");
+        document.body.removeChild(aux);
+        alert("提示詞:\n"+aux.value+"\n已複製到剪貼簿");
+    }
     function generateText() {
       var select1 = document.getElementById("select1");
       var select2 = document.getElementById("select2");
