@@ -93,70 +93,14 @@
 
 </select>
 </div>
+
 <div class="select-container">
 
   <label>2.主題</label>
-  <select id="select2" multiple>
-   <option value='castle'>城堡</option>
-<option value='japanesebonsaitree'>日本盆景樹</option>
-<option value='mountainrange'>山脈</option>
-<option value='alienspaceship'>外星飛船</option>
-<option value='medievaltavern'>中世紀小酒館</option>
-<option value='ancientruins'>古遺址</option>
-<option value='cozyalleyway'>舒適的小巷</option>
-<option value='sorcerer'>巫師</option>
-<option value='Castle'>城堡</option>
-<option value='Church, Cathedral'>教堂</option>
-<option value='Guild'>公會</option>
-<option value='Tavern'>酒館</option>
-<option value='Hotel'>旅館</option>
-<option value='Cliff'>懸崖</option>
-<option value='Beach'>海灘</option>
-<option value='Sea'>海</option>
-<option value='Riverside'>河邊</option>
-<option value='River'>河</option>
-<option value='Openair Onsen'>露天溫泉</option>
-<option value='Medieval Village'>中世紀村莊</option>
-<option value='Pub'>酒吧</option>
-<option value='Magnificent Indoor Hall'>豪華室內大廳</option>
-<option value='Magnificent Indoor Hall with Chandelier'>吊燈豪華大廳</option>
-<option value='Training Course'>訓練場</option>
-<option value='Street Scenery'>街景</option>
-<option value='Bathroom'>浴室</option>
-<option value='Medieval Tavern'>中世酒館</option>
-<option value='Succubus'>媚魔</option>
-<option value='Sorceress'>巫婆</option>
-<option value='Human'>人類</option>
-<option value='priest'>牧師</option>
-<option value='devil'>惡魔</option>
-<option value='Summoner'>招喚師</option>
-<option value='Elf/Fairy'>精靈/妖精</option>
-<option value='Bard'>詩人</option>
-<option value='Dark Elf'>黑暗精靈</option>
-<option value='Dancer'>舞孃</option>
-<option value='sea  ​​monster'>海怪</option>
-<option value='Merchant'>商人</option>
-<option value='Halfelf'>半精靈</option>
-<option value='playboy  bunny'>兔女郎</option>
-<option value='Angel'>天使</option>
-<option value='cheerleader'>啦啦隊長</option>
-<option value='Ghost'>幽靈/鬼魂</option>
-<option value='maid'>女僕</option>
-<option value='Fairy'>妖精</option>
-<option value='nurse'>護士</option>
-<option value='Durahan'>無頭騎士</option>
-<option value='Sister/Nun'>修女</option>
-<option value='Orc'>獸人</option>
-<option value='Jiangshi'>殭屍</option>
-<option value='model'>模特兒</option>
-<option value='Rider'>騎兵</option>
-<option value='Mermaid,'>人魚</option>
-<option value='Dragoon'>龍騎士</option>
-<option value='Werewolf'>狼人</option>
-<option value='Paladin'>聖騎士</option>
+  <textarea id="select2" rows=4 cols=20 ></textarea>
+  </div>
 
 
-  </select></div>
  <div class="select-container">
 
   <label>3.風格參考</label>
@@ -295,7 +239,6 @@
 <option value='bioluminescence'>生物光</option>
 <option value='ponytail'>單馬尾</option>
 <option value='light blush'>臉紅</option>
-<option value='nude'>裸體</option>
 <option value='braid'>辮子</option>
 <option value='facial'>面部的</option>
 <option value='school uniform'>校園制服</option>
@@ -321,7 +264,6 @@
 <option value='blush'>臉紅</option>
 <option value='swimsuit'>泳裝</option>
 <option value='very long hair'>長長髮</option>
-<option value='Open mouth and stick out tongue'>高潮期</option>
 <option value='sportswear'>運動服</option>
 <option value=',     '>遮單眼</option>
 <option value='expressionless'>無表情</option>
@@ -360,7 +302,7 @@
     //   var option1 = select1.options[select1.selectedIndex].value;
   //var option2 = select2.options[select2.selectedIndex].value;
   var option1 =  Array.from(select1.selectedOptions).map(option => option.value).join(", ");
-  var option2 =  Array.from(select2.selectedOptions).map(option => option.value).join(", ");
+  var option2 =  select2.value;
   var option3 = Array.from(select3.selectedOptions).map(option => option.value).join(", ");
   //var option4 = select4.options[select4.selectedIndex].value;
   var option4 =  Array.from(select4.selectedOptions).map(option => option.value).join(", ");
