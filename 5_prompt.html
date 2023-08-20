@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>響應式文生圖模版</title>
+
+  <style>
+    /* 響應式設定 */
+    @media screen and (max-width: 506px) {
+      .container {
+        flex-direction: column;
+      }
+
+      .select-container {
+        width: 100%;
+      }
+    }
+    
+    /* 版面設定 */
+    body {
+      background: #f2f2f2; 
+      font-family: Arial;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-wrap: wrap;  
+      justify-content: space-between;
+    }
+    
+    .select-container {
+      width: 45%;
+      padding: 10px;
+      background: #fff;
+      font-size: 20px;
+      border-radius: 5px;
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    option {
+      font-size:16px;
+    }
+
+    button {
+      background: #4285f4;
+      color: #fff;
+      padding: 10px 15px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    #result {
+      width: 100%;
+      padding: 10px;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+    }
+  </style>
+
+
+
+<body>
+<div class="container">
+<div class="select-container">
+  <label>1.圖像類型</label>
+  <select id="select1" multiple>
+ <option value="  ">無</option>
+  <option value='photography'>攝影</option>
+  <option value='illustration'>插圖</option>
+ <option value='Paper carving'>紙雕</option>
+ <option value='sticker'>貼紙</option>
+<option value='layered paper art'>多層剪影</option>
+<option value='poster'>海報</option>
+<option value='airbrush'>噴槍</option>
+<option value='Miniature faking'>玩具世界效果</option>
+<option value='3D render'>3D渲染</option>
+<option value='clay model'>油泥模型</option>
+<option value='Photorealistic photo'>寫實照片</option>
+<option value='digital painting'>數字繪畫</option>
+<option value='oilpainting'>油畫</option>
+<option value='pencil sketch'>鉛筆素描</option>
+<option value='woodblock print'>木版畫</option>
+<option value='Watercolor painting'>水彩畫</option>
+<option value='Charcoal drawing'>炭筆畫</option>
+<option value='Pastel painting'>粉彩畫</option>
+<option value='Color pencil drawing'>彩鉛筆畫</option>
+<option value='Paper-based ink wash painting'>紙本水墨畫</option>
+<option value='Ink painting'>墨寫畫風</option>
+
+</select>
+</div>
+
+<div class="select-container">
+
+  <label>2.主體</label>
+  <textarea id="select2" rows=4 cols=20 ></textarea>
+  </div>
+ 
+<div class="select-container">
+
+  <label>3.背景</label>
+  <textarea id="select3" rows=4 cols=20 ></textarea>
+  </div>
+
+
+
+ <div class="select-container">
+
+  <label>4.鏡頭與構圖</label>
+  <select id="select4" multiple>
+   <option value="  ">無</option>
+   <option value='Mandala'>曼茶羅構圖</option>
+   <option value='headshot'>大頭照</option>
+   <option value='Full Length Shot(FLS)'>全身</option>
+   <option value='Detail Shot(ECU)'>細節鏡頭(ECU)</option>
+<option value='Face Shot(VCU)'>面部拍攝(VCU)</option>
+<option value='Knee Shot(KS)'>膝景(KS)</option>
+
+   <option value='Detail Shot(ECU)'>大特寫</option>
+<option value='Chest Shot(MCU)'>胸部以上</option>
+<option value='Waist Shot(WS)'>腰部以上</option>
+<option value='Knee Shot(KS)'>膝蓋以上</option>
+<option value='Full Length Shot(FLS)'>全身</option>
+<option value='Long Shot(LS)'>人占3/4</option>
+<option value='Extra Long Shot(ELS)'>人在遠方</option>
+<option value='Big Close-Up(BCU)'>臉部特寫</option>
+
+
+   <option value='extreme close up view'>極端特寫</option>
+  <option value="aerial view">鳥瞰圖</option>
+  <option value="Microscopic">顯微鏡</option>
+  <option value="Fisheye Lens">魚眼鏡頭</option>
+  <option value="GoPro">自拍</option>
+   <option value="Drone">無人機視角</option>
+   <option value="Vantage Point">俯瞰視角</option>
+<option value="Wide Angle">廣角鏡頭</option>
+  <option value="isometric perspective">等距透視</option>
+  <option value="close-up view">特寫視圖</option>
+  <option value="side-profile">側面輪廓</option>
+  <option value="interior view">內景</option>
+  <option value="exterior view">外觀</option>
+  <option value="portrait">肖像</option>
+  </select></div>
+
+  <div class="select-container">
+
+  <label>5.風格參考</label>
+  <select id="select5" multiple>
+  <option value="  ">無</option>
+    <option value='Yamada Akihiro'>山田章博</option>
+   <option value='Munashichi'>六七質</option>
+   <option value='Ghibli Studio'>吉卜力風格</option>
+<option value='Stained glass window'>彩色玻璃窗</option>
+<option value='Miyazaki Hayao style'>宮崎駿風格</option>
+<option value='Vincent Van Gogh'>梵高</option>
+<option value='Voynich manuscript'>伏尼契手稿</option>
+   
+<option value='Cyberpunk'>賽博朋克</option>
+<option value='Pop art'>波普藝術</option>
+<option value='Chinese propaganda'>中國宣傳畫</option>
+<option value='traditional Japanese ukiyoe'>浮世繪</option>
+<option value='Tradition Chinese Ink Painting'>東方山水畫</option>
+<option value='Japanese Ukiyo-e'>浮世繪</option>
+<option value='Manga style'>日本漫畫風格</option>
+<option value='stock illustration style'>童話故事書插圖風格</option>
+<option value='CGSociety'>夢工廠動畫風格</option>
+<option value='DreamWorks Pictures'>夢工廠影業</option>
+<option value='Victorian'>維多利亞時代</option>
+<option value='futuristic'>未來主義</option>
+<option value='Minimalist'>極簡主義</option>
+<option value='brutalist'>粗獷主義</option>
+<option value='Minimalist'>極簡主義</option>
+<option value='brutalist'>粗獷主義</option>
+<option value='Constructivist'>建構主義</option>
+<option value='botw'>曠野之息</option>
+<option value='Warframe'>星際戰甲</option>
+<option value='Pokemon'>寶可夢</option>
+<option value='APEX'>Apex英雄</option>
+<option value='The Elder Scrolls'>上古卷軸</option>
+<option value='From Software'>魂系遊戲</option>
+<option value='League oflegends'>英雄聯盟</option>
+<option value='jojo's bizarre adventure'>Jolo的奇妙冒險</option>
+<option value='Makoto Shinkai'>新海誠</option>
+
+
+
+<option value='AAA game art'>AAA遊戲藝術</option>
+<option value='concept art'>概念藝術</option>
+<option value='pixel art'>像素藝術</option>
+<option value='street photography'>街頭攝影</option>
+<option value='futuristic'>未來派</option>
+<option value='sci-fi'>科幻</option>
+<option value='linocut'>Linocut</option>
+<option value='linework'>線條</option>
+<option value='simple lines'>簡單的線條</option>
+<option value='90s anim'>90年代動漫</option>
+<option value='manga'>漫畫</option>
+<option value='post-apocalyptic'>後世界末日</option>
+<option value='Fantasy visual effects'>幻想視覺效果</option>
+<option value='Hand-drawnstylevisualeffects'>手繪風視覺效果</option>
+<option value='Intense color visual effects'>色彩強烈視覺效果</option>
+<option value='Abstract style'>抽象畫風</option>
+<option value='Black and white cartoon style'>卡通黑白風格</option>
+<option value='Classical style	'>古典畫風</option>
+<option value='Black and white healing'>治癒系黑白風格</option>
+<option value='Graphic design style'>平面設計畫風</option>
+<option value='Cubi ststyle'>立體派畫風</option>
+<option value='Lighting and shadow visual'>光影視覺效果</option>
+<option value='Texture-rich'>紋理豐富肌理</option>
+<option value='Impressioni ststyle'>印象派畫風</option>
+<option value='Visual effects'>視覺效果</option>
+<option value='Pointilli ststyle'>記號派畫風</option>
+<option value='Black and white animation style'>動畫黑白風格</option>
+<option value='Dynamic visual effects'>動態視覺效果</option>
+<option value='Modern style'>現代畫風</option>
+<option value='Rough texture'>粗糙肌理</option>
+<option value='Delicate texture'>細膩肌理</option>
+<option value='Fauvi ststyle'>野獸派畫風</option>
+<option value='Black and white illustration'>插畫黑白風格</option>
+<option value='Brushstroke style'>筆觸畫風</option>
+<option value='Black and white brushstroke style'>筆觸黑白風格</option>
+<option value='Surreal visual effects'>超現實視覺效果</option>
+<option value='Black and white style'>黑白風格</option>
+<option value='Black and white photography'>照片黑白風格</option>
+<option value='Photorealistic visual effects'>逼真視覺效果</option>
+<option value='Black and white prop design style'>道具黑白風格</option>
+<option value='Black and white vintage style'>蒐奇風格</option>
+<option value='Digital painting style visual effects'>數位畫風視覺效果</option>
+<option value='Black and white streetwear style'>潮牌黑白風格</option>
+<option value='Style-Empire'>帝國風格</option>
+<option value='Black and white minimalist style'>簡約黑白風格</option>
+
+  </select></div>
+
+ 
+
+  <div class="select-container">
+
+  <label>6.品質與修飾</label>
+  <select id="select6" multiple>
+   
+ <option value="  ">無</option>
+ <option value='8k'>8k</option>
+<option value='HD'>高清</option>
+<option value='masterpiece'>傑作</option>
+<option value='high detail'>高細節</option>
+<option value='hyper quality'>高品質</option>
+<option value='beautiful'>美麗</option>
+<option value='sharp focus'>清晰聚焦</option>
+<option value="ornate details">華麗的細節</option>
+  <option value="dynamic brushwork">動感的筆觸</option>
+<option value='majestic'>雄偉</option>
+<option value='awe-inspiring'>令人敬畏</option>
+<option value='calm'>平靜</option>
+<option value='serene'>安詳</option>
+<option value='high-contrast'>高對比度</option>
+<option value='intricate'>錯綜複雜</option>
+<option value='insane detail'>瘋狂的細節</option>
+<option value='trending on artstation'>在藝術站上流行</option>
+<option value='smooth'>平滑</option>
+<option value='the most beautiful image ever seen'>最美麗的畫面</option>
+
+<option value='technique highly detailed'>技術性高細節</option>
+<option value='matte'>磨砂</option>
+<option value='dreamatic lighting'>舞台燈光</option>
+<option value='elegant'>高雅</option>
+<option value='beautiful'>美麗</option>
+<option value='post processing'>後期處理</option>
+<option value='sharp'>銳化</option>
+<option value='Diffuse'>色散</option>
+<option value='picture of the day'>當日圖照</option>
+<option value='ambient lighting'>環境光照</option>
+<option value='epic composition'>史詩般作品</option>
+<option value='ultrawide shot'>超廣角</option>
+<option value='light effect'>光效</option>
+<option value='up close portraits of'>近距離肖像</option>
+<option value='low angle'>低角度</option>
+<option value='high low'>高角度</option>
+<option value='atmospheric'>大氣層粒子特效</option>
+<option value='uplight'>上光燈</option>
+<option value='upscaled'>宏大畫面</option>
+<option value='wallpaper'>壁紙精美</option>
+<option value='no clouds'>無雲</option>
+<option value='raytracing reflections'>光線追蹤</option>
+<option value='cinematic'>電影效果</option>
+<option value='3D matte painting'>3D無光繪畫</option>
+<option value='volumetric lighting'>體積光</option>
+<option value='mood lighting'>氛圍光</option>
+<option value='bright'>明亮</option>
+<option value='soft illumination'>全局柔光燈</option>
+<option value='soft lights'>局部柔光</option>
+<option value='rays of shimmering light'>閃光</option>
+<option value='crepuscular ray'>雲隙光</option>
+<option value='bioluminescence'>生物光</option>
+ <option value='moonlight illuminating the city'>照亮城市的月光</option>
+<option value='strong sunlight'>強烈的陽光</option>
+<option value='changing light in refracted light'>折射光線下的變幻光影</option>
+<option value='flickering candlelight'>閃爍不定的燭光</option>
+<option value='beautiful images in starlight'>星光下的美麗影像</option>
+<option value='soft shadows'>柔和的陰影</option>
+<option value='dreamy light effects'>夢幻般的光影效果</option>
+<option value='Misty images in the smoke'>煙霧中的迷離影像</option>
+<option value='futuristic night scenes'>未來主義的夜景</option>
+<option value='the red neon light'>紅色的雷虹燈光</option>
+<option value='fantasy starry skies'>充滿幻想的星空</option>
+<option value='projections of robots'>機器人的投影</option>
+<option value='beams of future technology'>未來的科技光束</option>
+
+
+  <option value="white panels">白色面板</option>
+  <option value="sleek design">時尚設計</option>
+  <option value="sunset colors">夕陽的色彩</option>
+  <option value="golden lighting">金色的燈光</option>
+  <option value="overgrown">雜草叢生的</option>
+  <option value="crumbling">搖搖欲墜的</option>
+  <option value="decrepit">破舊的</option>
+<option value='helpless loneliness'>無助的孤獨</option>
+<option value='hope of survivors'>倖存者的希望</option>
+<option value='the tension of criminal action'>犯罪行動的緊張</option>
+<option value='oppression of dark forces'>黑暗力量的壓迫感</option>
+<option value='oppression of darkness'>黑暗的壓迫感</option>
+<option value='loneliness of despair'>絕望的孤獨感</option>
+<option value='exhilarating excitement'>亢奮的興奮感</option>
+<option value='tension of danger'>危險的緊張感</option>
+<option value='futuristic sense of technology'>科技的未來感</option>
+<option value='the exciting sense of adventure'>刺激的冒險感</option>
+<option value='mysterious sense of unknowability'>神秘的不可知感</option>
+<option value='psychedelic feeling'>迷幻的感覺</option>
+<option value='sense of hope for survivors'>倖存者的希望感</option>
+<option value='grey sense of loss'>灰暗的喪失感</option>
+<option value='loss and despair'>失落與絕望</option>
+<option value='the loneliness of a future world'>未來世界的孤獨感</option>
+<option value='the hope of survival and courage'>生存的希望與勇氣</option>
+<option value='the pleasure of technology'>科技帶來的愉悅感</option>
+
+
+
+
+
+  </select></div><div>
+
+  <button onclick="generateText()">產生</button>
+  </div>
+    <div>
+
+  <button onclick="copyText()">複製提示詞</button>
+  </div>
+
+  <div id="result"></div>
+ </div>
+
+  <script>
+    function copyText(){
+        var result = document.getElementById("result").innerHTML;
+        var aux = document.createElement("input");
+        aux.setAttribute("value", result);
+        document.body.appendChild(aux);
+        aux.select();
+        document.execCommand("copy");
+        document.body.removeChild(aux);
+        alert("提示詞:\n"+aux.value+"\n已複製到剪貼簿");
+    }
+    function generateText() {
+      var select1 = document.getElementById("select1");
+      var select2 = document.getElementById("select2");
+      var select3 = document.getElementById("select3");
+      var select4 = document.getElementById("select4");
+      var select5 = document.getElementById("select5");
+      var select6 = document.getElementById("select6");
+      //var select7 = document.getElementById("select7");
+
+    //   var option1 = select1.options[select1.selectedIndex].value;
+  //var option2 = select2.options[select2.selectedIndex].value;
+  var option1 =  Array.from(select1.selectedOptions).map(option => option.value).join(", ");
+  var option2 =  select2.value;
+  var option3 =  select3.value;
+ // var option3 = Array.from(select3.selectedOptions).map(option => option.value).join(", ");
+  //var option4 = select4.options[select4.selectedIndex].value;
+  var option4 =  Array.from(select4.selectedOptions).map(option => option.value).join(", ");
+  var option5 = Array.from(select5.selectedOptions).map(option => option.value).join(", ");
+  var option6 = Array.from(select6.selectedOptions).map(option => option.value).join(", ");
+  //var option7 = Array.from(select7.selectedOptions).map(option => option.value).join(", ");
+
+      var result = document.getElementById("result");
+      result.innerHTML = `a ${option1} of  ${option2}, ${option3}, ${option4}, ${option5}, ${option6}`;
+    }
+  </script>
+</body>
+</html>
