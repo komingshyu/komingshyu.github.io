@@ -4,11 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>響應式文生圖模版</title>
+  <title>AI文生圖簡易模版</title>
+   <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/smoothness/jquery-ui.css">
+  <script src="http://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="http://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
   <style>
     /* 響應式設定 */
-    @media screen and (max-width: 506px) {
+    @media screen and (max-width: 406px) {
       .container {
         flex-direction: column;
       }
@@ -73,6 +76,7 @@
 
 
 <body>
+<div align=center><lable style="font-size:22px;">AI文生圖簡易模版</lable></div>
 <div class="container">
 <div class="select-container">
   <label>1.圖像類型</label>
@@ -355,15 +359,26 @@
 
   <button onclick="generateText()">產生</button>
   </div>
+   
     <div>
 
-  <button onclick="copyText()">複製提示詞</button>
+  <button id="opencopy" onclick="copyText()">複製提示詞</button>
   </div>
 
   <div id="result"></div>
+
+   
  </div>
 
-  <script>
+   
+<div id="dialog" title="提示詞已複製到剪貼簿中:"></div>
+ 
+<script>
+$( "#dialog" ).dialog({ autoOpen: false });
+        $( "#opencopy" ).click(function() {
+        $( "#dialog" ).dialog( "open" );
+        });
+
     function copyText(){
         var result = document.getElementById("result").innerHTML;
         var aux = document.createElement("input");
@@ -372,7 +387,10 @@
         aux.select();
         document.execCommand("copy");
         document.body.removeChild(aux);
-        alert("提示詞:\n"+aux.value+"\n已複製到剪貼簿");
+     
+        
+
+        //alert("提示詞:\n"+aux.value+"\n已複製到剪貼簿");
     }
     function generateText() {
       var select1 = document.getElementById("select1");
@@ -395,6 +413,8 @@
   var option6 = Array.from(select6.selectedOptions).map(option => option.value).join(", ");
   //var option7 = Array.from(select7.selectedOptions).map(option => option.value).join(", ");
 
+      var dialog1 = document.getElementById("dialog");
+      dialog.innerHTML = `a ${option1} of  ${option2}, ${option3}, ${option4}, ${option5}, ${option6}`;
       var result = document.getElementById("result");
       result.innerHTML = `a ${option1} of  ${option2}, ${option3}, ${option4}, ${option5}, ${option6}`;
     }
