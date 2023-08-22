@@ -28,16 +28,16 @@
     }
     
     .container {
-      max-width: 600px;
+      max-width: 560px;
       margin: 0 auto;
-      padding: 20px;
+      padding: 10px;
       display: flex;
       flex-wrap: wrap;  
       justify-content: space-between;
     }
     
     .select-container {
-      width: 45%;
+      width: 40%;
       padding: 10px;
       background: #fff;
       font-size: 20px;
@@ -78,9 +78,24 @@
 <body>
 <div align=center><lable style="font-size:22px;">AI文生圖簡易模版</lable></div>
 <div class="container">
-<div class="select-container">
-  <label>1.圖像類型</label>
+ <div class="select-container">
+
+  <label>1.品質</label>
   <select id="select1" multiple>
+    <option value="  ">無</option>
+ <option value='8k'>8k</option>
+<option value='HD'>高清</option>
+<option value='masterpiece'>傑作</option>
+<option value='high detail'>高細節</option>
+<option value='hyper quality'>高品質</option>
+<option value='beautiful'>美麗</option>
+<option value='sharp focus'>清晰聚焦</option>
+  </select></div>
+
+
+<div class="select-container">
+  <label>2.圖像類型</label>
+  <select id="select2" multiple>
  <option value="  ">無</option>
   <option value='photography'>攝影</option>
   <option value='illustration'>插圖</option>
@@ -109,22 +124,22 @@
 
 <div class="select-container">
 
-  <label>2.主體</label>
-  <textarea id="select2" rows=4 cols=20 ></textarea>
+  <label>3.主體</label>
+  <textarea id="select3" rows=4 cols=20 ></textarea>
   </div>
  
 <div class="select-container">
 
-  <label>3.背景</label>
-  <textarea id="select3" rows=4 cols=20 ></textarea>
+  <label>4.背景</labe4>
+  <textarea id="select4" rows=4 cols=20 ></textarea>
   </div>
 
 
 
  <div class="select-container">
 
-  <label>4.鏡頭與構圖</label>
-  <select id="select4" multiple>
+  <label>5.鏡頭與構圖</label>
+  <select id="select5" multiple>
    <option value="  ">無</option>
    <option value='Mandala'>曼茶羅構圖</option>
    <option value='headshot'>大頭照</option>
@@ -161,8 +176,8 @@
 
   <div class="select-container">
 
-  <label>5.風格參考</label>
-  <select id="select5" multiple>
+  <label>6.風格參考</label>
+  <select id="select6" multiple>
   <option value="  ">無</option>
   <option value="chibi">公仔</option>
     <option value='Yamada Akihiro'>山田章博</option>
@@ -254,17 +269,10 @@
 
   <div class="select-container">
 
-  <label>6.品質與修飾</label>
-  <select id="select6" multiple>
+  <label>7.修飾</label>
+  <select id="select7" multiple>
    
  <option value="  ">無</option>
- <option value='8k'>8k</option>
-<option value='HD'>高清</option>
-<option value='masterpiece'>傑作</option>
-<option value='high detail'>高細節</option>
-<option value='hyper quality'>高品質</option>
-<option value='beautiful'>美麗</option>
-<option value='sharp focus'>清晰聚焦</option>
 <option value="ornate details">華麗的細節</option>
   <option value="dynamic brushwork">動感的筆觸</option>
 <option value='majestic'>雄偉</option>
@@ -399,24 +407,22 @@ $( "#dialog" ).dialog({ autoOpen: false });
       var select4 = document.getElementById("select4");
       var select5 = document.getElementById("select5");
       var select6 = document.getElementById("select6");
-      //var select7 = document.getElementById("select7");
+      var select7 = document.getElementById("select7");
 
-    //   var option1 = select1.options[select1.selectedIndex].value;
-  //var option2 = select2.options[select2.selectedIndex].value;
+
   var option1 =  Array.from(select1.selectedOptions).map(option => option.value).join(", ");
-  var option2 =  select2.value;
+  var option2 =  Array.from(select2.selectedOptions).map(option => option.value).join(", ");
   var option3 =  select3.value;
- // var option3 = Array.from(select3.selectedOptions).map(option => option.value).join(", ");
-  //var option4 = select4.options[select4.selectedIndex].value;
-  var option4 =  Array.from(select4.selectedOptions).map(option => option.value).join(", ");
+  var option4 =  select4.value;
+ 
   var option5 = Array.from(select5.selectedOptions).map(option => option.value).join(", ");
   var option6 = Array.from(select6.selectedOptions).map(option => option.value).join(", ");
-  //var option7 = Array.from(select7.selectedOptions).map(option => option.value).join(", ");
+  var option7 = Array.from(select7.selectedOptions).map(option => option.value).join(", ");
 
       var dialog1 = document.getElementById("dialog");
-      dialog.innerHTML = `a ${option1} of  ${option2}, ${option3}, ${option4}, ${option5}, ${option6}`;
+      dialog.innerHTML = `${option1} , ${option2} of  ${option3}, ${option4}, ${option5}, ${option6}, ${option7}`;
       var result = document.getElementById("result");
-      result.innerHTML = `a ${option1} of  ${option2}, ${option3}, ${option4}, ${option5}, ${option6}`;
+      result.innerHTML = `${option1} ,  ${option2} of  ${option3}, ${option4}, ${option5}, ${option6}, ${option7}`;
     }
   </script>
 </body>
