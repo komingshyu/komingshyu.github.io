@@ -2158,7 +2158,7 @@
                 }
             }), i("span", {
                 staticClass: "copy-right"
-            }, [t._v(" Copyright©zhangyongfeng5350@gmail.com , add backup ")]), i("audio", {
+            }, [t._v(" Copyright©zhangyongfeng5350@gmail.com ")]), i("audio", {
                 attrs: {
                     id: "audiobg",
                     preload: "auto",
@@ -2601,7 +2601,7 @@
                         t.showImport = !0
                     }
                 }
-           }, [t._v("名單")]), i("el-button", {
+            }, [t._v("名單")]), i("el-button", {
                 attrs: {
                     size: "mini"
                 },
@@ -2610,37 +2610,7 @@
                         t.showImportphoto = !0
                     }
                 }
-    
-           
-           }, [t._v("照片")]), i("el-button", {
-                attrs: {
-                    size: "mini"
-                },
-                on: {
-                    click: function() {
-                         const currentDate = new Date();
-                         const year = currentDate.getFullYear();
-                         const month = String(currentDate.getMonth() + 1).padStart(2, '0');
-                         const day = String(currentDate.getDate()).padStart(2, '0');
-
-                         // 取得 localStorage 的資料
-                         const data = JSON.stringify(localStorage);
-
-                        // 建立一個新的 Blob 物件
-                        const blob = new Blob([data], { type: 'application/json' });
-
-                        // 建立一個下載連結
-                        const downloadLink = document.createElement('a');
-                         downloadLink.href = URL.createObjectURL(blob);
-                        downloadLink.download = `抽獎備份_${year}${month}${day}.json`;
-
-                        // 模擬點擊下載連結
-                       downloadLink.dispatchEvent(new MouseEvent('click'));
-
-                    }
-                }
-
-           }, [t._v("備份")]), i("el-dialog", {
+            }, [t._v("照片")]), i("el-dialog", {
                 staticClass: "setwat-dialog",
                 attrs: {
                     "append-to-body": !0,
@@ -2652,9 +2622,6 @@
                         t.showSetwat = e
                     }
                 }
-            
-            
-
             }, [i("el-form", {
                 ref: "form",
                 attrs: {
