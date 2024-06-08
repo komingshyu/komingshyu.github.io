@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>模彩檔案轉換</title>
+</head>
+<body align=center>
+  <h1>模彩檔案轉換為表格程式</h1><br>
+  請選取JSON檔案
+  <input type="file" id="fileInput">
+
+  <br>
+  <textarea id="jsonData" rows="10" cols="50"></textarea><br>
+ <button id="convertBtn">轉換得獎名單</button>
+  <div id="tableContainer"></div>
+
+  <script>
+    // 獲取選擇檔案的input元素
+    const fileInput = document.getElementById('fileInput');
+
+    // 當選擇檔案時觸發change事件
+    fileInput.addEventListener('change', (event) => {
+      // 獲取選擇的檔案
+      const file = event.target.files[0];
+
+      // 創建FileReader物件
+      const reader = new FileReader();
+
+      // 當讀取完成時觸發load事件
+      reader.addEventListener('load', (event) => {
+        // 獲取讀取的內容
+        const content = event.target.result;
+
+        // 將內容顯示在textarea中
+        const textarea = document.getElementById('jsonData');
+        textarea.value = content;
+      });
+
+      // 讀取檔案內容
+      reader.readAsText(file);
+    });
+ 
+    const jsonData = document.getElementById('jsonData');
+    const convertBtn = document.getElementById('convertBtn');
+    const tableContainer = document.getElementById('tableContainer');
+
+    convertBtn.addEventListener('click', () => {
+      const data = JSON.parse(jsonData.value);
+      const config = JSON.parse(data.config);
+      const newLottery = JSON.parse(data.newLottery);
+      const result = JSON.parse(data.result);
+      const list = JSON.parse(data.list);
+
+
+     
+
+      
+       const firstConfigItem = Object.entries(config)[0];
+      let tableHtml = `<p><h2> ${firstConfigItem[1]}</h2></p>`;
+      
+
+      
+      
+
+      tableHtml += '<table align=center border=1><thead><tr><th>獎項</th><th>得獎人員姓名</th></tr></thead><tbody>';
+
+      for (const key in result) {
+        const prizeName = newLottery.find((item) => item.key === key).name;
+        const winners = result[key];
+
+        tableHtml += '<tr>';
+        tableHtml += `<td>${prizeName}</td><td>`;
+
+        winners.forEach((winner) => {
+          const winnerName = list.find((item) => item.key === winner).name;
+          tableHtml += `${winnerName}&ensp;&ensp;`;
+        });
+
+        tableHtml += '</td></tr>';
+      }
+
+      tableHtml += '</tbody></table>';
+
+      tableContainer.innerHTML = tableHtml;
+    });
+  </script>
+
+</body>
+</html>
