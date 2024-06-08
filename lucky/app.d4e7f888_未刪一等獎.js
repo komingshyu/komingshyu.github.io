@@ -2271,7 +2271,23 @@
                     },
                     expression: "form.number"
                 }
-            
+            })], 1), i("el-form-item", {
+                attrs: {
+                    label: "一等獎"
+                }
+            }, [i("el-input", {
+                attrs: {
+                    type: "number",
+                    min: 0,
+                    step: 1
+                },
+                model: {
+                    value: t.form.firstPrize,
+                    callback: function(e) {
+                        t.$set(t.form, "firstPrize", e)
+                    },
+                    expression: "form.firstPrize"
+                }
             })], 1), t._l(t.storeNewLottery, (function(e) {
                 return i("el-form-item", {
                     key: e.key,
@@ -2386,7 +2402,9 @@
         function v(t) {
             var e = "";
             switch (t) {
-            
+            case "firstPrize":
+                e = "一等獎";
+                break;
             default:
                 break
             }
@@ -3783,10 +3801,10 @@
                 config: {
                     name: "陽明國中教職員模彩抽獎活動",
                     number: 70,
-                   
+                    firstPrize: 1
                 },
                 result: {
-                    
+                    firstPrize: []
                 },
                 newLottery: [],
                 list: [],
@@ -3797,7 +3815,7 @@
                     t.config = {
                         name: "陽明國中教職員模彩抽獎活動",
                         number: 70,
-                        
+                        firstPrize: 1
                     },
                     t.newLottery = []
                 },
@@ -3809,17 +3827,17 @@
                 },
                 setClearResult: function(t) {
                     t.result = {
-                        
+                        firstPrize: []
                     }
                 },
                 setClearStore: function(t) {
                     t.config = {
                         name: "陽明國中教職員模彩抽獎活動",
                         number: 70,
-                        
+                        firstPrize: 1
                     },
                     t.result = {
-                       
+                        firstPrize: []
                     },
                     t.newLottery = [],
                     t.list = [],
