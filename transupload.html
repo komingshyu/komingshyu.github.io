@@ -4,13 +4,14 @@
   <title>模彩檔案轉換</title>
 </head>
 <body align=center>
-  <h1>模彩檔案轉換為表格程式</h1><br>
-  請選取JSON檔案
+  <h1>模彩檔案轉換為表格程式V1.0</h1>
+   (配合<a href="https://komingshyu.github.io/lucky/" target=_blank>https://komingshyu.github.io/lucky/</a> 網頁備份)<hr>
+  (1)選取備份JSON檔
   <input type="file" id="fileInput">
-
   <br>
   <textarea id="jsonData" rows="10" cols="50"></textarea><br>
- <button id="convertBtn">轉換得獎名單</button>
+ (2)<button id="convertBtn">轉換得獎名單</button>
+  design by koming 2024.06.06 <hr>
   <div id="tableContainer"></div>
 
   <script>
@@ -68,11 +69,12 @@
         const winners = result[key];
 
         tableHtml += '<tr>';
-        tableHtml += `<td>${prizeName}</td><td>`;
+        tableHtml += `<td align=left>${prizeName}</td><td align=left>`;
 
         winners.forEach((winner) => {
           const winnerName = list.find((item) => item.key === winner).name;
-          tableHtml += `${winnerName}&ensp;&ensp;`;
+          const winnerNumber = list.find((item) => item.key === winner).key;
+          tableHtml += `${winnerNumber} ${winnerName}&ensp;&ensp;`;
         });
 
         tableHtml += '</td></tr>';
