@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>陽明國中學生照片批量處理圖片裁切程式（四位數檔名）</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .upload-form { margin-bottom: 20px; }
+        #preview { max-width: 100%; margin-top: 20px; }
+        #downloadLinks { margin-top: 20px; display: flex; flex-wrap: wrap; }
+        #downloadLinks a, #processBtn, #downloadAllBtn { 
+            display: inline-block; margin: 5px; padding: 5px 10px; 
+            background-color: #4CAF50; color: white; text-decoration: none; 
+            border-radius: 3px; cursor: pointer; border: none;
+        }
+        #processBtn { background-color: #008CBA; }
+        #downloadAllBtn { background-color: #f44336; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>陽明國中學生照片批量處理圖片裁切程式（四位數檔名）</h1>
+        <form id="uploadForm" class="upload-form">
+            輸入班級：<input type="text" id="classInput" placeholder="請輸入班級（兩位數）" required maxlength="2" pattern="[0-9]{2}">
+            <br> 
+            第1張照片<input type="file" id="imageInput1" accept="image/*" required>
+            第2張照片<input type="file" id="imageInput2" accept="image/*" required>
+            <button type="submit" id="processBtn" class="hidden">開始處理照片</button>
+        </form>
+        <div id="status"></div>
+        <canvas id="previewCanvas" style="display:none;"></canvas>
+        <div id="downloadLinks"></div>
+        <button id="downloadAllBtn" class="hidden">下載全部照片</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        const coordinates = {
+            A: [
+                [160,955],[1095,955],[2030,955],[2965,955],[3900,955],
+                [160,2380],[1095,2380],[2030,2380],[2965,2380],[3900,2380],
+                [160,3805],[1095,3805],[2030,3805],[2965,3805],[3900,3805],
+                [160,5230],[1095,5230],[2030,5230],[2965,5230],[3900,5230]
+            ],
+            B: [
+                [1075,2120],[2010,2120],[2945,2120],[3880,2120],[4815,2120],
+                [1075,3545],[2010,3545],[2945,3545],[3880,3545],[4815,3545],
+                [1075,4970],[2010,4970],[2945,4970],[3880,4970],[4815,4970],
+                [1075,6395],[2010,6395],[2945,6395],[3880,6395],[4815,6395]
+            ]
+        };
+
+        let processedImages = [];
+        const form = document.getElementById('uploadForm');
+        const classInput = document.getElementById('classInput');
+        const imageInput1 = document.getElementById('imageInput1');
+        const imageInput2 = document.getElementById('imageInput2');
+        const processBtn = document.getElementById('processBtn');
+        const status = document.getElementById('status');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const ctx = previewCanvas.getContext('2d');
+        const downloadLinks = document.getElementById('downloadLinks');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+
+        function checkInputs() {
+            if (classInput.value.length === 2 && imageInput1.files.length > 0 && imageInput2.files.length > 0) {
+                processBtn.classList.remove('hidden');
+            } else {
+                processBtn.classList.add('hidden');
+            }
+        }
+
+        classInput.addEventListener('input', checkInputs);
+        imageInput1.addEventListener('change', checkInputs);
+        imageInput2.addEventListener('change', checkInputs);
+
+        async function processImage(file, startIndex) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const img = new Image();
+                    img.onload = async function() {
+                        previewCanvas.width = img.width;
+                        previewCanvas.height = img.height;
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+
+                        const batchProcessedImages = [];
+
+                        for (let i = 0; i < 20; i++) {
+                            const cropData = {
+                                x: coordinates.A[i][0],
+                                y: coordinates.A[i][1],
+                                width: coordinates.B[i][0] - coordinates.A[i][0],
+                                height: coordinates.B[i][1] - coordinates.A[i][1]
+                            };
+
+                            const croppedCanvas = document.createElement('canvas');
+                            croppedCanvas.width = cropData.width;
+                            croppedCanvas.height = cropData.height;
+                            const croppedCtx = croppedCanvas.getContext('2d');
+
+                            croppedCtx.drawImage(previewCanvas, 
+                                cropData.x, cropData.y, cropData.width, cropData.height, 
+                                0, 0, cropData.width, cropData.height);
+
+                            const blob = await new Promise(resolve => croppedCanvas.toBlob(resolve, 'image/jpeg'));
+                            const fileName = `${classInput.value}${(startIndex + i + 1).toString().padStart(2, '0')}.jpg`;
+                            batchProcessedImages.push({blob, fileName});
+
+                            status.textContent = `圖片 ${fileName} 處理完成`;
+                        }
+                        resolve(batchProcessedImages);
+                    }
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (classInput.value.length !== 2 || imageInput1.files.length === 0 || imageInput2.files.length === 0) {
+                alert('請確保已輸入兩位數班級編號並選擇兩張圖片');
+                return;
+            }
+
+            downloadLinks.innerHTML = ''; // Clear previous links
+            processedImages = []; // Clear previous processed images
+
+            const batch1 = await processImage(imageInput1.files[0], 0);
+            const batch2 = await processImage(imageInput2.files[0], 20);
+
+            processedImages = [...batch1, ...batch2];
+
+            processedImages.forEach(img => {
+                const url = URL.createObjectURL(img.blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = img.fileName;
+                link.textContent = `下載 ${img.fileName}`;
+                downloadLinks.appendChild(link);
+            });
+
+            status.textContent = '所有圖片處理完成';
+            downloadAllBtn.classList.remove('hidden');
+        });
+
+        downloadAllBtn.addEventListener('click', async () => {
+            const zip = new JSZip();
+            processedImages.forEach(img => {
+                zip.file(img.fileName, img.blob);
+            });
+            
+            const content = await zip.generateAsync({type: "blob"});
+            saveAs(content, "all_images.zip");
+        });
+    </script>
+</body>
+</html>
