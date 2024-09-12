@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖片自動裁切程式(網頁版)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+        .instruction {
+            color: red;
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="file"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        button {
+            background-color: #3498db;
+            color: #fff;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        #canvas-container {
+            max-width: 100%;
+            overflow: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #canvas {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>圖片自動裁切程式(網頁版)</h1>
+        <p class="instruction">(可使用滑鼠拖曳分割線調整位置)</p>
+        <div class="input-group">
+            <label for="imageInput">選擇圖片：</label>
+            <input type="file" id="imageInput" accept="image/*">
+        </div>
+        <div class="input-group">
+            <label for="horizontalSplit">橫向分割數量：</label>
+            <input type="number" id="horizontalSplit" min="1" value="3">
+        </div>
+        <div class="input-group">
+            <label for="verticalSplit">縱向分割數量：</label>
+            <input type="number" id="verticalSplit" min="1" value="3">
+        </div>
+        <div class="button-group">
+            <button id="splitButton">開始分割</button>
+            <button id="cropButton">裁切並下載 ZIP</button>
+        </div>
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript 代碼保持不變
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const imageInput = document.getElementById('imageInput');
+        const splitButton = document.getElementById('splitButton');
+        const cropButton = document.getElementById('cropButton');
+        const horizontalSplitInput = document.getElementById('horizontalSplit');
+        const verticalSplitInput = document.getElementById('verticalSplit');
+
+        let image;
+        let horizontalLines = [];
+        let verticalLines = [];
+        let isDragging = false;
+        let draggedLine = null;
+        let scale = 1;
+
+        imageInput.addEventListener('change', loadImage);
+        splitButton.addEventListener('click', splitImage);
+        cropButton.addEventListener('click', cropAndSave);
+        canvas.addEventListener('mousedown', startDragging);
+        canvas.addEventListener('mousemove', drag);
+        canvas.addEventListener('mouseup', stopDragging);
+
+        function loadImage(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                image = new Image();
+                image.onload = function() {
+                    adjustCanvasSize();
+                    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+                }
+                image.src = event.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function adjustCanvasSize() {
+            const container = document.getElementById('canvas-container');
+            const maxWidth = container.clientWidth;
+            const maxHeight = window.innerHeight * 0.7; // 70% of viewport height
+
+            scale = Math.min(maxWidth / image.width, maxHeight / image.height, 1);
+
+            canvas.width = image.width * scale;
+            canvas.height = image.height * scale;
+        }
+
+        function splitImage() {
+            if (!image) return;
+
+            const horizontalSplit = parseInt(horizontalSplitInput.value);
+            const verticalSplit = parseInt(verticalSplitInput.value);
+
+            horizontalLines = [];
+            verticalLines = [];
+
+            for (let i = 1; i < horizontalSplit; i++) {
+                horizontalLines.push(canvas.height * i / horizontalSplit);
+            }
+
+            for (let i = 1; i < verticalSplit; i++) {
+                verticalLines.push(canvas.width * i / verticalSplit);
+            }
+
+            drawImage();
+        }
+
+        function drawImage() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+
+            for (const y of horizontalLines) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+
+            for (const x of verticalLines) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+        }
+
+        function startDragging(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            for (let i = 0; i < horizontalLines.length; i++) {
+                if (Math.abs(y - horizontalLines[i]) < 5) {
+                    isDragging = true;
+                    draggedLine = { index: i, isHorizontal: true };
+                    return;
+                }
+            }
+
+            for (let i = 0; i < verticalLines.length; i++) {
+                if (Math.abs(x - verticalLines[i]) < 5) {
+                    isDragging = true;
+                    draggedLine = { index: i, isHorizontal: false };
+                    return;
+                }
+            }
+        }
+
+        function drag(e) {
+            if (!isDragging || !draggedLine) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            if (draggedLine.isHorizontal) {
+                horizontalLines[draggedLine.index] = Math.max(0, Math.min(y, canvas.height));
+            } else {
+                verticalLines[draggedLine.index] = Math.max(0, Math.min(x, canvas.width));
+            }
+
+            drawImage();
+        }
+
+        function stopDragging() {
+            isDragging = false;
+            draggedLine = null;
+        }
+
+        async function cropAndSave() {
+            if (!image) return;
+
+            const zip = new JSZip();
+            const areas = [];
+            const sortedHorizontalLines = [0, ...horizontalLines.sort((a, b) => a - b), canvas.height];
+            const sortedVerticalLines = [0, ...verticalLines.sort((a, b) => a - b), canvas.width];
+
+            for (let i = 0; i < sortedHorizontalLines.length - 1; i++) {
+                for (let j = 0; j < sortedVerticalLines.length - 1; j++) {
+                    areas.push({
+                        x: sortedVerticalLines[j] / scale,
+                        y: sortedHorizontalLines[i] / scale,
+                        width: (sortedVerticalLines[j+1] - sortedVerticalLines[j]) / scale,
+                        height: (sortedHorizontalLines[i+1] - sortedHorizontalLines[i]) / scale
+                    });
+                }
+            }
+
+            for (let index = 0; index < areas.length; index++) {
+                const area = areas[index];
+                const cropCanvas = document.createElement('canvas');
+                cropCanvas.width = area.width;
+                cropCanvas.height = area.height;
+                const cropCtx = cropCanvas.getContext('2d');
+                cropCtx.drawImage(image, area.x, area.y, area.width, area.height, 0, 0, area.width, area.height);
+
+                const blob = await new Promise(resolve => cropCanvas.toBlob(resolve, 'image/jpeg'));
+                zip.file(`${(index + 1).toString().padStart(2, '0')}.jpg`, blob);
+            }
+
+            const content = await zip.generateAsync({type:"blob"});
+            saveAs(content, "cropped_images.zip");
+        }
+    </script>
+</body>
+</html>
