@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖片文字辨識</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        label, select, input[type="file"], button {
+            margin-top: 10px;
+            margin-bottom: 15px;
+            display: block;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        button:hover:enabled {
+            background-color: #45a049;
+        }
+
+        textarea {
+            width: 100%;
+            height: 200px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            resize: none;
+            font-size: 14px;
+            line-height: 1.5;
+            box-sizing: border-box;
+        }
+
+        #progressWrapper {
+            width: 100%;
+            background-color: #f3f3f3;
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 15px;
+            display: none;
+        }
+
+        #progressBar {
+            width: 0;
+            height: 20px;
+            background-color: #4caf50;
+            transition: width 0.5s;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Add a simple animation for progress bar */
+        @keyframes progress-animation {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        #outputText {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>圖片文字辨識<br>(使用Tesseract.js開源OCR)</h2>
+        
+        <!-- 語言選擇 -->
+        <label for="languageSelect">選擇辨識語言：</label>
+        <select id="languageSelect">
+            <option value="chi_tra">繁體中文</option>
+            <option value="chi_sim">簡體中文</option>
+            <option value="eng">英文</option>
+        </select>
+
+        <!-- 圖片上傳 -->
+        <input type="file" id="imageInput" accept="image/*">
+        
+        <!-- 辨識按鈕 -->
+        <button id="recognizeButton" disabled>進行文字辨識</button>
+
+        <!-- 進度條 -->
+        <div id="progressWrapper">
+            <div id="progressBar"></div>
+        </div>
+
+        <!-- 顯示辨識結果的多行文字框 -->
+        <textarea id="outputText" placeholder="辨識結果會顯示在這裡"></textarea>
+
+        <!-- 存為文字檔按鈕，初始隱藏 -->
+        <button id="downloadButton" class="hidden">存為文字檔</button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const recognizeButton = document.getElementById('recognizeButton');
+        const outputText = document.getElementById('outputText');
+        const downloadButton = document.getElementById('downloadButton');
+        const languageSelect = document.getElementById('languageSelect');
+        const progressWrapper = document.getElementById('progressWrapper');
+        const progressBar = document.getElementById('progressBar');
+        let selectedFile = null; // 儲存選擇的圖片檔案
+
+        // 當選擇圖片時啟用辨識按鈕
+        imageInput.addEventListener('change', function(event) {
+            selectedFile = event.target.files[0];
+            if (selectedFile) {
+                recognizeButton.disabled = false; // 啟用辨識按鈕
+            }
+        });
+
+        // 更新進度條的函數
+        function updateProgress(progress) {
+            progressBar.style.width = progress + '%';
+        }
+
+        // 辨識按鈕點擊事件
+        recognizeButton.addEventListener('click', function() {
+            if (selectedFile) {
+                const selectedLanguage = languageSelect.value; // 獲取選中的語言
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function() {
+                        progressWrapper.style.display = 'block'; // 顯示進度條
+                        Tesseract.recognize(
+                            img,
+                            selectedLanguage, // 根據選擇的語言進行文字辨識
+                            {
+                                logger: (m) => {
+                                    if (m.status === 'recognizing text') {
+                                        const progress = Math.round(m.progress * 100);
+                                        updateProgress(progress); // 更新進度條
+                                    }
+                                    console.log(m);
+                                }
+                            }
+                        ).then(({ data: { text } }) => {
+                            outputText.value = text;
+                            downloadButton.classList.remove('hidden'); // 顯示存為文字檔按鈕
+                            progressWrapper.style.display = 'none'; // 辨識完成後隱藏進度條
+                        });
+                    };
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        });
+
+        // 存為文字檔按鈕點擊事件
+        downloadButton.addEventListener('click', function() {
+            const text = outputText.value;
+            const blob = new Blob([text], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'output.txt';
+            link.click();
+        });
+    </script>
+
+</body>
+</html>
