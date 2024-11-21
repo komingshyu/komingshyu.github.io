@@ -1,0 +1,132 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: '微軟正黑體', Arial, sans-serif;
+    background-color: #f5f5f5;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #2c3e50;
+}
+
+.settings {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+#imageCount {
+    padding: 5px;
+    width: 100px;
+    margin-left: 10px;
+}
+
+.upload-area {
+    border: 3px dashed #ccc;
+    padding: 40px;
+    text-align: center;
+    margin: 20px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.upload-area:hover {
+    border-color: #2c3e50;
+    background-color: #f8f9fa;
+}
+
+.preview-container {
+    margin: 20px 0;
+}
+
+.image-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+}
+
+.preview-image {
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+    border-radius: 5px;
+    border: 2px solid #ddd;
+}
+
+.controls {
+    text-align: center;
+    margin: 20px 0;
+}
+
+.btn {
+    padding: 10px 20px;
+    margin: 0 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #2c3e50;
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn:hover {
+    background-color: #34495e;
+}
+
+#outputCanvas {
+    max-width: 100%;
+    margin: 20px auto;
+    display: block;
+    border: 1px solid #ddd;
+}
+
+.result-container {
+    text-align: center;
+    margin-top: 30px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        margin: 10px;
+        padding: 10px;
+    }
+
+    .preview-image {
+        width: 100px;
+        height: 100px;
+    }
+
+    .btn {
+        padding: 8px 16px;
+        margin: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    .upload-area {
+        padding: 20px;
+    }
+
+    .preview-image {
+        width: 80px;
+        height: 80px;
+    }
+} 

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>圖像智慧拼接系統</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>圖像智慧拼接系統</h1>
+        <div class="settings"><label>(上傳圖片時確保相鄰圖片有 30-50% 的重疊區域)</label></div>
+        
+        
+        <div class="settings">
+            <label for="imageCount">設定圖像數量：</label>
+            <input type="number" id="imageCount" min="2" max="10" value="2">
+        </div>
+
+        <div class="upload-area" id="dropZone">
+            <p>將圖片拖曳至此處或點擊選擇檔案</p>
+            <input type="file" id="fileInput" multiple accept="image/*" style="display: none;">
+        </div>
+
+        <div class="preview-container">
+            <h3>預覽圖</h3>
+            <div id="imagePreview" class="image-preview"></div>
+        </div>
+
+        <div class="controls">
+            <button id="stitchBtn" class="btn">開始拼接</button>
+            <button id="clearBtn" class="btn">清除圖片</button>
+        </div>
+
+        <div class="result-container">
+            <h3>拼接結果</h3>
+            <canvas id="outputCanvas"></canvas>
+            <a id="downloadBtn" class="btn" download="stitched_image.jpg">下載拼接圖片</a>
+        </div>
+    </div>
+
+    <!-- 先載入 OpenCV.js -->
+    <script async src="https://docs.opencv.org/4.8.0/opencv.js" onload="onOpenCvReady();" type="text/javascript"></script>
+    
+    <!-- 確保 OpenCV.js 載入完成後再載入我們的腳本 -->
+    <script>
+        function onOpenCvReady() {
+            // 當 OpenCV.js 載入完成後，再載入我們的腳本
+            var script = document.createElement('script');
+            script.src = 'script.js';
+            document.body.appendChild(script);
+        }
+    </script>
+</body>
+</html> 
