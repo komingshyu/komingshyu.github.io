@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1A2B 猜數字遊戲</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f0f2f5;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+        }
+
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input {
+            flex: 1;
+            padding: 10px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #4CAF50;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .error {
+            color: #ff0000;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #ffebee;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .success {
+            color: #4CAF50;
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #E8F5E9;
+            border-radius: 4px;
+            display: none;
+        }
+
+        .history {
+            margin-top: 20px;
+        }
+
+        .history h2 {
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .history-list {
+            list-style: none;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: #f8f9fa;
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .history-item:nth-child(even) {
+            background-color: #e9ecef;
+        }
+
+        .rules {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e3f2fd;
+            border-radius: 4px;
+        }
+
+        .rules h2 {
+            margin-bottom: 10px;
+            color: #1565c0;
+        }
+
+        .rules p {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>1A2B 猜數字遊戲</h1>
+        
+        <div class="rules">
+            <h2>遊戲規則</h2>
+            <p>1. 電腦會隨機產生一個4位數字（1-9，數字不重複）</p>
+            <p>2. 請猜出這個4位數字</p>
+            <p>3. A代表數字和位置都對，B代表數字對但位置錯</p>
+            <p>例如：答案8123，猜1052，提示為0A2B</p>
+        </div>
+
+        <div class="game-controls">
+            <input type="text" id="guessInput" maxlength="4" placeholder="輸入4個不重複數字(1-9)">
+            <button id="guessButton">猜！</button>
+            <button id="restartButton">重新開始</button>
+        </div>
+
+        <div id="error" class="error"></div>
+        <div id="success" class="success"></div>
+
+        <div class="history">
+            <h2>猜測歷史</h2>
+            <ul id="historyList" class="history-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        function initGame() {
+            var game = {
+                answer: '',
+                attempts: 0,
+                gameOver: false,
+                
+                // DOM elements
+                input: document.getElementById('guessInput'),
+                guessButton: document.getElementById('guessButton'),
+                restartButton: document.getElementById('restartButton'),
+                errorDiv: document.getElementById('error'),
+                successDiv: document.getElementById('success'),
+                historyList: document.getElementById('historyList'),
+
+                generateAnswer: function() {
+                    var numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+                    var result = '';
+                    for (var i = 0; i < 4; i++) {
+                        var randomIndex = Math.floor(Math.random() * numbers.length);
+                        result += numbers[randomIndex];
+                        numbers.splice(randomIndex, 1);
+                    }
+                    return result;
+                },
+
+                validateInput: function(guess) {
+                    if (guess.length !== 4) {
+                        this.showError('請輸入4個數字');
+                        return false;
+                    }
+                    
+                    if (!/^\d{4}$/.test(guess)) {
+                        this.showError('只能輸入數字');
+                        return false;
+                    }
+                    
+                    if (new Set(guess).size !== 4) {
+                        this.showError('數字不能重複');
+                        return false;
+                    }
+                    
+                    if (guess.includes('0')) {
+                        this.showError('不能包含0');
+                        return false;
+                    }
+
+                    return true;
+                },
+
+                calculateResult: function(guess) {
+                    var a = 0;
+                    var b = 0;
+                    
+                    for (var i = 0; i < 4; i++) {
+                        if (guess[i] === this.answer[i]) {
+                            a++;
+                        } else if (this.answer.includes(guess[i])) {
+                            b++;
+                        }
+                    }
+                    
+                    return a + 'A' + b + 'B';
+                },
+
+                makeGuess: function() {
+                    var guess = this.input.value;
+                    
+                    if (!this.validateInput(guess)) {
+                        return;
+                    }
+
+                    this.attempts++;
+                    var result = this.calculateResult(guess);
+                    this.addToHistory(guess, result);
+                    this.input.value = '';
+
+                    if (result === '4A0B') {
+                        this.handleWin();
+                    }
+
+                    this.errorDiv.style.display = 'none';
+                },
+
+                handleWin: function() {
+                    this.gameOver = true;
+                    this.input.disabled = true;
+                    this.guessButton.disabled = true;
+                    this.successDiv.textContent = '恭喜你贏了！只用了 ' + this.attempts + ' 次就猜中';
+                    this.successDiv.style.display = 'block';
+                },
+
+                showError: function(message) {
+                    this.errorDiv.textContent = message;
+                    this.errorDiv.style.display = 'block';
+                },
+
+                addToHistory: function(guess, result) {
+                    var li = document.createElement('li');
+                    li.className = 'history-item';
+                    li.innerHTML = '<span>第 ' + this.attempts + ' 次：' + guess + '</span><span>' + result + '</span>';
+                    this.historyList.insertBefore(li, this.historyList.firstChild);
+                },
+
+                initialize: function() {
+                    this.answer = this.generateAnswer();
+                    this.attempts = 0;
+                    this.gameOver = false;
+                    this.input.value = '';
+                    this.input.disabled = false;
+                    this.guessButton.disabled = false;
+                    this.errorDiv.style.display = 'none';
+                    this.successDiv.style.display = 'none';
+                    this.historyList.innerHTML = '';
+                    console.log('Answer:', this.answer); // For debugging
+                }
+            };
+
+            // Initialize game
+            game.initialize();
+
+            // Event listeners
+            game.guessButton.addEventListener('click', function() {
+                game.makeGuess();
+            });
+
+            game.restartButton.addEventListener('click', function() {
+                game.initialize();
+            });
+
+            game.input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    game.makeGuess();
+                }
+            });
+
+            return game;
+        }
+
+        // Start the game
+        var game = initGame();
+    </script>
+</body>
+</html>

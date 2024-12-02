@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>與AI合作設計的有用網頁</title>
+   <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .header {
+            background-color: #e0e0e0;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .header h1 {
+            color: #004080;
+            margin: 0;
+        }
+        .intro {
+            background-color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .intro p {
+            color: #333333;
+            margin: 0;
+        }
+        .links {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+        .link-box {
+            border-radius: 10px;
+            margin: 10px;
+            padding: 20px;
+            text-align: center;
+            width: calc(20% - 40px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .link-box:hover {
+            transform: scale(1.05);
+        }
+        .link-box a {
+            color: #333333;
+            text-decoration: none;
+            font-size: 1.5em;
+            color: #004080;
+        }
+        .link-box p {
+            font-size: 0.9em;
+            color: #666666;
+        }
+        .link-box .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 1200px) {
+            .link-box {
+                width: calc(25% - 40px);
+            }
+        }
+        @media (max-width: 992px) {
+            .link-box {
+                width: calc(33.33% - 40px);
+            }
+        }
+        @media (max-width: 768px) {
+            .link-box {
+                width: calc(50% - 40px);
+            }
+        }
+        @media (max-width: 576px) {
+            .link-box {
+                width: calc(100% - 40px);
+            }
+        }
+    </style>
+</head>
+<body onload="loadLinks(linksData)">
+    <div class="header">
+        <h1>Koming與AI合作設計的有用小工具</h1>
+    </div>
+    <div class="intro">
+        <p>這是一個由AI協助設計的網頁小工具，提供給大家參考使用，所有的資料都是在您的電腦本機處理，資料不會上傳。</p>
+    </div>
+    <div class="links" id="links">
+        <!-- Links will be dynamically inserted here -->
+    </div>
+    <script src="data.js"></script>
+    <script>
+        // 隨機顏色和圖示
+        const colors = ['#add8e6', '#90ee90', '#ffffe0', '#ffb6c1', '#d8bfd8'];
+        const icons = ['📚', '🍎', '🌍',  '📚', '🏋️', '👨‍🍳',  '🛠️', '🐱',  '📚', '🍃'];
+
+        function getRandomColor() {
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function getRandomIcon() {
+            return icons[Math.floor(Math.random() * icons.length)];
+        }
+
+        function loadLinks(data) {
+            const linksContainer = document.getElementById('links');
+            data.forEach(item => {
+                const linkBox = document.createElement('div');
+                linkBox.className = 'link-box';
+                linkBox.style.backgroundColor = getRandomColor();
+                linkBox.innerHTML = `
+                    <div class="icon">${getRandomIcon()}</div>
+                    <a href="${item.link}" target="_blank">${item.name}</a>
+                    <p>${item.description}</p>
+                `;
+                linksContainer.appendChild(linkBox);
+            });
+        }
+    </script>
+</body>
+</html>
