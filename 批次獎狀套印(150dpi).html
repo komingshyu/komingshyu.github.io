@@ -239,13 +239,40 @@ text1,text2,text3,text4,text5,text6
 
     // 預設設定
     const defaultSettings = [
-        { x: 90, y: 355, size: 28 },
-        { x: 90, y: 400, size: 28 },
-        { x: 90, y: 445, size: 28 },
-        { x: 90, y: 490, size: 28 },
-        { x: 90, y: 540, size: 28 },
-        { x: 90, y: 773, size: 28 }
+        {text: "舉辦項目：DEMO第一次段考", x: 90, y: 355, size: 28 },
+        {text: "舉行年度：113學年度第1學期", x: 90, y: 400, size: 28 },
+        {text: "參加學生：103班 王大同", x: 90, y: 445, size: 28 },
+        { text: "評定成績：全班第1名", x: 90, y: 490, size: 28 },
+        {text: "特頒此狀以茲鼓勵", x: 90, y: 540, size: 28 },
+        { text: "中華民國  113 年  12  月 15  日", x: 90, y: 773, size: 28 }
     ];
+
+   window.onload = function() {
+    
+    drawText_def();
+    }
+
+
+    function drawText_def() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+
+        const selectedFont = fontSelect.value;
+        document.querySelectorAll('.text-input').forEach((textInput, index) => {
+            const x = parseInt(textInput.querySelector('.xCoord').value) || 0;
+            const y = parseInt(textInput.querySelector('.yCoord').value) || 0;
+            const size = parseInt(textInput.querySelector('.fontSize').value) || 20;
+            const text = defaultSettings[index].text;
+
+            ctx.font = `${size * 1.949}px "${selectedFont}"`; // 將字型大小轉換為 150 DPI 的大小
+            ctx.fillStyle = 'black';
+            ctx.fillText(text, x * 1.949, y * 1.949); // 將座標轉換為 150 DPI 的座標
+        });
+
+    }
+
+
+
+
 
     // 從 localStorage 讀取設定
     let settings = JSON.parse(localStorage.getItem('150certificateSettings')) || defaultSettings;
@@ -325,7 +352,7 @@ text1,text2,text3,text4,text5,text6
                 imagePreview.style.backgroundSize = 'contain';
                 imagePreview.style.backgroundRepeat = 'no-repeat';
                 imagePreview.style.backgroundPosition = 'center';
-                drawText(data[0]); // 重新繪製第一筆資料
+                //drawText(data[0]); // 重新繪製第一筆資料
             }
         }
         reader.readAsDataURL(file);

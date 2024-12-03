@@ -193,6 +193,12 @@
         { text: "中華民國  113 年  12  月 15  日", x: 123, y: 1060, size: 39 }
     ];
 
+     window.onload = function() {
+    
+    drawText();
+    };
+
+
     // 從 localStorage 讀取設定
     let settings = JSON.parse(localStorage.getItem('certificateSettings')) || defaultSettings;
 
