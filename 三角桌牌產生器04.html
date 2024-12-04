@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
-    <base href="https://websimlabel.com/">
+  
     <title>A4三角桌牌產生器（圖片縮放移動）</title>
     <style>
         body {
@@ -16,7 +16,7 @@
         .container {
             display: flex;
             flex: 1;
-            background-color: white;
+            background-color: #E8FFF5;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
             overflow: hidden;
@@ -31,7 +31,7 @@
             width: 75%;
             padding: 20px;
             box-sizing: border-box;
-            background-color: #f9f9f9;
+            background-color: #ADADAD;
             overflow-y: auto;
         }
         h1 {
@@ -39,7 +39,7 @@
             text-align: center;
             margin-top: 0;
         }
-        .input-area, .font-selector, .font-size-slider, .image-upload {
+        .input-area, .font-selector, .font-size-slider, .image-upload, .color-picker, .background-settings {
             margin-bottom: 20px;
         }
         label {
@@ -47,12 +47,26 @@
             margin-bottom: 5px;
             font-weight: bold;
         }
-        select, textarea, input[type="range"], input[type="file"] {
+        select, textarea, input[type="range"], input[type="file"], input[type="color"] {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
             box-sizing: border-box;
+        }
+        .color-picker label {
+            display: flex;
+            align-items: center;
+        }
+        .color-picker input[type="color"] {
+            flex: 0 0 auto;
+            margin-left: 10px;
+        }
+        .color-picker .color-preview {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #ddd;
+            margin-right: 10px;
         }
         .actions {
             display: flex;
@@ -80,9 +94,9 @@
             width: 210mm;
             height: 297mm;
             border: 1px solid #000;
-            border: none;
             margin: 20px auto;
             padding: 0.1mm;
+            border: none;
             box-sizing: border-box;
             background-color: white;
             page-break-after: always;
@@ -100,7 +114,7 @@
             position: relative;
             height: 100%;
         }
-        .draggable-text, .draggable-image {
+        .draggable-text, .draggable-image, .draggable-background {
             position: absolute;
             cursor: move;
             user-select: none;
@@ -112,6 +126,9 @@
         }
         .draggable-image {
             z-index: 1;
+        }
+        .draggable-background {
+            z-index: 0;
         }
         .resize-handle {
             width: 10px;
@@ -179,7 +196,7 @@
             margin: 15% auto;
             padding: 20px;
             border: 1px solid #888;
-            
+
             width: 450px;
             border-radius: 8px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -208,7 +225,7 @@
 </div>
 <div class="container">
     <div class="left-panel">
-        <h2>A4三角桌牌產生器<br>（koming修改v3）</h2>
+        <h2>A4三角桌牌產生器<br>（koming修改V4）</h2>
 
         <div class="input-area">
             <label for="noteList">備註清單：</label>
@@ -218,6 +235,21 @@
         <div class="font-size-slider">
             <label for="noteFontSize">備註字體大小：<span id="noteFontSizeValue">60</span></label>
             <input type="range" id="noteFontSize" min="20" max="100" value="60">
+        </div>
+
+        <div class="font-selector">
+            <label for="noteFontSelect">備註字體：</label>
+            <select id="noteFontSelect">
+                <option value="DFKai-SB">標楷體</option>
+                <option value="Microsoft JhengHei Bold">微軟正黑體粗體</option>
+                <option value="PMingLiU">新細明體</option>
+                <option value="EngTRESS">EngTRESS</option>
+            </select>
+        </div>
+
+        <div class="color-picker">
+            <label for="noteColor">備註顏色：<span id="noteColorPreview" class="color-preview"></span></label>
+            <input type="color" id="noteColor" value="#000000">
         </div>
 
         <div class="input-area">
@@ -231,13 +263,18 @@
         </div>
 
         <div class="font-selector">
-            <label for="fontSelect">選擇字體：</label>
-            <select id="fontSelect">
+            <label for="nameFontSelect">姓名字體：</label>
+            <select id="nameFontSelect">
                 <option value="DFKai-SB">標楷體</option>
                 <option value="Microsoft JhengHei Bold">微軟正黑體粗體</option>
                 <option value="PMingLiU">新細明體</option>
                 <option value="EngTRESS">EngTRESS</option>
             </select>
+        </div>
+
+        <div class="color-picker">
+            <label for="nameColor">姓名顏色：<span id="nameColorPreview" class="color-preview"></span></label>
+            <input type="color" id="nameColor" value="#000000">
         </div>
 
         <div class="image-upload">
@@ -248,6 +285,21 @@
         <div class="font-size-slider">
             <label for="imageZoom">圖片縮放：<span id="imageZoomValue">100</span>%</label>
             <input type="range" id="imageZoom" min="10" max="200" value="100">
+        </div>
+
+        <div class="background-settings">
+            <label for="backgroundUpload">背景圖片：</label>
+            <input type="file" id="backgroundUpload" accept="image/*" onchange="handleBackgroundUpload(event)">
+        </div>
+
+        <div class="font-size-slider">
+            <label for="backgroundZoom">背景縮放：<span id="backgroundZoomValue">100</span>%</label>
+            <input type="range" id="backgroundZoom" min="10" max="300" value="100">
+        </div>
+
+        <div class="font-size-slider">
+            <label for="backgroundOpacity">背景透明度：<span id="backgroundOpacityValue">100</span>%</label>
+            <input type="range" id="backgroundOpacity" min="0" max="100" value="100">
         </div>
     </div>
 
@@ -264,57 +316,92 @@
     <div class="modal-content">
         <span class="close">&times;</span>
         <h2>使用說明</h2>
-        
+
         <pre>
 由屏東後庄國小黃老師設計的三角桌牌產生器修改完成
 修改內容:
 1.將一張A4紙張改為可容納2份三角桌牌(原設計是1份)
 2.增加文字圖像的座標紀錄，提供下次使用時能回到上次的設定位置
  (原設計只能回到左上角位置，無法記住上次的位置設定)
-3.將[儲存為PDF]改為直接[開啟PDF列印]
-         komingshyu 2024.12.02
-        </pre>
-        
+3.修改為備註及文字個別字體與顏色的設定
+4.增加一個背景圖像，可調整透明度及大小
+5.將[儲存為PDF]改為直接[開啟PDF列印]
+         komingshyu 2024.12.04
+        </pre><a href="https://puti001.github.io/teach_tools/Triangle_Table_Card_Generator2.html" target=_blank>原設計網址</a>
+
     </div>
 </div>
-
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js"></script>
 <script>
-let draggableNote, draggableName, draggableImage;
+let draggableNote, draggableName, draggableImage, draggableBackground;
 let isDragging = false;
 let startX, startY;
 let uploadedImage = null;
+let uploadedBackground = null;
 let imageZoom = 100;
+let backgroundZoom = 100;
+let backgroundOpacity = 100;
 let noteTextLeft = localStorage.getItem('noteTextLeft') || '0px';
 let noteTextTop = localStorage.getItem('noteTextTop') || '0px';
 let nameTextLeft = localStorage.getItem('nameTextLeft') || '0px';
 let nameTextTop = localStorage.getItem('nameTextTop') || '0px';
 let imageLeft = localStorage.getItem('imageLeft') || '0px';
 let imageTop = localStorage.getItem('imageTop') || '0px';
+let backgroundLeft = localStorage.getItem('backgroundLeft') || '0px';
+let backgroundTop = localStorage.getItem('backgroundTop') || '0px';
 
 window.onload = function() {
     loadFromLocalStorage();
     document.getElementById('noteFontSize').addEventListener('input', updateNoteFontSize);
     document.getElementById('nameFontSize').addEventListener('input', updateNameFontSize);
     document.getElementById('imageZoom').addEventListener('input', updateImageZoom);
+    document.getElementById('backgroundZoom').addEventListener('input', updateBackgroundZoom);
+    document.getElementById('backgroundOpacity').addEventListener('input', updateBackgroundOpacity);
+    document.getElementById('noteFontSelect').addEventListener('change', function() {
+        saveToLocalStorage();
+        applySelectedFont('note');
+        generatePreview();
+    });
+    document.getElementById('nameFontSelect').addEventListener('change', function() {
+        saveToLocalStorage();
+        applySelectedFont('name');
+        generatePreview();
+    });
+    document.getElementById('noteColor').addEventListener('input', function() {
+        saveToLocalStorage();
+        updateColorPreview('noteColorPreview', this.value);
+        generatePreview();
+    });
+    document.getElementById('nameColor').addEventListener('input', function() {
+        saveToLocalStorage();
+        updateColorPreview('nameColorPreview', this.value);
+        generatePreview();
+    });
     generatePreview();
 };
 
 function saveToLocalStorage() {
     localStorage.setItem('noteList', document.getElementById('noteList').value);
     localStorage.setItem('nameList', document.getElementById('nameList').value);
-    localStorage.setItem('selectedFont', document.getElementById('fontSelect').value);
+    localStorage.setItem('selectedNoteFont', document.getElementById('noteFontSelect').value);
+    localStorage.setItem('selectedNameFont', document.getElementById('nameFontSelect').value);
     localStorage.setItem('noteFontSize', document.getElementById('noteFontSize').value);
     localStorage.setItem('nameFontSize', document.getElementById('nameFontSize').value);
     localStorage.setItem('imageZoom', document.getElementById('imageZoom').value);
+    localStorage.setItem('backgroundZoom', document.getElementById('backgroundZoom').value);
+    localStorage.setItem('backgroundOpacity', document.getElementById('backgroundOpacity').value);
+    localStorage.setItem('noteColor', document.getElementById('noteColor').value);
+    localStorage.setItem('nameColor', document.getElementById('nameColor').value);
     localStorage.setItem('noteTextLeft', noteTextLeft);
     localStorage.setItem('noteTextTop', noteTextTop);
     localStorage.setItem('nameTextLeft', nameTextLeft);
     localStorage.setItem('nameTextTop', nameTextTop);
     localStorage.setItem('imageLeft', imageLeft);
     localStorage.setItem('imageTop', imageTop);
+    localStorage.setItem('backgroundLeft', backgroundLeft);
+    localStorage.setItem('backgroundTop', backgroundTop);
 }
 
 function loadFromLocalStorage() {
@@ -324,8 +411,11 @@ function loadFromLocalStorage() {
     if (localStorage.getItem('nameList')) {
         document.getElementById('nameList').value = localStorage.getItem('nameList');
     }
-    if (localStorage.getItem('selectedFont')) {
-        document.getElementById('fontSelect').value = localStorage.getItem('selectedFont');
+    if (localStorage.getItem('selectedNoteFont')) {
+        document.getElementById('noteFontSelect').value = localStorage.getItem('selectedNoteFont');
+    }
+    if (localStorage.getItem('selectedNameFont')) {
+        document.getElementById('nameFontSelect').value = localStorage.getItem('selectedNameFont');
     }
     if (localStorage.getItem('noteFontSize')) {
         document.getElementById('noteFontSize').value = localStorage.getItem('noteFontSize');
@@ -338,6 +428,22 @@ function loadFromLocalStorage() {
     if (localStorage.getItem('imageZoom')) {
         document.getElementById('imageZoom').value = localStorage.getItem('imageZoom');
         updateImageZoom();
+    }
+    if (localStorage.getItem('backgroundZoom')) {
+        document.getElementById('backgroundZoom').value = localStorage.getItem('backgroundZoom');
+        updateBackgroundZoom();
+    }
+    if (localStorage.getItem('backgroundOpacity')) {
+        document.getElementById('backgroundOpacity').value = localStorage.getItem('backgroundOpacity');
+        updateBackgroundOpacity();
+    }
+    if (localStorage.getItem('noteColor')) {
+        document.getElementById('noteColor').value = localStorage.getItem('noteColor');
+        updateColorPreview('noteColorPreview', localStorage.getItem('noteColor'));
+    }
+    if (localStorage.getItem('nameColor')) {
+        document.getElementById('nameColor').value = localStorage.getItem('nameColor');
+        updateColorPreview('nameColorPreview', localStorage.getItem('nameColor'));
     }
     if (localStorage.getItem('noteTextLeft')) {
         noteTextLeft = localStorage.getItem('noteTextLeft');
@@ -357,6 +463,12 @@ function loadFromLocalStorage() {
     if (localStorage.getItem('imageTop')) {
         imageTop = localStorage.getItem('imageTop');
     }
+    if (localStorage.getItem('backgroundLeft')) {
+        backgroundLeft = localStorage.getItem('backgroundLeft');
+    }
+    if (localStorage.getItem('backgroundTop')) {
+        backgroundTop = localStorage.getItem('backgroundTop');
+    }
 }
 
 document.getElementById('noteList').addEventListener('input', () => {
@@ -365,11 +477,6 @@ document.getElementById('noteList').addEventListener('input', () => {
 });
 document.getElementById('nameList').addEventListener('input', () => {
     saveToLocalStorage();
-    generatePreview();
-});
-document.getElementById('fontSelect').addEventListener('change', function() {
-    saveToLocalStorage();
-    applySelectedFont();
     generatePreview();
 });
 
@@ -394,9 +501,27 @@ function updateImageZoom() {
     generatePreview();
 }
 
-function applySelectedFont() {
-    const selectedFont = document.getElementById('fontSelect').value;
-    document.querySelectorAll('.draggable-text').forEach(element => {
+function updateBackgroundZoom() {
+    backgroundZoom = document.getElementById('backgroundZoom').value;
+    document.getElementById('backgroundZoomValue').textContent = backgroundZoom;
+    saveToLocalStorage();
+    generatePreview();
+}
+
+function updateBackgroundOpacity() {
+    backgroundOpacity = document.getElementById('backgroundOpacity').value;
+    document.getElementById('backgroundOpacityValue').textContent = backgroundOpacity;
+    saveToLocalStorage();
+    generatePreview();
+}
+
+function updateColorPreview(id, color) {
+    document.getElementById(id).style.backgroundColor = color;
+}
+
+function applySelectedFont(type) {
+    const selectedFont = type === 'note' ? document.getElementById('noteFontSelect').value : document.getElementById('nameFontSelect').value;
+    document.querySelectorAll(`.draggable-text.${type}-text`).forEach(element => {
         element.style.fontFamily = selectedFont;
     });
 }
@@ -413,13 +538,28 @@ function handleImageUpload(event) {
     }
 }
 
+function handleBackgroundUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            uploadedBackground = e.target.result;
+            generatePreview();
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
 function generatePreview() {
     saveToLocalStorage();
     const noteList = document.getElementById('noteList').value.split('\n');
     const nameList = document.getElementById('nameList').value.split('\n');
-    const selectedFont = document.getElementById('fontSelect').value;
+    const noteFont = document.getElementById('noteFontSelect').value;
+    const nameFont = document.getElementById('nameFontSelect').value;
     const noteFontSize = document.getElementById('noteFontSize').value;
     const nameFontSize = document.getElementById('nameFontSize').value;
+    const noteColor = document.getElementById('noteColor').value;
+    const nameColor = document.getElementById('nameColor').value;
 
     // 直接從 localStorage 讀取座標值
     noteTextLeft = localStorage.getItem('noteTextLeft') || '0px';
@@ -428,6 +568,8 @@ function generatePreview() {
     nameTextTop = localStorage.getItem('nameTextTop') || '0px';
     imageLeft = localStorage.getItem('imageLeft') || '0px';
     imageTop = localStorage.getItem('imageTop') || '0px';
+    backgroundLeft = localStorage.getItem('backgroundLeft') || '0px';
+    backgroundTop = localStorage.getItem('backgroundTop') || '0px';
 
     const previewContainer = document.getElementById('previewContainer');
     previewContainer.innerHTML = '';
@@ -448,12 +590,32 @@ function generatePreview() {
             const label = document.createElement('div');
             label.className = 'label';
 
+            if (uploadedBackground) {
+                const backgroundElement = document.createElement('img');
+                backgroundElement.className = 'draggable-background';
+                backgroundElement.src = uploadedBackground;
+                backgroundElement.style.maxWidth = '100%';
+                backgroundElement.style.maxHeight = '100%';
+                backgroundElement.style.transform = `scale(${backgroundZoom / 100})`;
+                backgroundElement.style.transformOrigin = 'top left';
+                backgroundElement.style.opacity = backgroundOpacity / 100;
+
+                // 明確設置左邊和頂部位置
+                backgroundElement.style.position = 'absolute';
+                backgroundElement.style.left = backgroundLeft;
+                backgroundElement.style.top = backgroundTop;
+
+                label.appendChild(backgroundElement);
+                setupDraggableElement(backgroundElement);
+            }
+
             const noteText = document.createElement('div');
             noteText.className = 'draggable-text note-text';
             noteText.textContent = noteList[index] || '';
-            noteText.style.fontFamily = selectedFont;
+            noteText.style.fontFamily = noteFont;
             noteText.style.fontSize = `${noteFontSize}px`;
-            
+            noteText.style.color = noteColor;
+
             // 明確設置左邊和頂部位置
             noteText.style.position = 'absolute';
             noteText.style.left = noteTextLeft;
@@ -462,9 +624,10 @@ function generatePreview() {
             const nameText = document.createElement('div');
             nameText.className = 'draggable-text name-text';
             nameText.textContent = nameList[index] || '';
-            nameText.style.fontFamily = selectedFont;
+            nameText.style.fontFamily = nameFont;
             nameText.style.fontSize = `${nameFontSize}px`;
-            
+            nameText.style.color = nameColor;
+
             // 明確設置左邊和頂部位置
             nameText.style.position = 'absolute';
             nameText.style.left = nameTextLeft;
@@ -478,7 +641,7 @@ function generatePreview() {
                 imageElement.style.maxHeight = '100%';
                 imageElement.style.transform = `scale(${imageZoom / 100})`;
                 imageElement.style.transformOrigin = 'top left';
-                
+
                 // 明確設置左邊和頂部位置
                 imageElement.style.position = 'absolute';
                 imageElement.style.left = imageLeft;
@@ -507,7 +670,7 @@ function generatePreview() {
 }
 function setupDraggableElement(element) {
     element.addEventListener('mousedown', startDragging);
-    if (element.classList.contains('draggable-image')) {
+    if (element.classList.contains('draggable-image') || element.classList.contains('draggable-background')) {
         element.addEventListener('wheel', zoomImage);
     }
 }
@@ -525,7 +688,7 @@ function startDragging(e) {
 function drag(e) {
     if (!isDragging) return;
     e.preventDefault();
-    const target = e.target.closest('.draggable-text, .draggable-image');
+    const target = e.target.closest('.draggable-text, .draggable-image, .draggable-background');
     if (!target) return;
 
     const parentRect = target.parentElement.getBoundingClientRect();
@@ -557,13 +720,15 @@ function zoomImage(e) {
 
 function updateAllCells(changedElement) {
     const selector = changedElement.classList.contains('note-text') ? '.note-text' :
-                     changedElement.classList.contains('name-text') ? '.name-text' : '.draggable-image';
+                     changedElement.classList.contains('name-text') ? '.name-text' :
+                     changedElement.classList.contains('draggable-image') ? '.draggable-image' :
+                     changedElement.classList.contains('draggable-background') ? '.draggable-background' : '';
     const cells = document.querySelectorAll(selector);
     cells.forEach(cell => {
         if (cell !== changedElement) {
             cell.style.left = changedElement.style.left;
             cell.style.top = changedElement.style.top;
-            if (selector === '.draggable-image') {
+            if (selector === '.draggable-image' || selector === '.draggable-background') {
                 cell.style.transform = changedElement.style.transform;
             }
         }
@@ -580,6 +745,9 @@ function savePosition(element) {
     } else if (element.classList.contains('draggable-image')) {
         imageLeft = element.style.left || '0px';
         imageTop = element.style.top || '0px';
+    } else if (element.classList.contains('draggable-background')) {
+        backgroundLeft = element.style.left || '0px';
+        backgroundTop = element.style.top || '0px';
     }
     saveToLocalStorage();
 }
@@ -606,10 +774,10 @@ async function saveAsPDF() {
             const imgData = canvas.toDataURL('image/jpeg', 1.0);
             doc.addImage(imgData, 'JPEG', 0, 0, 210, 297);
         }
-        
+
         // 直接開啟 PDF
         window.open(doc.output('bloburl'), '_blank');
-        
+
     } catch (error) {
         console.error('Error in saveAsPDF:', error);
         alert(`開啟 PDF 時發生錯誤：${error.message}`);
@@ -635,8 +803,6 @@ async function saveAsPDF() {
         }
     }
 
-
-
 // Error handling for unhandled rejections
 window.addEventListener('unhandledrejection', function(event) {
     console.error('Unhandled rejection (promise: ', event.promise, ', reason: ', event.reason, ').');
@@ -649,7 +815,6 @@ window.onerror = function(message, source, lineno, colno, error) {
     alert('發生了意外錯誤。請刷新頁面並重試。');
     return true;
 };
-
 
 </script>
 </body>
