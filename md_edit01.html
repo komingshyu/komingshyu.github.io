@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown即時預覽網頁</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            height: 90vh;
+        }
+
+        .editor-container, .preview-container {
+            flex: 1;
+            padding: 6px;
+            box-sizing: border-box;
+        }
+
+        .editor-container {
+            background-color: #e0f0e0;
+            border-right: 2px solid #a0c0a0;
+        }
+
+        .preview-container {
+            background-color: #e0f0e0;
+            border-left: 2px solid #a0c0a0;
+        }
+
+        .title {
+            font-size: 16px;
+            margin-bottom: 0px;
+            color: #333;
+            text-align: center;
+            background-color: #d0e0d0;
+            padding: 10px;
+            border-bottom: 2px solid #a0c0a0;
+        }
+
+        textarea {
+            width: 100%;
+            height: calc(100% - 160px);
+            border: none;
+            resize: none;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+
+        button {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-right: 5px;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
+
+        #preview {
+            padding: 10px;
+            box-sizing: border-box;
+            height: calc(100% - 40px);
+            background-color: #ffffff;
+            overflow-y: auto;
+        }
+
+        .markdown-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+
+        .markdown-buttons button {
+            flex: 1 1 calc(20% - 10px);
+            box-sizing: border-box;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 500px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="title">Markdown簡易web編輯器V1</div>
+
+    <div class="container">
+        <div class="editor-container">
+            <div class="title">Markdown輸入區</div>
+            <textarea id="editor" placeholder="在這裡輸入Markdown..."></textarea>
+            <div class="markdown-buttons">
+                <button onclick="insertMarkdown('**粗體文字**')">粗體</button>
+                <button onclick="insertMarkdown('*斜體文字*')">斜體</button>
+                <button onclick="insertMarkdown('~~刪除線~~')">刪除線</button>
+                <button onclick="insertMarkdown('`行內代碼`')">行內代碼</button>
+                <button onclick="insertMarkdown('```\n代碼塊\n```')">代碼塊</button>
+                <button onclick="insertMarkdown('> 引用')">引用</button>
+                <button onclick="insertMarkdown('- 項目')">無序列表</button>
+                <button onclick="insertMarkdown('1. 項目')">有序列表</button>
+                <button onclick="insertMarkdown('[連結文字](http://example.com)')">連結</button>
+                <button onclick="insertMarkdown('![圖片說明](http://example.com/image.jpg)')">圖片</button>
+                <button onclick="insertMarkdown('---')">水平線</button>
+                <button onclick="insertMarkdown('# 標題1')">標題1</button>
+                <button onclick="insertMarkdown('## 標題2')">標題2</button>
+                <button onclick="insertMarkdown('### 標題3')">標題3</button>
+                <button onclick="insertMarkdown('#### 標題4')">標題4</button>
+            </div>
+            <div class="buttons">
+                <button id="helpButton">Md標記說明</button>
+                <button id="saveButton">下載Md檔案</button>
+               <label>匯入Md檔案</label>
+                <input type="file" id="loadButton" accept=".md">
+            </div>
+        </div>
+        <div class="preview-container">
+            <div class="title">網頁預覽區</div>
+            <div id="preview"></div>
+        </div>
+    </div>
+    
+
+    <div id="helpModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>MD常用標記說明</h2>
+            <pre>
+            1. **粗體文字**      2. *斜體文字*    3. ~~刪除線~~
+            4. `行內代碼`        5. ```代碼塊```  6. > 引用
+            7. - 項目            8. 1. 項目    
+            9. [連結文字](http://example.com)
+            10. ![圖片說明](http://example.com/image.jpg)
+            11. --- (水平線)     12. # 標題1      13. ## 標題2
+            14. ### 標題3        15. #### 標題4
+          </pre>
+        </div>
+    </div>
+
+
+
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editor = document.getElementById('editor');
+            const preview = document.getElementById('preview');
+            const saveButton = document.getElementById('saveButton');
+            const loadButton = document.getElementById('loadButton');
+            const helpButton = document.getElementById('helpButton');
+            const helpModal = document.getElementById('helpModal');
+            const closeModal = document.getElementsByClassName('close')[0];
+
+            function updatePreview() {
+                const markdownText = editor.value;
+                const html = marked.parse(markdownText);
+                preview.innerHTML = html;
+            }
+
+            editor.addEventListener('input', updatePreview);
+
+            saveButton.addEventListener('click', function() {
+                const markdownText = editor.value;
+                const blob = new Blob([markdownText], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'document.md';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+
+            loadButton.addEventListener('change', function(event) {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        editor.value = e.target.result;
+                        updatePreview();
+                    };
+                    reader.readAsText(file);
+                }
+            });
+
+            helpButton.addEventListener('click', function() {
+                helpModal.style.display = 'block';
+            });
+
+            closeModal.addEventListener('click', function() {
+                helpModal.style.display = 'none';
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target == helpModal) {
+                    helpModal.style.display = 'none';
+                }
+            });
+
+            // Initial preview update
+            updatePreview();
+        });
+
+        function insertMarkdown(markdown) {
+            const editor = document.getElementById('editor');
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            const before = text.substring(0, start);
+            const after = text.substring(end, text.length);
+            editor.value = before + markdown + after;
+            editor.selectionStart = editor.selectionEnd = start + markdown.length;
+            editor.focus();
+            updatePreview();
+        }
+    </script>
+</body>
+</html>
