@@ -1,6 +1,7 @@
 const linksData = [
     { name: "A4三角桌牌產生器V3", description: "修改1張A4可以產生2張桌牌，並記錄座標定位，改為直接開啟PDF，改自屏東後庄國小黃老師，<a href=https://puti001.github.io/teach_tools/Triangle_Table_Card_Generator2.html target=_blank>原網址</a>", link: "三角桌牌產生器03.html" },
-    { name: "A4三角桌牌產生器V4", description: "修改V3版，增加背景圖像載入，及備註與姓名的顏色字體設定，版面略調，改自屏東後庄國小黃老師，<a href=https://puti001.github.io/teach_tools/Triangle_Table_Card_Generator2.html target=_blank>原網址</a>", link: "三角桌牌產生器04.html" },    
+    { name: "A4三角桌牌產生器V4", description: "修改V3版，增加背景圖像載入，及備註與姓名的顏色字體設定，版面略調，改自屏東後庄國小黃老師，<a href=https://puti001.github.io/teach_tools/Triangle_Table_Card_Generator2.html target=_blank>原網址</a>", link: "三角桌牌產生器04.html" },   
+     { name: "A4三角桌牌產生器V5", description: "修改V4版，解決備註與姓名無法讀取上一次顏色的設定問題，改自屏東後庄國小黃老師，<a href=https://puti001.github.io/teach_tools/Triangle_Table_Card_Generator2.html target=_blank>原網址</a>", link: "三角桌牌產生器05.html" },  
     { name: "批次獎狀套印V1", description: "可載入A4獎狀圖像及得獎資料,再網頁上調整位置大小,並轉出PDF列印(150dpi)", link: "批次獎狀套印(150dpi)01.html" },
     { name: "單張獎狀套印V1", description: "可載入A4獎狀圖像及輸入得獎資料,再網頁上調整位置大小,並轉出PDF列印(150dpi)", link: "單張獎狀套印(150dpi)01.html" }, 
     { name: "圖像智慧拼接系統V1", description: "將連續拍攝的照片拼接成一張完整圖像，需要有30%-50%的重疊影像", link: "photo_stitching/index.html" },
