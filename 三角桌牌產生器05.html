@@ -350,6 +350,7 @@ let imageLeft = localStorage.getItem('imageLeft') || '0px';
 let imageTop = localStorage.getItem('imageTop') || '0px';
 let backgroundLeft = localStorage.getItem('backgroundLeft') || '0px';
 let backgroundTop = localStorage.getItem('backgroundTop') || '0px';
+document.getElementById('nameFontSize').value=localStorage.getItem('nameFontSize') || 140;
 
 window.onload = function() {
     initializeColors(); // 初始化顏色
