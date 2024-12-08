@@ -224,18 +224,18 @@
         <h2>A4標籤貼紙產生器<br>（koming修改V1）</h2>
 
         <div class="input-area">
-            <label for="noteList">1)備註清單：</label>
-            <textarea id="noteList" rows="4" placeholder="請輸入備註，每行一項"></textarea>
+            <label for="lnoteList">1)備註清單：</label>
+            <textarea id="lnoteList" rows="4" placeholder="請輸入備註，每行一項"></textarea>
         </div>
 
         <div class="font-size-slider">
-            <label for="noteFontSize">備註字體大小：<span id="noteFontSizeValue">20</span></label>
-            <input type="range" id="noteFontSize" min="8" max="100" value="20">
+            <label for="lnoteFontSize">備註字體大小：<span id="lnoteFontSizeValue">20</span></label>
+            <input type="range" id="lnoteFontSize" min="8" max="100" value="20">
         </div>
 
         <div class="font-selector">
-            <label for="noteFontSelect">備註字體：</label>
-            <select id="noteFontSelect">
+            <label for="lnoteFontSelect">備註字體：</label>
+            <select id="lnoteFontSelect">
                 <option value="DFKai-SB">標楷體</option>
                 <option value="Microsoft JhengHei Bold">微軟正黑體粗體</option>
                 <option value="PMingLiU">新細明體</option>
@@ -244,23 +244,23 @@
         </div>
 
         <div class="color-picker">
-            <label for="noteColor">備註顏色：<span id="noteColorPreview" class="color-preview"></span></label>
-            <input type="color" id="noteColor" value="#000000">
+            <label for="lnoteColor">備註顏色：<span id="lnoteColorPreview" class="color-preview"></span></label>
+            <input type="color" id="lnoteColor" value="#000000">
         </div>
 
         <div class="input-area">
-            <label for="nameList">2)姓名清單：</label>
-            <textarea id="nameList" rows="4" placeholder="請輸入姓名，每行一項"></textarea>
+            <label for="lnameList">2)姓名清單：</label>
+            <textarea id="lnameList" rows="4" placeholder="請輸入姓名，每行一項"></textarea>
         </div>
 
         <div class="font-size-slider">
-            <label for="nameFontSize">姓名字體大小：<span id="nameFontSizeValue">40</span></label>
-            <input type="range" id="nameFontSize" min="16" max="200" value="40">
+            <label for="lnameFontSize">姓名字體大小：<span id="lnameFontSizeValue">40</span></label>
+            <input type="range" id="lnameFontSize" min="16" max="200" value="40">
         </div>
 
         <div class="font-selector">
-            <label for="nameFontSelect">姓名字體：</label>
-            <select id="nameFontSelect">
+            <label for="lnameFontSelect">姓名字體：</label>
+            <select id="lnameFontSelect">
                 <option value="DFKai-SB">標楷體</option>
                 <option value="Microsoft JhengHei Bold">微軟正黑體粗體</option>
                 <option value="PMingLiU">新細明體</option>
@@ -269,8 +269,8 @@
         </div>
 
         <div class="color-picker">
-            <label for="nameColor">姓名顏色：<span id="nameColorPreview" class="color-preview"></span></label>
-            <input type="color" id="nameColor" value="#000000">
+            <label for="lnameColor">姓名顏色：<span id="lnameColorPreview" class="color-preview"></span></label>
+            <input type="color" id="lnameColor" value="#000000">
         </div>
 
         <div class="image-upload">
@@ -333,14 +333,15 @@
 <div id="instructionsModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
-        <h2>使用說明</h2>
+        <h2>標籤貼紙產生器V1使用說明</h2>
 
         <pre>
 由屏東後庄國小黃老師設計的三角桌牌產生器修改完成
 修改內容:
 1.將程式修改為標籤貼紙產生器，可以列印有邊界或無邊界的貼紙
 1.提供列印貼紙紙張的張數 X*Y ，可以自行設定，例如 3*8 
-2.提供設定A4貼紙上下左右邊距空白的大小，單位為mm，若是0表沒邊距
+2.提供設定A4貼紙上下左右邊距空白的大小，單位為mm，若是0表沒邊距，
+  請依照標籤貼紙種類去設定。
 3.因為是列印PDF檔案，所以列印時必須將列印設定中的紙張大小設定[實際大小]，
   否則印表機會自動縮放96%，會造成列印不精準，請特別注意。
 5.將[儲存為PDF]改為直接[開啟PDF列印]
@@ -361,10 +362,10 @@ let uploadedBackground = null;
 let imageZoom = 100;
 let backgroundZoom = 100;
 let backgroundOpacity = 100;
-let noteTextLeft = localStorage.getItem('noteTextLeft') || '0px';
-let noteTextTop = localStorage.getItem('noteTextTop') || '0px';
-let nameTextLeft = localStorage.getItem('nameTextLeft') || '0px';
-let nameTextTop = localStorage.getItem('nameTextTop') || '0px';
+let lnoteTextLeft = localStorage.getItem('lnoteTextLeft') || '0px';
+let lnoteTextTop = localStorage.getItem('lnoteTextTop') || '0px';
+let lnameTextLeft = localStorage.getItem('lnameTextLeft') || '0px';
+let lnameTextTop = localStorage.getItem('lnameTextTop') || '0px';
 let imageLeft = localStorage.getItem('imageLeft') || '0px';
 let imageTop = localStorage.getItem('imageTop') || '0px';
 let backgroundLeft = localStorage.getItem('backgroundLeft') || '0px';
@@ -375,7 +376,7 @@ let backgroundTop = localStorage.getItem('backgroundTop') || '0px';
 //let paddingRight = localStorage.getItem('paddingRight') || 5;
 //let paddingBottom = localStorage.getItem('paddingBottom') || 10;
 //let paddingLeft = localStorage.getItem('paddingLeft') || 5;
-document.getElementById('nameFontSize').value=localStorage.getItem('nameFontSize') || 40;
+document.getElementById('lnameFontSize').value=localStorage.getItem('lnameFontSize') || 40;
 document.getElementById('gridX').value = localStorage.getItem('gridX') || 2;
 document.getElementById('gridY').value = localStorage.getItem('gridY') || 2;
 document.getElementById('paddingTop').value = localStorage.getItem('paddingTop') || 0;   
@@ -392,29 +393,29 @@ document.getElementById('paddingLeft').value = localStorage.getItem('paddingLeft
 window.onload = function() {
     initializeColors(); // 初始化顏色
     loadFromLocalStorage();
-    document.getElementById('noteFontSize').addEventListener('input', updateNoteFontSize);
-    document.getElementById('nameFontSize').addEventListener('input', updateNameFontSize);
+    document.getElementById('lnoteFontSize').addEventListener('input', updatelnoteFontSize);
+    document.getElementById('lnameFontSize').addEventListener('input', updatelnameFontSize);
     document.getElementById('imageZoom').addEventListener('input', updateImageZoom);
     document.getElementById('backgroundZoom').addEventListener('input', updateBackgroundZoom);
     document.getElementById('backgroundOpacity').addEventListener('input', updateBackgroundOpacity);
-    document.getElementById('noteFontSelect').addEventListener('change', function() {
+    document.getElementById('lnoteFontSelect').addEventListener('change', function() {
         saveToLocalStorage();
         applySelectedFont('note');
         generatePreview();
     });
-    document.getElementById('nameFontSelect').addEventListener('change', function() {
+    document.getElementById('lnameFontSelect').addEventListener('change', function() {
         saveToLocalStorage();
         applySelectedFont('name');
         generatePreview();
     });
-    document.getElementById('noteColor').addEventListener('input', function() {
+    document.getElementById('lnoteColor').addEventListener('input', function() {
         saveToLocalStorage();
-        updateColorPreview('noteColorPreview', this.value);
+        updateColorPreview('lnoteColorPreview', this.value);
         generatePreview();
     });
-    document.getElementById('nameColor').addEventListener('input', function() {
+    document.getElementById('lnameColor').addEventListener('input', function() {
         saveToLocalStorage();
-        updateColorPreview('nameColorPreview', this.value);
+        updateColorPreview('lnameColorPreview', this.value);
         generatePreview();
     });
     document.getElementById('gridX').addEventListener('input', function() {
@@ -441,44 +442,43 @@ window.onload = function() {
         saveToLocalStorage();
         generatePreview();
     });
-
-   
+  
     generatePreview();
 };
 
 function initializeColors() {
-    // 檢查是否存在 noteColor 和 nameColor，若不存在則初始化
-    if (!localStorage.getItem('noteColor')) {
-        localStorage.setItem('noteColor', '#000000'); // 設置預設顏色
+    // 檢查是否存在 lnoteColor 和 lnameColor，若不存在則初始化
+    if (!localStorage.getItem('lnoteColor')) {
+        localStorage.setItem('lnoteColor', '#000000'); // 設置預設顏色
 
     }else{
-        document.getElementById('noteColor').value = localStorage.getItem('noteColor');
+        document.getElementById('lnoteColor').value = localStorage.getItem('lnoteColor');
     };
-    if (!localStorage.getItem('nameColor')) {
-        localStorage.setItem('nameColor', '#000000'); // 設置預設顏色
+    if (!localStorage.getItem('lnameColor')) {
+        localStorage.setItem('lnameColor', '#000000'); // 設置預設顏色
 
     }else{
-        document.getElementById('nameColor').value = localStorage.getItem('nameColor');
+        document.getElementById('lnameColor').value = localStorage.getItem('lnameColor');
     };
 
 }
 
 function saveToLocalStorage() {
-    localStorage.setItem('noteList', document.getElementById('noteList').value);
-    localStorage.setItem('nameList', document.getElementById('nameList').value);
-    localStorage.setItem('selectedNoteFont', document.getElementById('noteFontSelect').value);
-    localStorage.setItem('selectedNameFont', document.getElementById('nameFontSelect').value);
-    localStorage.setItem('noteFontSize', document.getElementById('noteFontSize').value);
-    localStorage.setItem('nameFontSize', document.getElementById('nameFontSize').value);
+    localStorage.setItem('lnoteList', document.getElementById('lnoteList').value);
+    localStorage.setItem('lnameList', document.getElementById('lnameList').value);
+    localStorage.setItem('lselectedNoteFont', document.getElementById('lnoteFontSelect').value);
+    localStorage.setItem('lselectedNameFont', document.getElementById('lnameFontSelect').value);
+    localStorage.setItem('lnoteFontSize', document.getElementById('lnoteFontSize').value);
+    localStorage.setItem('lnameFontSize', document.getElementById('lnameFontSize').value);
     localStorage.setItem('imageZoom', document.getElementById('imageZoom').value);
     localStorage.setItem('backgroundZoom', document.getElementById('backgroundZoom').value);
     localStorage.setItem('backgroundOpacity', document.getElementById('backgroundOpacity').value);
-    localStorage.setItem('noteColor', document.getElementById('noteColor').value);
-    localStorage.setItem('nameColor', document.getElementById('nameColor').value);
-    localStorage.setItem('noteTextLeft', noteTextLeft);
-    localStorage.setItem('noteTextTop', noteTextTop);
-    localStorage.setItem('nameTextLeft', nameTextLeft);
-    localStorage.setItem('nameTextTop', nameTextTop);
+    localStorage.setItem('lnoteColor', document.getElementById('lnoteColor').value);
+    localStorage.setItem('lnameColor', document.getElementById('lnameColor').value);
+    localStorage.setItem('lnoteTextLeft', lnoteTextLeft);
+    localStorage.setItem('lnoteTextTop', lnoteTextTop);
+    localStorage.setItem('lnameTextLeft', lnameTextLeft);
+    localStorage.setItem('lnameTextTop', lnameTextTop);
     localStorage.setItem('imageLeft', imageLeft);
     localStorage.setItem('imageTop', imageTop);
     localStorage.setItem('backgroundLeft', backgroundLeft);
@@ -492,25 +492,25 @@ function saveToLocalStorage() {
 }
 
 function loadFromLocalStorage() {
-    if (localStorage.getItem('noteList')) {
-        document.getElementById('noteList').value = localStorage.getItem('noteList');
+    if (localStorage.getItem('lnoteList')) {
+        document.getElementById('lnoteList').value = localStorage.getItem('lnoteList');
     }
-    if (localStorage.getItem('nameList')) {
-        document.getElementById('nameList').value = localStorage.getItem('nameList');
+    if (localStorage.getItem('lnameList')) {
+        document.getElementById('lnameList').value = localStorage.getItem('lnameList');
     }
-    if (localStorage.getItem('selectedNoteFont')) {
-        document.getElementById('noteFontSelect').value = localStorage.getItem('selectedNoteFont');
+    if (localStorage.getItem('lselectedNoteFont')) {
+        document.getElementById('lnoteFontSelect').value = localStorage.getItem('lselectedNoteFont');
     }
-    if (localStorage.getItem('selectedNameFont')) {
-        document.getElementById('nameFontSelect').value = localStorage.getItem('selectedNameFont');
+    if (localStorage.getItem('lselectedNameFont')) {
+        document.getElementById('lnameFontSelect').value = localStorage.getItem('lselectedNameFont');
     }
-    if (localStorage.getItem('noteFontSize')) {
-        document.getElementById('noteFontSize').value = localStorage.getItem('noteFontSize');
-        updateNoteFontSize();
+    if (localStorage.getItem('lnoteFontSize')) {
+        document.getElementById('lnoteFontSize').value = localStorage.getItem('lnoteFontSize');
+        updatelnoteFontSize();
     }
-    if (localStorage.getItem('nameFontSize')) {
-        document.getElementById('nameFontSize').value =localStorage.getItem('nameFontSize');
-        updateNameFontSize();
+    if (localStorage.getItem('lnameFontSize')) {
+        document.getElementById('lnameFontSize').value =localStorage.getItem('lnameFontSize');
+        updatelnameFontSize();
         
     }
     if (localStorage.getItem('imageZoom')) {
@@ -525,48 +525,48 @@ function loadFromLocalStorage() {
         document.getElementById('backgroundOpacity').value = localStorage.getItem('backgroundOpacity');
         updateBackgroundOpacity();
     }
-    // 讀取 noteColor
-    if (localStorage.getItem('noteColor')) {
-        const noteColor = localStorage.getItem('noteColor');
-        document.getElementById('noteColor').value = noteColor;
-        updateColorPreview('noteColorPreview', noteColor);
+    // 讀取 lnoteColor
+    if (localStorage.getItem('lnoteColor')) {
+        const lnoteColor = localStorage.getItem('lnoteColor');
+        document.getElementById('lnoteColor').value = lnoteColor;
+        updateColorPreview('lnoteColorPreview', lnoteColor);
 
     }
 
-    // 讀取 nameColor
-    if (localStorage.getItem('nameColor')) {
-        const nameColor = localStorage.getItem('nameColor');
-        document.getElementById('nameColor').value = nameColor;
-        updateColorPreview('nameColorPreview', nameColor);
+    // 讀取 lnameColor
+    if (localStorage.getItem('lnameColor')) {
+        const lnameColor = localStorage.getItem('lnameColor');
+        document.getElementById('lnameColor').value = lnameColor;
+        updateColorPreview('lnameColorPreview', lnameColor);
 
     }
 
     // 在顏色選擇器變更時保存顏色值
-document.getElementById('noteColor').addEventListener('input', function() {
+document.getElementById('lnoteColor').addEventListener('input', function() {
     const color = this.value;
-    updateColorPreview('noteColorPreview', color);
-    localStorage.setItem('noteColor', color); // 保存到 localStorage
+    updateColorPreview('lnoteColorPreview', color);
+    localStorage.setItem('lnoteColor', color); // 保存到 localStorage
 
 });
 
-document.getElementById('nameColor').addEventListener('input', function() {
+document.getElementById('lnameColor').addEventListener('input', function() {
     const color = this.value;
-    updateColorPreview('nameColorPreview', color);
-    localStorage.setItem('nameColor', color); // 保存到 localStorage
+    updateColorPreview('lnameColorPreview', color);
+    localStorage.setItem('lnameColor', color); // 保存到 localStorage
 
 });
 
-    if (localStorage.getItem('noteTextLeft')) {
-        noteTextLeft = localStorage.getItem('noteTextLeft');
+    if (localStorage.getItem('lnoteTextLeft')) {
+        lnoteTextLeft = localStorage.getItem('lnoteTextLeft');
     }
-    if (localStorage.getItem('noteTextTop')) {
-        noteTextTop = localStorage.getItem('noteTextTop');
+    if (localStorage.getItem('lnoteTextTop')) {
+        lnoteTextTop = localStorage.getItem('lnoteTextTop');
     }
-    if (localStorage.getItem('nameTextLeft')) {
-        nameTextLeft = localStorage.getItem('nameTextLeft');
+    if (localStorage.getItem('lnameTextLeft')) {
+        lnameTextLeft = localStorage.getItem('lnameTextLeft');
     }
-    if (localStorage.getItem('nameTextTop')) {
-        nameTextTop = localStorage.getItem('nameTextTop');
+    if (localStorage.getItem('lnameTextTop')) {
+        lnameTextTop = localStorage.getItem('lnameTextTop');
     }
     if (localStorage.getItem('imageLeft')) {
         imageLeft = localStorage.getItem('imageLeft');
@@ -605,25 +605,25 @@ document.getElementById('nameColor').addEventListener('input', function() {
     generatePreview();
 }
 
-document.getElementById('noteList').addEventListener('input', () => {
+document.getElementById('lnoteList').addEventListener('input', () => {
     saveToLocalStorage();
     generatePreview();
 });
-document.getElementById('nameList').addEventListener('input', () => {
+document.getElementById('lnameList').addEventListener('input', () => {
     saveToLocalStorage();
     generatePreview();
 });
 
-function updateNoteFontSize() {
-    const size1 = document.getElementById('noteFontSize').value;
-    document.getElementById('noteFontSizeValue').textContent = size1;
+function updatelnoteFontSize() {
+    const size1 = document.getElementById('lnoteFontSize').value;
+    document.getElementById('lnoteFontSizeValue').textContent = size1;
     saveToLocalStorage();
     generatePreview();
 }
 
-function updateNameFontSize() {
-    const size2 = document.getElementById('nameFontSize').value;
-    document.getElementById('nameFontSizeValue').textContent = size2;
+function updatelnameFontSize() {
+    const size2 = document.getElementById('lnameFontSize').value;
+    document.getElementById('lnameFontSizeValue').textContent = size2;
     saveToLocalStorage();
     generatePreview();
 }
@@ -652,11 +652,11 @@ function updateBackgroundOpacity() {
 function updateColorPreview(id, color) {
     document.getElementById(id).style.backgroundColor = color;
     // 確保顏色值被正確應用到文字上
-    if (id === 'noteColorPreview') {
+    if (id === 'lnoteColorPreview') {
         document.querySelectorAll('.note-text').forEach(element => {
             element.style.color = color;
         });
-    } else if (id === 'nameColorPreview') {
+    } else if (id === 'lnameColorPreview') {
         document.querySelectorAll('.name-text').forEach(element => {
             element.style.color = color;
         });
@@ -664,7 +664,7 @@ function updateColorPreview(id, color) {
 }
 
 function applySelectedFont(type) {
-    const selectedFont = type === 'note' ? document.getElementById('noteFontSelect').value : document.getElementById('nameFontSelect').value;
+    const selectedFont = type === 'note' ? document.getElementById('lnoteFontSelect').value : document.getElementById('lnameFontSelect').value;
     document.querySelectorAll(`.draggable-text.${type}-text`).forEach(element => {
         element.style.fontFamily = selectedFont;
     });
@@ -696,20 +696,20 @@ function handleBackgroundUpload(event) {
 
 function generatePreview() {
     saveToLocalStorage();
-    const noteList = document.getElementById('noteList').value.split('\n');
-    const nameList = document.getElementById('nameList').value.split('\n');
-    const noteFont = document.getElementById('noteFontSelect').value;
-    const nameFont = document.getElementById('nameFontSelect').value;
-    const noteFontSize = document.getElementById('noteFontSize').value;
-    const nameFontSize = document.getElementById('nameFontSize').value;
-    const noteColor = document.getElementById('noteColor').value;
-    const nameColor = document.getElementById('nameColor').value;
+    const lnoteList = document.getElementById('lnoteList').value.split('\n');
+    const lnameList = document.getElementById('lnameList').value.split('\n');
+    const noteFont = document.getElementById('lnoteFontSelect').value;
+    const nameFont = document.getElementById('lnameFontSelect').value;
+    const lnoteFontSize = document.getElementById('lnoteFontSize').value;
+    const lnameFontSize = document.getElementById('lnameFontSize').value;
+    const lnoteColor = document.getElementById('lnoteColor').value;
+    const lnameColor = document.getElementById('lnameColor').value;
 
     // 直接從 localStorage 讀取座標值
-    noteTextLeft = localStorage.getItem('noteTextLeft') || '0px';
-    noteTextTop = localStorage.getItem('noteTextTop') || '0px';
-    nameTextLeft = localStorage.getItem('nameTextLeft') || '0px';
-    nameTextTop = localStorage.getItem('nameTextTop') || '0px';
+    lnoteTextLeft = localStorage.getItem('lnoteTextLeft') || '0px';
+    lnoteTextTop = localStorage.getItem('lnoteTextTop') || '0px';
+    lnameTextLeft = localStorage.getItem('lnameTextLeft') || '0px';
+    lnameTextTop = localStorage.getItem('lnameTextTop') || '0px';
     imageLeft = localStorage.getItem('imageLeft') || '0px';
     imageTop = localStorage.getItem('imageTop') || '0px';
     backgroundLeft = localStorage.getItem('backgroundLeft') || '0px';
@@ -725,7 +725,7 @@ function generatePreview() {
     const previewContainer = document.getElementById('previewContainer');
     previewContainer.innerHTML = '';
 
-    const pageCount = Math.ceil(Math.max(noteList.length, nameList.length) / (gridX * gridY));
+    const pageCount = Math.ceil(Math.max(lnoteList.length, lnameList.length) / (gridX * gridY));
 
     for (let page = 0; page < pageCount; page++) {
         const previewPage = document.createElement('div');
@@ -739,7 +739,7 @@ function generatePreview() {
 
         for (let i = 0; i < gridX * gridY; i++) {
             const index = page * gridX * gridY + i;
-            if (index >= noteList.length || index >= nameList.length) continue;
+            if (index >= lnoteList.length || index >= lnameList.length) continue;
 
             const label = document.createElement('div');
             label.className = 'label';
@@ -765,27 +765,27 @@ function generatePreview() {
 
             const noteText = document.createElement('div');
             noteText.className = 'draggable-text note-text';
-            noteText.textContent = noteList[index] || '';
+            noteText.textContent = lnoteList[index] || '';
             noteText.style.fontFamily = noteFont;
-            noteText.style.fontSize = `${noteFontSize}px`;
-            noteText.style.color = noteColor;
+            noteText.style.fontSize = `${lnoteFontSize}px`;
+            noteText.style.color = lnoteColor;
 
             // 明確設置左邊和頂部位置
             noteText.style.position = 'absolute';
-            noteText.style.left = noteTextLeft;
-            noteText.style.top = noteTextTop;
+            noteText.style.left = lnoteTextLeft;
+            noteText.style.top = lnoteTextTop;
 
             const nameText = document.createElement('div');
             nameText.className = 'draggable-text name-text';
-            nameText.textContent = nameList[index] || '';
+            nameText.textContent = lnameList[index] || '';
             nameText.style.fontFamily = nameFont;
-            nameText.style.fontSize = `${nameFontSize}px`;
-            nameText.style.color = nameColor;
+            nameText.style.fontSize = `${lnameFontSize}px`;
+            nameText.style.color = lnameColor;
 
             // 明確設置左邊和頂部位置
             nameText.style.position = 'absolute';
-            nameText.style.left = nameTextLeft;
-            nameText.style.top = nameTextTop;
+            nameText.style.left = lnameTextLeft;
+            nameText.style.top = lnameTextTop;
 
             if (uploadedImage) {
                 const imageElement = document.createElement('img');
@@ -888,11 +888,11 @@ function updateAllCells(changedElement) {
 
 function savePosition(element) {
     if (element.classList.contains('note-text')) {
-        noteTextLeft = element.style.left || '0px';
-        noteTextTop = element.style.top || '0px';
+        lnoteTextLeft = element.style.left || '0px';
+        lnoteTextTop = element.style.top || '0px';
     } else if (element.classList.contains('name-text')) {
-        nameTextLeft = element.style.left || '0px';
-        nameTextTop = element.style.top || '0px';
+        lnameTextLeft = element.style.left || '0px';
+        lnameTextTop = element.style.top || '0px';
     } else if (element.classList.contains('draggable-image')) {
         imageLeft = element.style.left || '0px';
         imageTop = element.style.top || '0px';
