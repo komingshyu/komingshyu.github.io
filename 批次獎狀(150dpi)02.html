@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批次獎狀套印系統</title>
+    <style>
+        body {
+            font-family:"DFKai-SB", Arial, sans-serif;
+            display: flex;
+            background-color: #DFFFDF;
+            margin: 0;
+            padding: 20px;
+        }
+        #settings {
+            width: 36%;
+            padding: 20px;
+            background-color: #FFFFF4;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-right: 20px;
+        }
+        #preview {
+            width: 210mm;
+            position: relative;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #canvas {
+            width: 210mm;
+            height: 297mm;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: 1px solid #ccc;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        #imagePreview {
+            width: 210mm;
+            height: 297mm;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-size: cover;
+            background-position: center;
+        }
+        .text-input {
+            margin-bottom: 10px;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+         input[type="number"] {
+            width: 46px;
+            padding: 5px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            padding: 10px 15px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+
+        /* 說明視窗樣式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+
+            width: 80%;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div id="settings">
+    <h2>批次獎狀設定區 &emsp;&emsp;&emsp; 預覽區→</h2>
+    <label>(1)獎狀範本上傳</label><input type="file" id="imageInput"  accept="image/*"><br>
+     <label>(2)匯入得獎資料</label><input type="file" id="dataInput" accept=".csv,.txt"><br>
+    <label for="fontSelect">選擇字體：</label>
+    <select id="fontSelect">
+        <option value="DFKai-SB">標楷體</option>
+        <option value="Microsoft JhengHei">微軟正黑體</option>
+        <option value="MingLiU">細明體</option>
+    </select>
+
+    <!-- 共用的 XY 座標及字型大小設定 -->
+    <div class="text-input">
+        <label>第1列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="90">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="355">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="28">
+        </div>
+    </div>
+    <div class="text-input">
+        <label>第2列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="90">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="400">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="28">
+        </div>
+    </div>
+    <div class="text-input">
+        <label>第3列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="90">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="445">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="28">
+        </div>
+    </div>
+    <div class="text-input">
+        <label>第4列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="90">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="490">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="28">
+        </div>
+    </div>
+    <div class="text-input">
+        <label>第5列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="90">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="540">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="28">
+        </div>
+    </div>
+    <div class="text-input">
+        <label>第6列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="90">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="773">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="28">
+        </div>
+    </div>
+
+    <button id="previewFirst">預覽第一筆資料</button>
+    <button id="exportPDF">儲存PDF</button>
+    <button id="showInstructions">使用說明</button>
+    <button id="loadDemo">DEMO</button>
+</div>
+
+<div id="preview">
+    <div id="imagePreview"></div>
+    <canvas id="canvas" width="1240" height="1754"></canvas>
+</div>
+
+<!-- 說明視窗 -->
+<div id="instructionsModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>使用說明</h2>
+        <p>1. 獎狀範本上傳：請用A4空白獎狀掃描成圖檔(jpg, png)，做為設定定位使用。</p>
+        <p>2. 匯入得獎資料：獎狀內容資料匯入，做為套印獎狀使用。</p>
+        <p>3. 得獎資料，請用逗點間隔，存成UTF8格式，txt或csv皆可，格式範例如下：</p>
+        <pre>
+text1,text2,text3,text4,text5,text6
+舉辦項目：第一次段考,舉行年度：113學年度第1學期,參加學生：103班 王大同,評定成績：全班第1名,特頒此狀以茲鼓勵,中華民國  113  年  12 月 15   日
+舉辦項目：第二次段考,舉行年度：113學年度第2學期,參加學生：103班 李小明,評定成績：全班第2名,特頒此狀以茲鼓勵,中華民國  113  年  12 月 16   日
+        </pre>
+        <p>4. 在預覽區中，可以更改設定區的X座標、Y座標、字型大小，及時觀看調整實際列印時的正確性。</p>
+        <p>5. 預覽沒問題後，儲存PDF，會將套印結果轉為PDF儲存，在開啟PDF檔案列印獎狀即可。</p>
+        <p>6. 本網頁適用各種A4獎狀的套印，在不浪費紙張下完成準確的位置套印。</p>
+        <p>                             網頁設計: komingshyu</p>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.0/papaparse.min.js"></script>
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const dataInput = document.getElementById('dataInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imagePreview = document.getElementById('imagePreview');
+    const fontSelect = document.getElementById('fontSelect');
+
+    let img = new Image();
+    let data = [];
+
+    // 預設設定
+    const defaultSettings = [
+        {text: "舉辦項目：DEMO第一次段考", x: 90, y: 355, size: 28 },
+        {text: "舉行年度：113學年度第1學期", x: 90, y: 400, size: 28 },
+        {text: "參加學生：103班 王大同", x: 90, y: 445, size: 28 },
+        { text: "評定成績：全班第1名", x: 90, y: 490, size: 28 },
+        {text: "特頒此狀以茲鼓勵", x: 90, y: 540, size: 28 },
+        { text: "中華民國  113 年  12  月 15  日", x: 90, y: 773, size: 28 }
+    ];
+
+   window.onload = function() {
+
+    drawText_def();
+    }
+
+    function drawText_def() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+
+        const selectedFont = fontSelect.value;
+        document.querySelectorAll('.text-input').forEach((textInput, index) => {
+            const x = parseInt(textInput.querySelector('.xCoord').value) || 0;
+            const y = parseInt(textInput.querySelector('.yCoord').value) || 0;
+            const size = parseInt(textInput.querySelector('.fontSize').value) || 20;
+            const text = defaultSettings[index].text;
+
+            ctx.font = `${size * 1.949}px "${selectedFont}"`; // 將字型大小轉換為 150 DPI 的大小
+            ctx.fillStyle = 'black';
+            ctx.fillText(text, x * 1.949, y * 1.949); // 將座標轉換為 150 DPI 的座標
+        });
+
+    }
+
+    // 從 localStorage 讀取設定
+    let settings = JSON.parse(localStorage.getItem('150certificateSettings')) || defaultSettings;
+
+    // 初始化輸入框
+    document.querySelectorAll('.text-input').forEach((textInput, index) => {
+        textInput.querySelector('.xCoord').value = settings[index].x;
+        textInput.querySelector('.yCoord').value = settings[index].y;
+        textInput.querySelector('.fontSize').value = settings[index].size;
+    });
+
+    // 更新 localStorage
+    function updateLocalStorage() {
+        const updatedSettings = [];
+        document.querySelectorAll('.text-input').forEach(textInput => {
+            updatedSettings.push({
+                x: parseInt(textInput.querySelector('.xCoord').value),
+                y: parseInt(textInput.querySelector('.yCoord').value),
+                size: parseInt(textInput.querySelector('.fontSize').value)
+            });
+        });
+        localStorage.setItem('certificateSettings', JSON.stringify(updatedSettings));
+    }
+
+    // 當任何 XY 座標或字型大小輸入框的內容改變時，更新 localStorage 並重新繪製文字
+    document.querySelectorAll('.xCoord, .yCoord, .fontSize').forEach(input => {
+        input.addEventListener('input', function() {
+            updateLocalStorage();
+            drawText(data[0]); // 重新繪製第一筆資料
+        });
+    });
+
+    // 當字體選擇改變時，重新繪製文字
+    fontSelect.addEventListener('change', function() {
+        drawText(data[0]); // 重新繪製第一筆資料
+    });
+
+    function drawText(texts) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+
+        const selectedFont = fontSelect.value;
+        document.querySelectorAll('.text-input').forEach((textInput, index) => {
+            const x = parseInt(textInput.querySelector('.xCoord').value) || 0;
+            const y = parseInt(textInput.querySelector('.yCoord').value) || 0;
+            const size = parseInt(textInput.querySelector('.fontSize').value) || 20;
+            const text = texts[`text${index + 1}`];
+
+            ctx.font = `${size * 1.949}px "${selectedFont}"`; // 將字型大小轉換為 150 DPI 的大小
+            ctx.fillStyle = 'black';
+            ctx.fillText(text, x * 1.949, y * 1.949); // 將座標轉換為 150 DPI 的座標
+        });
+    }
+
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            img.onload = function() {
+                // 自動調整圖片大小
+                const aspectRatio = img.width / img.height;
+                const targetWidth = 1240; // 150 DPI 的 A4 寬度
+                const targetHeight = 1754; // 150 DPI 的 A4 高度
+                const canvasAspectRatio = targetWidth / targetHeight;
+
+                if (aspectRatio > canvasAspectRatio) {
+                    // 圖片較寬，依寬度調整
+                    img.width = targetWidth;
+                    img.height = targetWidth / aspectRatio;
+                } else {
+                    // 圖片較高，依高度調整
+                    img.height = targetHeight;
+                    img.width = targetHeight * aspectRatio;
+                }
+
+                imagePreview.style.backgroundImage = `url(${e.target.result})`;
+                imagePreview.style.backgroundSize = 'contain';
+                imagePreview.style.backgroundRepeat = 'no-repeat';
+                imagePreview.style.backgroundPosition = 'center';
+                //drawText(data[0]); // 重新繪製第一筆資料
+            }
+        }
+        reader.readAsDataURL(file);
+    });
+
+    dataInput.addEventListener('change', function() {
+        const file = this.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            Papa.parse(e.target.result, {
+                header: true,
+                complete: function(results) {
+                    data = results.data;
+                    drawText(data[0]); // 重新繪製第一筆資料
+                }
+            });
+        }
+        reader.readAsText(file);
+    });
+
+    document.getElementById('previewFirst').addEventListener('click', function() {
+        drawText(data[0]); // 預覽第一筆資料
+    });
+
+    document.getElementById('exportPDF').addEventListener('click', function() {
+        const { jsPDF } = window.jspdf; // 確保正確引用 jsPDF
+        const pdf = new jsPDF('p', 'mm', 'a4');
+
+        data.forEach((item, index) => {
+            drawText(item);
+            const imgData = canvas.toDataURL('image/png');
+            if (index === 0) {
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+            } else {
+                pdf.addPage();
+                pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+            }
+        });
+
+        pdf.save('批次獎狀.pdf'); // 儲存 PDF
+    });
+
+    // DEMO 按鈕功能
+    document.getElementById('loadDemo').addEventListener('click', function() {
+        // 載入獎狀範本 demoprize.jpg
+        const demoImage = new Image();
+        demoImage.src = 'demoprize.jpg';
+        demoImage.onload = function() {
+            const aspectRatio = demoImage.width / demoImage.height;
+            const targetWidth = 1240; // 150 DPI 的 A4 寬度
+            const targetHeight = 1754; // 150 DPI 的 A4 高度
+            const canvasAspectRatio = targetWidth / targetHeight;
+
+            if (aspectRatio > canvasAspectRatio) {
+                // 圖片較寬，依寬度調整
+                demoImage.width = targetWidth;
+                demoImage.height = targetWidth / aspectRatio;
+            } else {
+                // 圖片較高，依高度調整
+                demoImage.height = targetHeight;
+                demoImage.width = targetHeight * aspectRatio;
+            }
+
+            imagePreview.style.backgroundImage = `url(${demoImage.src})`;
+            imagePreview.style.backgroundSize = 'contain';
+            imagePreview.style.backgroundRepeat = 'no-repeat';
+            imagePreview.style.backgroundPosition = 'center';
+        }
+
+        // 載入得獎資料 demo得獎資料.txt
+        fetch('demo得獎資料.txt')
+            .then(response => response.text())
+            .then(text => {
+                Papa.parse(text, {
+                    header: true,
+                    complete: function(results) {
+                        data = results.data;
+                        drawText(data[0]); // 重新繪製第一筆資料
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading demo data:', error);
+            });
+    });
+
+    // 說明視窗功能
+    const modal = document.getElementById('instructionsModal');
+    const btn = document.getElementById('showInstructions');
+    const span = document.getElementsByClassName('close')[0];
+
+    btn.onclick = function() {
+        modal.style.display = 'block';
+    }
+
+    span.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>
