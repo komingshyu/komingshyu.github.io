@@ -165,6 +165,7 @@
     </div>
 
     <button id="exportPDF">開啟PDF列印</button>
+    <button id="loadDemo">DEMO</button>
 </div>
 
 <div id="preview">
@@ -302,6 +303,37 @@
         window.open(pdf.output('bloburl'), '_blank');
 
     });
+
+     // DEMO 按鈕功能
+    document.getElementById('loadDemo').addEventListener('click', function() {
+        // 載入獎狀範本 demoprize.jpg
+        const demoImage = new Image();
+        demoImage.src = 'demoprize.jpg';
+        demoImage.onload = function() {
+            const aspectRatio = demoImage.width / demoImage.height;
+            const targetWidth = 1240; // 150 DPI 的 A4 寬度
+            const targetHeight = 1754; // 150 DPI 的 A4 高度
+            const canvasAspectRatio = targetWidth / targetHeight;
+
+            if (aspectRatio > canvasAspectRatio) {
+                // 圖片較寬，依寬度調整
+                demoImage.width = targetWidth;
+                demoImage.height = targetWidth / aspectRatio;
+            } else {
+                // 圖片較高，依高度調整
+                demoImage.height = targetHeight;
+                demoImage.width = targetHeight * aspectRatio;
+            }
+
+            imagePreview.style.backgroundImage = `url(${demoImage.src})`;
+            imagePreview.style.backgroundSize = 'contain';
+            imagePreview.style.backgroundRepeat = 'no-repeat';
+            imagePreview.style.backgroundPosition = 'center';
+        }
+
+        
+    });
+
 </script>
 </body>
 </html>
