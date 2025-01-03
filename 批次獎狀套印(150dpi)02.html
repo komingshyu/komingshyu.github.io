@@ -195,7 +195,7 @@
     </div>
 
     <button id="previewFirst">預覽第一筆資料</button>
-    <button id="exportPDF">儲存PDF</button>
+    <button id="exportPDF">開啟PDF列印</button>
     <button id="showInstructions">使用說明</button>
     <button id="loadDemo">DEMO</button>
 </div>
@@ -387,8 +387,11 @@ text1,text2,text3,text4,text5,text6
                 pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
             }
         });
+        // 直接開啟 PDF
+        window.open(pdf.output('bloburl'), '_blank');
 
-        pdf.save('批次獎狀.pdf'); // 儲存 PDF
+
+        //pdf.save('批次獎狀.pdf'); // 儲存 PDF
     });
 
     // DEMO 按鈕功能

@@ -297,8 +297,10 @@
         const pdf = new jsPDF('p', 'mm', 'a4');
         const imgData = canvas.toDataURL('image/png');
         pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-        pdf.save('獎狀.pdf');
-        //pdf.output('dataurlnewwindow'); // 開啟 PDF 而不存檔
+        //pdf.save('獎狀.pdf');
+        // 直接開啟 PDF
+        window.open(pdf.output('bloburl'), '_blank');
+
     });
 </script>
 </body>
