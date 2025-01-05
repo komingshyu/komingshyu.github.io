@@ -458,29 +458,61 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-   // 載入 demo 資料
-    function loadDemoData() {
-        try {
-            // 使用 fetch 讀取 CSV 檔案內容
-            const teacherDataResponse = fetch('teachers.csv');
-            const classDataResponse = fetch('classes.csv');
-
-            if (!teacherDataResponse.ok || !classDataResponse.ok) {
-                throw new Error('Failed to fetch demo data');
-            }
-
-            const teacherDataCSV = teacherDataResponse.text();
-            const classDataCSV = classDataResponse.text();
-
-            // 載入教師資料
-            loadTeacherData(teacherDataCSV);
-
-            // 載入班級資料
-            loadClassData(classDataCSV);
-        } catch (error) {
-            console.error('Error loading demo data:', error);
-        }
+   document.getElementById('demoDataButton').addEventListener('click', function() {
+    if (confirm("這將會刪除原先已配課資料，以 demo 資料覆蓋練習使用，是否確認？")) {
+        // 執行載入 demo 資料的功能
+        loadDemoData();
     }
+});
+
+// 自動載入 demo 資料
+function loadDemoData() {
+    // 假設 demo 資料的 CSV 檔案名稱
+    const teacherFile = 'teachers.csv';
+    const classFile = 'classes.csv';
+
+    // 先清除現有資料
+    clearAssignments();
+
+    // 載入教師資料
+    fetch(teacherFile)
+        .then(response => response.text())
+        .then(data => {
+            const parsedTeachers = parseCSV(data);
+            teachers = parsedTeachers.map(row => ({
+                id: row[0],
+                name: row[1],
+                required_hours: parseInt(row[2]),
+                assigned_hours: parseInt(row[3]),
+                remaining_hours: parseInt(row[4]),
+                overtime_hours: 0
+            }));
+            saveDataToLocalStorage(); // 儲存教師資料到 localStorage
+            updateTeacherTable(); // 更新教師表格
+        })
+        .catch(error => console.error('Error loading teacher data:', error));
+
+    // 載入班級資料
+    fetch(classFile)
+        .then(response => response.text())
+        .then(data => {
+            const parsedClasses = parseCSV(data);
+            headers = parsedClasses[0]; // 假設第一行是表頭
+            const classData = parsedClasses.slice(1);
+            classes = classData.map(row => ({
+                mentor: row[1],  // 導師姓名
+                class_name: row[0],
+                subjects: headers.slice(2).map((subject, index) => ({
+                    name: subject,
+                    hours: parseInt(subject.match(/\d+/)[0]),
+                    teacher: row[index + 2]
+                }))
+            }));
+            saveDataToLocalStorage(); // 儲存班級資料到 localStorage
+            updateClassTable(); // 更新班級表格
+        })
+        .catch(error => console.error('Error loading class data:', error));
+}
 
 
 
@@ -837,7 +869,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('addSubjectConfirmButton').addEventListener('click', addSubject);
     document.getElementById('addClassButton').addEventListener('click', showAddClassModal);
     document.getElementById('addClassConfirmButton').addEventListener('click', addClass);
-    document.getElementById('demoDataButton').addEventListener('click', showDemoDataWarning);
+    
     
 
     // 設置按鈕顏色
