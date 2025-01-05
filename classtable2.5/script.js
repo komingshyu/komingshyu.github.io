@@ -459,18 +459,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
    // 載入 demo 資料
-    async function loadDemoData() {
+    function loadDemoData() {
         try {
             // 使用 fetch 讀取 CSV 檔案內容
-            const teacherDataResponse = await fetch('teachers.csv');
-            const classDataResponse = await fetch('classes.csv');
+            const teacherDataResponse = fetch('teachers.csv');
+            const classDataResponse = fetch('classes.csv');
 
             if (!teacherDataResponse.ok || !classDataResponse.ok) {
                 throw new Error('Failed to fetch demo data');
             }
 
-            const teacherDataCSV = await teacherDataResponse.text();
-            const classDataCSV = await classDataResponse.text();
+            const teacherDataCSV = teacherDataResponse.text();
+            const classDataCSV = classDataResponse.text();
 
             // 載入教師資料
             loadTeacherData(teacherDataCSV);
