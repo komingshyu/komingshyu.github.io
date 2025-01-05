@@ -468,7 +468,7 @@ function loadDemoData() {
     const classFile = 'classes.csv';
 
     // 先清除現有資料
-    clearAssignments();
+    //clearAssignments();
 
     // 載入教師資料
     fetch(teacherFile)
