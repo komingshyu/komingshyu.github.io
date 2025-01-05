@@ -462,8 +462,8 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadDemoData() {
         try {
             // 使用 fetch 讀取 CSV 檔案內容
-            const teacherDataResponse = await fetch('教師資料.csv');
-            const classDataResponse = await fetch('班級資料.csv');
+            const teacherDataResponse = await fetch('teachers.csv');
+            const classDataResponse = await fetch('classes.csv');
 
             if (!teacherDataResponse.ok || !classDataResponse.ok) {
                 throw new Error('Failed to fetch demo data');
