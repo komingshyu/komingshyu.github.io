@@ -457,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (confirm("這將會刪除原先已配課資料，以 demo 資料覆蓋練習使用，是否確認？")) {
         // 執行載入 demo 資料的功能
         loadDemoData();
-        updateClassTableHeader();
+        
     }
 });
 
@@ -495,6 +495,11 @@ function loadDemoData() {
             const parsedClasses = parseCSV(data);
             headers = parsedClasses[0]; // 假設第一行是表頭
             const classData = parsedClasses.slice(1);
+ 
+                // 動態生成表格標題行
+                const classTableHeader = document.getElementById('classTableHeader');
+                classTableHeader.innerHTML = headers.map(header => `<th>${header}</th>`).join('');
+            
             classes = classData.map(row => ({
                 mentor: row[1],  // 導師姓名
                 class_name: row[0],
