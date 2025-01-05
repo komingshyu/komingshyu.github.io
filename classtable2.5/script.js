@@ -451,17 +451,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    // 顯示 demo 資料測試警告
-    function showDemoDataWarning() {
-        if (confirm("確定要使用 demo 資料嗎？這將會刪除原先已配課資料，並以 demo 資料覆蓋練習使用。")) {
-            loadDemoData();
-        }
-    }
+   
 
    document.getElementById('demoDataButton').addEventListener('click', function() {
     if (confirm("這將會刪除原先已配課資料，以 demo 資料覆蓋練習使用，是否確認？")) {
         // 執行載入 demo 資料的功能
         loadDemoData();
+        updateClassTableHeader();
     }
 });
 
@@ -510,6 +506,7 @@ function loadDemoData() {
             }));
             saveDataToLocalStorage(); // 儲存班級資料到 localStorage
             updateClassTable(); // 更新班級表格
+            updateClassTableHeader();
         })
         .catch(error => console.error('Error loading class data:', error));
 }
