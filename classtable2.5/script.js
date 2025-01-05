@@ -458,12 +458,16 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 載入 demo 資料
+   // 載入 demo 資料
     async function loadDemoData() {
         try {
             // 使用 fetch 讀取 CSV 檔案內容
             const teacherDataResponse = await fetch('教師資料.csv');
             const classDataResponse = await fetch('班級資料.csv');
+
+            if (!teacherDataResponse.ok || !classDataResponse.ok) {
+                throw new Error('Failed to fetch demo data');
+            }
 
             const teacherDataCSV = await teacherDataResponse.text();
             const classDataCSV = await classDataResponse.text();
