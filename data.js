@@ -1,5 +1,6 @@
 const linksData = [
-     { name: "國中教師配課網頁版V2.6", description: "比2.5版增加了清除所有資料功能，將會資料清除危險的按鈕用紅色，其他為綠色，並且修正新增科目的一些BUG，讓功能更完整", link: "classtable2.6/index.html" },
+     { name: "陽明註冊組專用大頭照自動裁切網頁版", description: "只提供給陽明國中註冊組所用的大頭照照片冊格式，自動裁切大頭照並依班級座號存檔，", link: "photocut.html" },
+    { name: "國中教師配課網頁版V2.6", description: "比2.5版增加了清除所有資料功能，將會資料清除危險的按鈕用紅色，其他為綠色，並且修正新增科目的一些BUG，讓功能更完整", link: "classtable2.6/index.html" },
 
     { name: "國中教師配課網頁版V2.5", description: "利用網頁的拖曳功能來進行教師配課作業，配課資料都存在本地端電腦，比2.4版增加了demo測試及班級的增刪", link: "classtable2.5/index.html" },
      { name: "國中教師配課網頁版V2.4", description: "利用網頁的拖曳功能來進行教師配課作業，配課資料都存在本地端電腦，可以備份已完成部分到其他電腦匯入使用", link: "classtable/index.html" },
