@@ -875,6 +875,8 @@ function loadDemoData() {
             headers = [];
             updateTeacherTable();
             updateClassTable();
+            updateClassTableHeader();
+
         }
     }
  
@@ -899,5 +901,9 @@ function loadDemoData() {
 
     // 設置按鈕顏色
     document.getElementById('clearButton').style.backgroundColor = 'lightcoral';
-    document.getElementById('importButton').style.backgroundColor = 'lightcoral';
+    document.getElementById('importButton').style.backgroundColor = 'lightcoral';  
+    document.getElementById('clearAllDataButton').style.backgroundColor = 'lightcoral';
+    document.getElementById('demoDataButton').style.backgroundColor = 'lightcoral';
+    document.getElementById('loadTeacherButton').style.backgroundColor = 'lightcoral';
+    document.getElementById('loadClassButton').style.backgroundColor = 'lightcoral';
 });
