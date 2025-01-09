@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中課程教師配課系統</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        國中課程教師配課系統V2.6
+        <div class="backup-import">            
+           <input type="file" id="backupFile" accept=".json" class="file-input">
+            <button id="importButton">匯入備份</button>
+            <button id="clearButton">清除配課資料</button>
+            <button id="backupButton">備份資料</button>
+            <button id="exportExcelButton">匯出EXCEL檔</button>
+            <button id="importInstructionsButton" >各項功能使用說明</button>
+            <button id="demoDataButton">demo資料測試</button>
+            <button id="clearAllDataButton">清除所有資料</button>
+        </div>
+    </div>
+
+    <div id="addSubjectModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>輸入要新增的科目</h2>
+        科目：<input type="text" id="newSubjectName" placeholder="科目名稱"><p>
+        節數：<input type="number" id="newSubjectHours" placeholder="節數">
+        <p>
+       <button id="addSubjectConfirmButton">確認新增</button>
+      <!--
+        <button onclick="addSubject()">確認新增</button>
+    -->
+    </div>
+   </div>
+
+  <div id="deleteSubjectModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>確認刪除科目</h2>
+        <p>您確定要刪除科目 <span id="deleteSubjectName"></span> 嗎？</p>
+        <button onclick="deleteSubject()">確認刪除</button>
+        <button onclick="closeDeleteSubjectModal()">取消</button>
+    </div>
+ </div>    
+
+    <div class="content">
+        <div class="left-frame frame">
+          
+            教師資料<input type="file" id="teacherFile" accept=".csv" class="file-input">
+           <div>
+            <button id="loadTeacherButton">載入教師資料</button>
+            <button id="addTeacherButton">新增教師</button>
+          </div>
+           
+            <table id="teacherTable">
+                <thead>
+                    <tr>
+                        <th>教師編號</th>
+                        <th>教師姓名</th>
+                        <th>應受節數</th>
+                        <th>已配節數</th>
+                        <th>剩餘節數</th>
+                        <th>超鐘點節數</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <div class="right-frame frame">
+           <div>
+            班級資料<input type="file" id="classFile" accept=".csv" class="file-input">
+            <button id="loadClassButton">載入班級資料</button>
+             <hr>
+           </div>
+           <div>
+             <button id="exportButton">配課表轉出</button>
+             <button id="addClassButton">新增班級</button>          
+            <button id="addSubjectButton">新增科目</button>
+            
+           </div>
+            <table id="classTable">
+                <thead>
+                    <tr id="classTableHeader"></tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    <div id="teacherDetailsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>教師詳細資料</h2>
+        <div id="teacherDetailsContent"></div>
+    </div>
+</div>
+
+</div>
+
+   <div id="addTeacherModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>新增教師</h2>
+        <input type="text" id="newTeacherId" placeholder="教師編號">
+        <input type="text" id="newTeacherName" placeholder="教師姓名">
+        <input type="number" id="newTeacherRequiredHours" placeholder="應受節數">
+        <input type="number" id="newTeacherAssignedHours" placeholder="已配節數">
+        <input type="number" id="newTeacherRemainingHours" placeholder="剩餘節數">
+        <button id="addTeacherConfirmButton">確認新增</button>
+    </div>
+  </div>
+
+   <div id="deleteTeacherModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>確認刪除教師</h2>
+        <p>您確定要刪除教師編號為 <span id="deleteTeacherId"></span> 的教師嗎？</p>
+        <button onclick="deleteTeacher()">確認刪除</button>
+        <button onclick="closeDeleteTeacherModal()">取消</button>
+    </div>
+  </div>
+
+   <div id="addClassModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>輸入要新增的班級</h2>
+            班級：<input type="text" id="newClassName" placeholder="班級名稱"><p>
+            導師：<input type="text" id="newMentorName" placeholder="導師姓名">
+            <p>
+            <button id="addClassConfirmButton">確認新增</button>
+        </div>
+    </div>
+
+   <div id="deleteClassModal" class="modal">
+       <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <h2>確認刪除班級</h2>
+            <p>您確定要刪除班級 <span id="deleteClassName"></span> 嗎？</p>
+            <button onclick="deleteClass()">確認刪除</button>
+            <button onclick="closeDeleteClassModal()">取消</button>
+          
+       </div>
+   </div>
+
+    <div id="instructionsModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>各項功能說明</h2>
+        <p>1. [載入教師資料]的範例說明：會取代原先教師資料，使用請特別注意!</p>
+        <p>教師資料的 CSV 格式應為：教師編號, 教師姓名, 應受節數, 已配節數, 剩餘節數。<br>
+        例如：</p>
+        <pre>
+        502,王小明, 12, 0, 12
+        602,陳小華, 18, 0, 12</pre>
+        <p>2. [載入班級資料]的範例說明：會取代原先班級資料，使用請特別注意!</p>
+        <p>班級資料的 CSV 格式應為：導師, 班級, 科目1, 科目2, ...。<br>
+        例如：</p>
+        <pre>
+        導師,班級,國文5, 數學4, 英文2
+        王大同,101,,,
+        李曉華,112,,, </pre>
+        <p>3. [備份資料]說明：會將配課表及教師節數下載為 backup.json</p>
+        <p>4. [匯入備份]說明：選擇已備份資料上傳覆蓋目前資料，使用請特別注意!</p>
+        <p>5. [清除配課資料]：只會將以配課的資料清除，教師節數回歸原始設定，使用請特別注意!</p>
+        <p>6. <font color=red>新增雙擊左邊教師姓名後出現教師詳細配課情形</font></p>
+        <p>7. [demo測試資料]：將原先資料清除匯入DEMO資料提供練習</p>
+        <p>8. [清除所有資料]：會將所有的全部資料刪除(包含教師及班級資料)，使用請特別注意!</p>
+        <p>9. [新增教師]、[新增班級]、[新增科目]：提供遺漏資料的新增功能</p>
+        <p>10.不用的教師、班級、科目有提供刪除功能，只要該教師、班級或科目全部未配課程，會出現[刪除]按鈕，便可刪除</p>
+        <p>  網頁設計: komingshyu  2025.01.09</p>
+    </div>
+</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
