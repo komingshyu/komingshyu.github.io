@@ -1,0 +1,612 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f0f0f0;
+}
+
+.header {
+    background-color: #4a4a4a;
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    font-size: 24px;
+    position: relative;
+}
+
+.backup-import {
+    display: flex;
+    justify-content: center;
+    margin-top: 10px;
+}
+
+.backup-import button, .backup-import input[type="file"] {
+    margin: 0 10px;
+}
+
+.content {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.frame {
+    padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    background-color: white;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 10px;
+    border-radius: 5px;
+}
+
+.left-frame {
+    width: 30%;
+}
+
+.right-frame {
+    width: 70%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+th {
+    background-color: #f2f2f2;
+}
+
+input[type="number"], input[type="text"] {
+    width: 60px;
+    border: 1px solid #ddd;
+    padding: 5px;
+}
+
+.teacher-name {
+    cursor: move;
+}
+
+.delete-btn {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 2px 5px;
+    cursor: pointer;
+    margin-left: 2px;
+    font-size: 0.8em;
+    border-radius: 3px;
+}
+
+.file-input {
+    margin-bottom: 10px;
+}
+
+button {
+    margin-bottom: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+button:hover {
+    background-color: #45a0f0;
+}
+
+/* 讓左邊教師資料表格標題行在滾動時保持在視口頂部 */
+#teacherTable th {
+    position: sticky;
+    top: 0;
+    background-color: #f2f2f2;
+    z-index: 1;
+}
+
+/* 讓右邊班級資料表格標題行在滾動時保持在視口頂部 */
+#classTableHeader th {
+    position: sticky;
+    top: 0;
+    background-color: #f2f2f2;
+    z-index: 1;
+}
+
+
+/* 教師詳細資料模態視窗樣式 */
+#teacherDetailsModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#teacherDetailsModal .modal-content {
+    background-color: #e0f7fa; /* 淡藍色背景 */
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd; /* 藍色框 */
+    width: 40%;
+    border-radius: 10px;
+    position: relative; /* 確保關閉圖示能夠正常顯示 */
+}
+
+#teacherDetailsModal .close-btn {
+    color: #aaa;
+    position: absolute; /* 確保關閉圖示能夠正常顯示 */
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#teacherDetailsModal .close-btn:hover,
+#teacherDetailsModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+
+/* 新增教師模態視窗樣式 */
+#addTeacherModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#addTeacherModal .modal-content {
+    background-color: #e0f7fa; /* 淡藍色背景 */
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd; /* 藍色框 */
+    width: 50%;
+    border-radius: 10px;
+    position: relative; /* 確保關閉圖示能夠正常顯示 */
+}
+
+#addTeacherModal .close-btn {
+    color: #aaa;
+    position: absolute; /* 確保關閉圖示能夠正常顯示 */
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#addTeacherModal .close-btn:hover,
+#addTeacherModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#addTeacherModal input {
+    width: 96%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#addTeacherModal button {
+    width: 96%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addTeacherModal button:hover {
+    background-color: #45a049;
+}
+
+/* 刪除教師模態視窗樣式 */
+#deleteTeacherModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#deleteTeacherModal .modal-content {
+    background-color: #e0f7fa; /* 淡藍色背景 */
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd; /* 藍色框 */
+    width: 40%;
+    border-radius: 10px;
+    position: relative; /* 確保關閉圖示能夠正常顯示 */
+}
+
+#deleteTeacherModal .close-btn {
+    color: #aaa;
+    position: absolute; /* 確保關閉圖示能夠正常顯示 */
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#deleteTeacherModal .close-btn:hover,
+#deleteTeacherModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#deleteTeacherModal button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#deleteTeacherModal button:hover {
+    background-color: #45a049;
+}
+
+
+/* 新增科目模態視窗樣式 */
+#addSubjectModal {
+    display: none;
+    position: fixed;
+    z-index: 2;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#addSubjectModal .modal-content {
+    background-color: #e0f7fa; /* 淡藍色背景 */
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd; /* 藍色框 */
+    width: 40%;
+    border-radius: 10px;
+    position: relative; /* 確保關閉圖示能夠正常顯示 */
+}
+
+#addSubjectModal .close-btn {
+    color: #aaa;
+    position: absolute; /* 確保關閉圖示能夠正常顯示 */
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#addSubjectModal .close-btn:hover,
+#addSubjectModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#addSubjectModal button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addSubjectModal button:hover {
+    background-color: #45a049;
+}
+
+/* 刪除科目模態視窗樣式 */
+#deleteSubjectModal {
+    display: none;
+    position: fixed;
+    z-index: 2;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#deleteSubjectModal .modal-content {
+    background-color: #e0f7fa; /* 淡藍色背景 */
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd; /* 藍色框 */
+    width: 40%;
+    border-radius: 10px;
+    position: relative; /* 確保關閉圖示能夠正常顯示 */
+}
+
+#deleteSubjectModal .close-btn {
+    color: #aaa;
+    position: absolute; /* 確保關閉圖示能夠正常顯示 */
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#deleteSubjectModal .close-btn:hover,
+#deleteSubjectModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#deleteSubjectModal button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#deleteSubjectModal button:hover {
+    background-color: #45a049;
+}
+
+
+/* 新增班級模態視窗樣式 */
+
+#addClassModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#addClassModal .modal-content {
+    background-color: #e0f7fa;
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd;
+    width: 40%;
+    border-radius: 10px;
+    position: relative;
+}
+
+#addClassModal .close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#addClassModal .close-btn:hover,
+#addClassModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#addClassModal button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#addClassModal button:hover {
+    background-color: #45a049;
+}
+
+
+/* 刪除班級模態視窗樣式 */
+
+#deleteClassModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#deleteClassModal .modal-content {
+    background-color: #e0f7fa;
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd;
+    width: 40%;
+    border-radius: 10px;
+    position: relative;
+}
+
+#deleteClassModal .close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#deleteClassModal .close-btn:hover,
+#deleteClassModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#deleteClassModal button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#deleteClassModal button:hover {
+    background-color: #45a049;
+}
+
+
+
+
+
+
+/* 說明模態視窗樣式 */
+
+#instructionsModal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+#instructionsModal .modal-content {
+    background-color: #ffffff;
+    margin: 5% auto;
+    padding: 20px;
+    border: 2px solid #0277bd;
+    width: 60%;
+    border-radius: 10px;
+    position: relative;
+}
+
+#instructionsModal .close-btn {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#instructionsModal .close-btn:hover,
+#instructionsModal .close-btn:focus {
+    color: black;
+    text-decoration: none;
+}
+
+#instructionsModal button {
+    width: 100%;
+    padding: 10px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+#instructionsModal button:hover {
+    background-color: #45a049;
+}
+
+/* 模態視窗樣式 */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgb(0,0,0);
+    background-color: rgba(0,0,0,0.4);
+    padding-top: 60px;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 60%;
+    border-radius: 10px;
+}
+
+.close-btn {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close-btn:hover,
+.close-btn:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
