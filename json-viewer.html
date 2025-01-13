@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON格式解析網頁</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            height: calc(100vh - 150px);
+        }
+
+        .panel {
+            flex: 1;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+
+        .input-controls {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #jsonInput {
+            width: 100%;
+            height: calc(100% - 50px);
+            resize: none;
+            padding: 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            background-color: #fafafa;
+        }
+
+        .json-display {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            overflow-y: auto;
+            height: 100%;
+            font-size: 14px;
+            line-height: 1.5;
+            padding-left: 5px;
+        }
+
+        .collapsible {
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+            padding-left: 15px;
+        }
+
+        .collapsible::before {
+            content: '▼';
+            position: absolute;
+            left: 0;
+            display: inline-block;
+            font-size: 10px;
+            transition: transform 0.2s ease;
+            color: #666;
+        }
+
+        .collapsed::before {
+            transform: rotate(-90deg);
+        }
+
+        .content {
+            position: relative;
+        }
+
+        .content::before {
+            content: '';
+            position: absolute;
+            left: 5px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: #e0e0e0;
+        }
+
+        .json-key {
+            color: #881391;
+            font-weight: 500;
+        }
+
+        .json-string {
+            color: #c41a16;
+        }
+
+        .json-number {
+            color: #1c00cf;
+        }
+
+        .json-boolean {
+            color: #0000ff;
+            font-weight: 500;
+        }
+
+        .json-null {
+            color: #808080;
+            font-style: italic;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .title {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .error {
+            color: #d32f2f;
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #fde8e8;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .indent {
+            margin-left: 24px;
+            position: relative;
+        }
+
+        .bracket {
+            color: #666;
+            font-weight: normal;
+        }
+
+        .comma {
+            color: #666;
+            margin-left: 2px;
+        }
+
+        .colon {
+            color: #666;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1 class="title">JSON格式解析網頁</h1>
+    <div class="container">
+        <div class="panel">
+            <div class="input-controls">
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
+                <button class="btn" onclick="document.getElementById('fileInput').click()">載入JSON檔案</button>
+                <button class="btn" onclick="clearInput()">清除</button>
+            </div>
+            <textarea id="jsonInput" placeholder="在此貼上JSON文字..."></textarea>
+            <div id="inputError" class="error"></div>
+        </div>
+        <div class="panel">
+            <div class="json-display" id="jsonDisplay"></div>
+        </div>
+    </div>
+
+    <script>
+        let jsonInput = document.getElementById('jsonInput');
+        let jsonDisplay = document.getElementById('jsonDisplay');
+        let fileInput = document.getElementById('fileInput');
+        let inputError = document.getElementById('inputError');
+
+        fileInput.addEventListener('change', function(e) {
+            let file = e.target.files[0];
+            if (file) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    jsonInput.value = e.target.result;
+                    formatJSON();
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        jsonInput.addEventListener('input', formatJSON);
+
+        function clearInput() {
+            jsonInput.value = '';
+            jsonDisplay.innerHTML = '';
+            inputError.textContent = '';
+        }
+
+        function formatJSON() {
+            let input = jsonInput.value.trim();
+            if (!input) {
+                jsonDisplay.innerHTML = '';
+                inputError.textContent = '';
+                return;
+            }
+
+            try {
+                let parsed = JSON.parse(input);
+                inputError.textContent = '';
+                jsonDisplay.innerHTML = createJSONView(parsed, 0);
+                addCollapsibleListeners();
+            } catch (e) {
+                inputError.textContent = '無效的JSON格式: ' + e.message;
+                jsonDisplay.innerHTML = '';
+            }
+        }
+
+        function createJSONView(obj, level) {
+            let html = '';
+
+            if (Array.isArray(obj)) {
+                if (obj.length === 0) return '<span class="bracket">[]</span>';
+                
+                html += '<span class="collapsible"><span class="bracket">[</span></span>';
+                html += '<div class="content indent">';
+                obj.forEach((item, index) => {
+                    html += '<div>';
+                    html += createJSONView(item, level + 1);
+                    if (index < obj.length - 1) html += '<span class="comma">,</span>';
+                    html += '</div>';
+                });
+                html += '</div><span class="bracket">]</span>';
+            } else if (obj === null) {
+                html += '<span class="json-null">null</span>';
+            } else if (typeof obj === 'object') {
+                let keys = Object.keys(obj);
+                if (keys.length === 0) return '<span class="bracket">{}</span>';
+
+                html += '<span class="collapsible"><span class="bracket">{</span></span>';
+                html += '<div class="content indent">';
+                keys.forEach((key, index) => {
+                    html += '<div>';
+                    html += '<span class="json-key">"' + escapeHTML(key) + '"</span>';
+                    html += '<span class="colon">:</span>';
+                    html += createJSONView(obj[key], level + 1);
+                    if (index < keys.length - 1) html += '<span class="comma">,</span>';
+                    html += '</div>';
+                });
+                html += '</div><span class="bracket">}</span>';
+            } else if (typeof obj === 'string') {
+                html += '<span class="json-string">"' + escapeHTML(obj) + '"</span>';
+            } else if (typeof obj === 'number') {
+                html += '<span class="json-number">' + obj + '</span>';
+            } else if (typeof obj === 'boolean') {
+                html += '<span class="json-boolean">' + obj + '</span>';
+            }
+
+            return html;
+        }
+
+        function addCollapsibleListeners() {
+            document.querySelectorAll('.collapsible').forEach(element => {
+                if (!element.hasListener) {
+                    element.hasListener = true;
+                    element.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        this.classList.toggle('collapsed');
+                        let content = this.nextElementSibling;
+                        content.classList.toggle('hidden');
+                    });
+                }
+            });
+        }
+
+        function escapeHTML(str) {
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
