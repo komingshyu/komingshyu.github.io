@@ -1,4 +1,7 @@
 const linksData = [
+  { name: "國中教師配課網頁版V3.0", description: "比2.7版轉出的EXCEL檔更容易將教師配課匯入欣河排課系統中，修正[匯入備份]沒有更新科目標題的問題", link: "classtable3.0/index.html" },
+    
+
   { name: "國中教師配課網頁版V2.7", description: "比2.6版增加[匯出EXCEL檔] 新增開課及教師配課 工作表，可再簡單修改後，匯入欣河排課系統中", link: "classtable2.7/index.html" },
     
  { name: "陽明註冊組專用大頭照自動裁切網頁版", description: "只提供給陽明國中註冊組所用的大頭照照片冊格式，自動裁切大頭照並依班級座號存檔，", link: "photocut.html" },
