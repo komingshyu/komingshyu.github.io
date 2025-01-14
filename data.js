@@ -1,5 +1,7 @@
 const linksData = [
-  { name: "國中教師配課網頁版V3.1", description: "比3.1版增加了[班級排序]及[教師排序]，依照代號由小至大排序，並修正有些跳出視窗無法關閉的問題，程式更加完整了", link: "classtable3.1/index.html" },
+  { name: "國中教師配課網頁版V3.2", description: "比3.1版增加了[新增教師]及[新增班級]、[新增科目]，對輸入資料重複的判斷，避免出錯", link: "classtable3.2/index.html" },
+  { name: "國中教師配課網頁版V3.1", description: "比3.0版增加了[班級排序]及[教師排序]，依照代號由小至大排序，並修正有些跳出視窗無法關閉的問題，程式更加完整了", link: "classtable3.1/index.html" },
+ 
   { name: "國中教師配課網頁版V3.0", description: "比2.7版轉出的EXCEL檔更容易將教師配課匯入欣河排課系統中，修正[匯入備份]沒有更新科目標題的問題", link: "classtable3.0/index.html" },
   
 
