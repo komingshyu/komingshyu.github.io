@@ -1,6 +1,6 @@
 const linksData = [
   { name: "國中教師配課網頁版V3.2", description: "比3.1版增加了[新增教師]及[新增班級]、[新增科目]，對輸入資料重複的判斷，避免出錯", link: "classtable3.2/index.html" },
-  { name: "另一款國中教師配課網頁版V1.0", description: "使用下拉式選單來進行配課第1版", link: "配課表v1/index.html" },
+  { name: "另一款國中教師配課網頁版V1.0", description: "使用下拉式選單來進行配課第1版 測試用用戶名 admin，密碼 1234", link: "配課表v1/index.html" },
     
  { name: "陽明註冊組專用大頭照自動裁切網頁版", description: "只提供給陽明國中註冊組所用的大頭照照片冊格式，自動裁切大頭照並依班級座號存檔，", link: "photocut.html" },
    
