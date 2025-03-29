@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中教師配課網頁系統</title>
+    
+    <link rel="stylesheet" href="styles.css">
+    <!-- SheetJS CDN -->
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> -->
+    <script src="xlsx.full.min.js"></script>
+
+</head>
+<body>
+    <header>
+        <h1 id="appTitle"></h1>
+        <nav class="navbar">
+            <a href="#" data-section="subject" class="active">1)科目管理</a>&nbsp;&nbsp;&nbsp;
+            <a href="#" data-section="teacher">2)教師管理</a>&nbsp;&nbsp;&nbsp;
+            <a href="#" data-section="class">3)班級課程</a>&nbsp;&nbsp;&nbsp;
+            <a href="#" data-section="schedule">4)配課作業</a>&nbsp;&nbsp;&nbsp;
+            <a href="#" data-section="report">5)報表生成</a>
+        </nav>
+        <div class="data-controls">
+            <button id="resetData">資料清除重置</button>
+            <button id="backupData">備份資料</button>
+            <button id="restoreData">還原資料</button>
+        </div>
+    </header>
+    
+
+    <main>
+        <section id="subject" class="section hidden">
+            <h2>科目管理</h2>
+            <form id="subjectForm" class="form-container">
+                <input type="text" id="subjectCode" placeholder="科目代號" required>
+                <input type="text" id="subjectName" placeholder="科目名稱" required>
+                <button type="submit">新增科目</button>
+            </form>
+            <div class="form-container">
+                <input type="file" id="subjectUpload" accept=".csv">
+                <button id="uploadSubjectBtn">科目上傳</button>
+                <button id="subjectUploadInfoBtn" class="secondary-btn">上傳說明</button>
+            </div>
+            <div id="subjectList"></div>
+        </section>
+        <section id="teacher" class="section hidden">
+    <h2>教師管理</h2>
+    <form id="teacherForm" class="form-container">
+        <input type="text" id="teacherCode" placeholder="教師代號" required>
+        <input type="text" id="teacherName" placeholder="教師姓名" required>
+        <select id="teacherSubject" required></select>
+        <input type="text" id="teacherOfficeLocation" placeholder="辦公室位置">  <!-- 修改為 officeLocation -->
+        <input type="number" id="teacherMaxLessons" placeholder="應授課節數" required>
+        <button type="submit">新增教師</button>
+    </form>
+    <div class="form-container">
+        <input type="file" id="teacherUpload" accept=".csv">
+        <button id="uploadTeacherBtn">教師上傳</button>
+        <button id="teacherUploadInfoBtn" class="secondary-btn">上傳說明</button>
+    </div>
+    <div id="teacherList"></div>
+</section>
+        <section id="class" class="section hidden">
+            <h2>班級課程管理</h2>
+            <form id="classForm" class="form-container">
+                <input type="text" id="className" placeholder="班級名稱" required>
+                <select id="classSubject" required></select>
+                <input type="number" id="classLessons" placeholder="節數" required>
+                <button type="submit">新增課程</button>
+            </form>
+            <form id="batchClassForm" class="form-container">
+                <input type="number" id="batchStart" placeholder="起始班級" required>
+                <input type="number" id="batchEnd" placeholder="結束班級" required>
+                <select id="batchSubject" required></select>
+                <input type="number" id="batchLessons" placeholder="節數" required>
+                <button type="submit">批量開課</button>
+            </form>
+            <select id="classFilter">
+                <option value="all">全部</option>
+                <option value="assigned">已分配</option>
+                <option value="unassigned">未分配</option>
+            </select>
+            <div id="classList"></div>
+        </section>
+        <section id="schedule" class="section hidden">
+            <h2>配課管理</h2>
+            <form id="scheduleForm" class="form-container">
+                <select id="scheduleTeacher" required></select>
+                <select id="scheduleClass" required></select>
+                <button type="submit">分配課程</button>
+            </form>
+            <div id="scheduleList"></div>
+            <h3>教師班級表</h3>
+            <select id="timetableTeacher"></select>
+            <div id="timetableGrid"></div>
+            <h3>班級配課表</h3>
+            <select id="classScheduleSelect"></select>
+            <div id="classScheduleGrid"></div>
+        </section>
+        <section id="report" class="section hidden">
+        <h2>報表生成</h2>
+        <div class="report-buttons">
+            <button id="generateReportCSV">生成並下載 CSV 報表</button>
+            <button id="generateReportXLSX">生成並下載 XLSX 報表</button>
+        </div>
+        <div id="reportOutput"></div>
+    </section>
+    </main>
+
+    <div id="modal" class="modal hidden">
+        <div class="modal-content">
+            <span id="modalClose" class="modal-close">×</span>
+            <h3 id="modalTitle"></h3>
+            <div id="modalBody"></div>
+            <div id="modalFooter" class="modal-footer"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <div class="makename" align=right><i>程式設計:KomingShyu 2025</i></div>
+</body>
+</html>
