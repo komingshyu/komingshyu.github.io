@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python 教學編輯器</title>
+    <style>
+        :root {
+            --primary: #3498db;
+            --secondary: #2c3e50;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: var(--dark);
+        }
+
+        .header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-container, .preview-container {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            padding: 1rem;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem;
+            background-color: var(--light);
+            border-radius: 5px 5px 0 0;
+            border: 1px solid #ddd;
+            border-bottom: none;
+        }
+
+        .panel-title {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center; /* 確保按鈕垂直居中對齊 */
+        }
+
+        button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        .btn-run {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .btn-clear {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        /* --- 新增下載按鈕樣式 --- */
+        .btn-download {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-download:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+         /* --- 新增下載按鈕樣式結束 --- */
+
+        button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .editor {
+            flex: 1;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #code-editor {
+            width: 100%;
+            height: 100%;
+            font-family: monospace;
+            font-size: 16px;
+            padding: 1rem;
+            border: none;
+            resize: none;
+            line-height: 1.5;
+            tab-size: 4;
+            /* 確保在有行號時內容正確對齊 */
+            padding-left: 3.5rem; /* 調整以匹配行號寬度 */
+            overflow-y: scroll; /* Allow textarea scrolling */
+        }
+
+        .preview {
+            flex: 1;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 0 0 5px 5px;
+            overflow: auto;
+        }
+
+        #output {
+            padding: 1rem;
+            white-space: pre-wrap;
+            font-family: monospace;
+            min-height: 100%;
+            font-size: 16px; /* Match editor */
+            line-height: 1.5; /* Match editor */
+        }
+
+        .dark-theme {
+            background-color: #1e1e1e;
+            color: #f8f8f2;
+        }
+
+         .dark-theme .preview {
+             background-color: #252526;
+             border-color: #333;
+             color: #ccc; /* Ensure output text is light in dark mode */
+        }
+
+         .dark-theme #code-editor {
+             background-color: #1e1e1e;
+             color: #d4d4d4;
+        }
+
+         .dark-theme .panel-header {
+             background-color: #333;
+             border-color: #555;
+        }
+         .dark-theme .panel-title {
+             color: #ccc;
+        }
+        .dark-theme .editor,
+        .dark-theme .preview { /* Apply border color to preview as well */
+             border-color: #333;
+        }
+        .dark-theme .line-numbers {
+             background-color: #252526; /* Match preview background */
+             color: #858585;
+             border-color: #333;
+        }
+         .dark-theme .status-bar {
+             background-color: #333;
+             color: #ccc;
+             border-top-color: #555;
+        }
+         .dark-theme .dropdown-content {
+             background-color: #252526;
+             box-shadow: 0 8px 16px rgba(0,0,0,0.5);
+        }
+         .dark-theme .dropdown-content a {
+             color: #ccc;
+        }
+         .dark-theme .dropdown-content a:hover {
+             background-color: #333;
+        }
+
+
+        .line-numbers {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 3rem; /* 給定固定寬度 */
+            padding: 1rem 0.5rem 1rem 0; /* 調整 padding */
+            background-color: #f5f5f5;
+            border-right: 1px solid #ddd;
+            text-align: right;
+            user-select: none;
+            color: #888;
+            font-family: monospace;
+            font-size: 16px;
+            line-height: 1.5;
+            overflow: hidden;
+            z-index: 1; /* 確保在 textarea 上方 */
+        }
+
+        .footer {
+            background-color: var(--secondary);
+            color: white;
+            text-align: center;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .editor-container, .preview-container {
+                width: 100%;
+                height: 50%;
+            }
+             #code-editor {
+                 padding-left: 3.5rem; /* 在小螢幕也確保 padding */
+            }
+        }
+
+        /* 語法高亮 簡單版 (樣式定義，實際高亮需 JS 實現) */
+        .python-keyword { color: #569cd6; }
+        .python-string { color: #ce9178; }
+        .python-comment { color: #6a9955; font-style: italic; }
+        .python-number { color: #b5cea8; }
+        .python-function { color: #dcdcaa; }
+
+        /* 範例選單 */
+        .examples-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-btn {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: white;
+            min-width: 160px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 2; /* 高於行號 */
+            border-radius: 4px;
+            overflow: auto; /* Allow dropdown scroll if too many items */
+            max-height: 300px; /* Limit dropdown height */
+            right: 0; /* 讓選單向左展開 */
+            font-size: 0.9rem;
+        }
+
+        .dropdown-content a {
+            color: var(--dark);
+            padding: 10px 14px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.2s;
+        }
+
+        .dark-theme .dropdown-content a {
+             color: #ccc;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--light);
+        }
+
+        .dark-theme .dropdown-content a:hover {
+             background-color: #333;
+        }
+
+        .examples-dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* 暗黑模式開關 */
+        .theme-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px; /* 稍微縮小 */
+            height: 26px; /* 稍微縮小 */
+        }
+
+        .theme-switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 26px; /* 匹配高度 */
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; /* 稍微縮小 */
+            width: 18px; /* 稍微縮小 */
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--primary); }
+        input:focus + .slider { box-shadow: 0 0 1px var(--primary); }
+        input:checked + .slider:before { transform: translateX(24px); } /* 調整移動距離 */
+
+        .status-bar {
+            padding: 5px 10px;
+            text-align: left;
+            font-size: 14px;
+            background-color: #f8f9fa;
+            border-top: 1px solid #ddd;
+            color: #666;
+            height: 28px;
+            line-height: 18px;
+            display: flex;
+            align-items: center;
+        }
+
+        .loading-animation {
+            display: inline-block;
+            width: 16px; /* 稍微縮小 */
+            height: 16px; /* 稍微縮小 */
+            border: 2px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+            margin-right: 8px; /* 調整間距 */
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Python 教學編輯器</h1>
+        <p>編寫 Python 程式碼並實時查看結果</p>
+    </div>
+
+    <div class="container">
+        <div class="editor-container">
+            <div class="panel-header">
+                <div class="panel-title">程式碼編輯器</div>
+                <div class="controls">
+                     <button class="btn-download" id="download-btn">下載為.py</button>
+                    <div class="examples-dropdown">
+                        <button class="dropdown-btn">範例</button>
+                        <div class="dropdown-content">
+                            <a href="#" data-example="hello">Hello World</a>
+                            <a href="#" data-example="loop">迴圈示例</a>
+                            <a href="#" data-example="function">函數示例</a>
+                            <a href="#" data-example="math">數學運算</a>
+                            <a href="#" data-example="list">列表操作</a>
+                            <hr> <a href="#" data-example="datatypes">基本資料型態</a>
+                            <a href="#" data-example="conditionals">條件判斷 (if/else)</a>
+                            <a href="#" data-example="userinput">使用者輸入</a>
+                            <a href="#" data-example="dictionary">字典 (Dictionary)</a>
+                            <a href="#" data-example="tuple">元組 (Tuple)</a>
+                            <a href="#" data-example="setdemo">集合 (Set)</a>
+                            <a href="#" data-example="stringmethods">字串方法</a>
+                            <a href="#" data-example="booleanlogic">布林邏輯</a>
+                            <a href="#" data-example="comparison">比較運算符</a>
+                            <a href="#" data-example="simpleclass">簡單類別 (Class)</a>
+                        </div>
+                        </div>
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="editor">
+                <div class="line-numbers" id="line-numbers">1</div>
+                 <textarea id="code-editor" spellcheck="false"># 歡迎使用 Python 教學編輯器
+# 在此輸入您的 Python 程式碼
+print("Hello, World!")
+
+# 試試看加入一些變數和運算
+name = "Python 學習者"
+print(f"歡迎您，{name}!")
+
+# 讓我們計算 1 到 10 的總和
+total = sum(range(1, 11))
+print(f"1 到 10 的總和是: {total}")</textarea>
+            </div>
+        </div>
+
+        <div class="preview-container">
+            <div class="panel-header">
+                <div class="panel-title">執行結果</div>
+                <div class="controls">
+                    <button class="btn-run" id="run-btn">執行</button>
+                    <button class="btn-clear" id="clear-btn">清除</button>
+                </div>
+            </div>
+            <div class="preview">
+                <pre id="output">系統正在準備中，請稍候...</pre>
+            </div>
+            <div class="status-bar" id="status-bar">
+                <span id="loading-indicator"></span>
+                <span id="status-text">準備就緒</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>Python 教學編輯器 &copy; 2025 | 互動式程式學習工具 by koming</p>
+    </div>
+
+    <script src="skulpt.min.js"></script>
+    <script src="skulpt-stdlib.js"></script>
+     <script>
+        // --- DOM Elements ---
+        const codeEditor = document.getElementById('code-editor');
+        const output = document.getElementById('output');
+        const runBtn = document.getElementById('run-btn');
+        const clearBtn = document.getElementById('clear-btn');
+        const lineNumbers = document.getElementById('line-numbers');
+        const themeToggle = document.getElementById('theme-toggle');
+        const statusBar = document.getElementById('status-bar');
+        const statusText = document.getElementById('status-text');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        const downloadBtn = document.getElementById('download-btn');
+
+        // --- Example Code Snippets (UPDATED) ---
+        const examples = {
+            hello: `# Hello World 範例\nprint("Hello, Python 世界!")\n\n# 變數使用\nname = "Python 學習者"\nprint(f"您好，{name}！歡迎學習 Python！")`,
+            loop: `# 迴圈示例\nprint("使用 for 迴圈:")\nfor i in range(1, 6):\n    print(f"第 {i} 次迭代")\n\nprint("\\n使用 while 迴圈:")\ncount = 5\nwhile count > 0:\n    print(f"倒數計時: {count}")\n    count -= 1\nprint("發射!")`,
+            function: `# 函數示例\ndef greet(name):\n    """這是一個簡單的問候函數"""\n    return f"您好，{name}！"\n\ndef calculate_area(length, width):\n    """計算矩形面積的函數"""\n    return length * width\n\n# 調用函數\nprint(greet("Python 學習者"))\n\n# 計算面積\nl = 5\nw = 3\nprint(f"{l} × {w} 的矩形面積為: {calculate_area(l, w)}")`,
+            math: `# 數學運算示例\nimport math\n\n# 基本運算\na = 10\nb = 3\nprint(f"{a} + {b} = {a + b}")\nprint(f"{a} - {b} = {a - b}")\nprint(f"{a} * {b} = {a * b}")\nprint(f"{a} / {b} = {a / b}")\nprint(f"{a} // {b} = {a // b}")  # 整數除法\nprint(f"{a} % {b} = {a % b}")    # 取餘數\nprint(f"{a} ** {b} = {a ** b}")  # 冪運算\n\n# 使用 math 模組\nprint(f"π 的值約為: {math.pi}")\nprint(f"√9 = {math.sqrt(9)}")\nprint(f"sin(30°) = {math.sin(math.radians(30))}")\nprint(f"log(100) = {math.log10(100)}")`,
+            list: `# 列表操作示例\n# 創建列表\nfruits = ['蘋果', '香蕉', '橘子', '葡萄', '草莓']\nprint("水果列表:", fruits)\n\n# 訪問列表元素\nprint("第一個水果:", fruits[0])\nprint("最後一個水果:", fruits[-1])\n\n# 切片\nprint("前三個水果:", fruits[:3])\nprint("後三個水果:", fruits[-3:])\n\n# 列表操作\nfruits.append('桃子')\nprint("添加桃子後:", fruits)\n\nfruits.insert(1, '檸檬')\nprint("在香蕉前插入檸檬:", fruits)\n\nfruits.remove('橘子')\nprint("移除橘子後:", fruits)\n\n# 使用列表推導式\nnumbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]\nsquares = [n**2 for n in numbers if n % 2 == 0]\nprint("偶數的平方:", squares)`,
+            datatypes: `# 基本資料型態示例\n\n# 整數 (Integer)\ncount = 10\nprint(f"數量: {count}, 型態: {type(count)}")\n\n# 浮點數 (Float)\nprice = 99.9\nprint(f"價格: {price}, 型態: {type(price)}")\n\n# 字串 (String)\nmessage = "歡迎學習 Python"\nprint(f"訊息: {message}, 型態: {type(message)}")\n\n# 布林值 (Boolean)\nis_active = True\nprint(f"是否啟用: {is_active}, 型態: {type(is_active)}")\n\n# NoneType (表示沒有值)\nresult = None\nprint(f"結果: {result}, 型態: {type(result)}")`,
+            conditionals: `# 條件判斷 (if/elif/else)\n\nage = 18\n\nif age < 13:\n    print("您是兒童")\nelif age < 18:\n    print("您是青少年")\nelse:\n    print("您是成年人")\n\n# 另一個例子\ntemperature = 25\nif temperature > 30:\n    print("天氣炎熱")\nelse:\n    print("天氣舒適")`,
+            userinput: `# 使用者輸入示例\n\n# 注意：在瀏覽器環境中，這會彈出一個輸入框\nname = input("請輸入您的名字: ")\nprint(f"您好，{name}！很高興認識您。")\n\n# input() 讀取的值預設是字串\nage_str = input("請輸入您的年齡: ")\n# 需要轉換型態才能進行數學運算\n# try-except 用於處理可能的輸入錯誤\ntry:\n    age = int(age_str)\n    print(f"明年您將是 {age + 1} 歲。")\nexcept ValueError:\n    print("輸入的年齡無效，請輸入數字。")`,
+            dictionary: `# 字典 (Dictionary) 示例\n# 字典是鍵值對 (key-value) 的集合\n\nstudent = {\n    "name": "小明",\n    "age": 15,\n    "major": "電腦科學"\n}\n\nprint("學生資訊:", student)\n\n# 訪問字典元素 (透過鍵)\nprint(f"學生姓名: {student['name']}")\nprint(f"學生年齡: {student.get('age')}") # 使用 get() 比較安全，若鍵不存在返回 None\n\n# 修改元素\nstudent['age'] = 16\nprint("修改年齡後:", student)\n\n# 添加新元素\nstudent['grade'] = 9\nprint("添加年級後:", student)\n\n# 遍歷字典\nprint("\\n遍歷鍵:")\nfor key in student:\n    print(key)\n\nprint("\\n遍歷值:")\nfor value in student.values():\n    print(value)\n\nprint("\\n遍歷鍵值對:")\nfor key, value in student.items():\n    print(f"{key}: {value}")`,
+            tuple: `# 元組 (Tuple) 示例\n# 元組是有序且不可變 (Immutable) 的序列\n\n# 創建元組\ncoordinates = (10, 20)\ncolors = ('紅', '綠', '藍')\n\nprint("座標:", coordinates)\nprint("顏色:", colors)\n\n# 訪問元素 (如同列表)\nprint("X 座標:", coordinates[0])\nprint("第一個顏色:", colors[0])\n\n# 元組不可變特性\n# 以下程式碼會產生錯誤 (TypeError)\n# try:\n#     coordinates[0] = 5 \n# except TypeError as e:\n#     print(f"試圖修改元組時發生錯誤: {e}")\nprint("\\n元組一旦創建，其元素不能被修改。")\n\n# 元組拆包 (Unpacking)\nx, y = coordinates\nprint(f"拆包後的 X={x}, Y={y}")`,
+            setdemo: `# 集合 (Set) 示例\n# 集合是無序且不重複元素的集合\n\n# 創建集合\nnumbers = {1, 2, 3, 4, 5}\nprint("數字集合:", numbers)\n\n# 從列表創建集合 (自動去重)\nitems = ['蘋果', '香蕉', '蘋果', '橘子']\nunique_items = set(items)\nprint("從列表創建的唯一水果集合:", unique_items)\n\n# 添加元素 (若已存在則無效果)\nnumbers.add(6)\nprint("添加 6 後:", numbers)\nnumbers.add(3) # 嘗試添加已存在的 3\nprint("嘗試再次添加 3 後:", numbers) # 集合內容不變\n\n# 移除元素\nnumbers.remove(1)\nprint("移除 1 後:", numbers)\n# numbers.remove(10) # 若移除不存在元素會報錯 (KeyError)\nnumbers.discard(10) # discard 移除不存在元素不會報錯\nprint("嘗試 discard 10 後:", numbers)\n\n# 集合運算 (簡單示例)\nset_a = {1, 2, 3}\nset_b = {3, 4, 5}\nprint(f"集合 A: {set_a}")\nprint(f"集合 B: {set_b}")\nprint(f"A 和 B 的聯集: {set_a.union(set_b)}")\nprint(f"A 和 B 的交集: {set_a.intersection(set_b)}")`,
+            stringmethods: `# 字串方法示例\n\nmy_string = "  Hello Python World!  "\nprint(f"原始字串: '{my_string}'")\n\n# 去除首尾空白\nprint(f"去除空白後: '{my_string.strip()}'")\n\n# 轉換大小寫\nprint(f"轉換為大寫: {my_string.upper()}")\nprint(f"轉換為小寫: {my_string.lower()}")\n\n# 查找子字串 (返回首次出現的索引，找不到返回 -1)\nprint(f"'Python' 的索引: {my_string.find('Python')}")\nprint(f"'Java' 的索引: {my_string.find('Java')}")\n\n# 替換子字串\nprint(f"替換 'World' 為 'Learner': {my_string.replace('World', 'Learner')}")\n\n# 分割字串 (預設按空白分割)\nwords = my_string.strip().split()\nprint(f"分割後的單詞列表: {words}")\n\n# 檢查開頭和結尾\nprint(f"字串是否以 '  Hello' 開頭? {my_string.startswith('  Hello')}")\nprint(f"去除空白後是否以 'Hello' 開頭? {my_string.strip().startswith('Hello')}")\nprint(f"字串是否以 'World!  ' 結尾? {my_string.endswith('World!  ')}")`,
+            booleanlogic: `# 布林邏輯示例 (and, or, not)\n\nhas_key = True\nis_door_open = False\nlight_on = True\n\nprint(f"有鑰匙: {has_key}")\nprint(f"門是開的: {is_door_open}")\nprint(f"燈是亮的: {light_on}")\n\n# and (兩者皆為 True 才為 True)\ncan_enter = has_key and is_door_open\nprint(f"可以使用鑰匙且門開著進入嗎? {can_enter}")\n\n# or (兩者至少一個為 True 即為 True)\nroom_is_bright = is_door_open or light_on\nprint(f"房間是亮的嗎 (門開或燈亮)? {room_is_bright}")\n\n# not (反轉布林值)\ncan_turn_light_off = not light_on\nprint(f"可以關燈嗎 (如果燈現在是關的)? {not light_on}") # 應該是問 "燈是關的嗎?"\nprint(f"燈是關的嗎? {not light_on}")\n\n# 組合使用\nshould_close_door = has_key and (not is_door_open)\nprint(f"應該關門嗎 (有鑰匙且門沒開)? {should_close_door}")`,
+            comparison: `# 比較運算符示例\n\nx = 10\ny = 5\nz = 10\n\nprint(f"x = {x}, y = {y}, z = {z}")\n\n# 等於 (==)\nprint(f"x == y ? {x == y}")  # False\nprint(f"x == z ? {x == z}")  # True\n\n# 不等於 (!=)\nprint(f"x != y ? {x != y}")  # True\nprint(f"x != z ? {x != z}")  # False\n\n# 大於 (>)\nprint(f"x > y ? {x > y}")   # True\n\n# 小於 (<)\nprint(f"y < x ? {y < x}")   # True\n\n# 大於等於 (>=)\nprint(f"x >= z ? {x >= z}") # True\nprint(f"x >= y ? {x >= y}") # True\n\n# 小於等於 (<=)\nprint(f"y <= x ? {y <= x}") # True\nprint(f"z <= x ? {z <= x}") # True`,
+            simpleclass: `# 簡單類別 (Class) 示例\n\n# 定義一個代表「狗」的類別\nclass Dog:\n    # 初始化方法 (創建物件時調用)\n    def __init__(self, name, breed):\n        self.name = name # 狗的名字 (實例屬性)\n        self.breed = breed # 狗的品種 (實例屬性)\n        print(f"一隻新的 {self.breed} 加入，叫做 {self.name}!")\n\n    # 定義一個方法 (物件的行為)\n    def bark(self):\n        print(f"{self.name} 說: 汪汪!")\n\n# 創建 Dog 物件 (實例化)\ndog1 = Dog("旺財", "柴犬")\ndog2 = Dog("小白", "貴賓犬")\n\n# 調用物件的方法\ndog1.bark()\ndog2.bark()\n\n# 訪問物件的屬性\nprint(f"{dog1.name} 的品種是 {dog1.breed}")`
+        };
+
+        // --- Skulpt Configuration and Functions ---
+        function outf(text) {
+            output.textContent += text;
+        }
+
+        function builtinRead(x) {
+            if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
+                throw "File not found: '" + x + "'";
+            return Sk.builtinFiles["files"][x];
+        }
+
+        function runPython() {
+            output.textContent = ''; // Clear previous output
+            statusText.textContent = "執行中...";
+            loadingIndicator.innerHTML = '<div class="loading-animation"></div>';
+            runBtn.disabled = true;
+            clearBtn.disabled = true;
+            downloadBtn.disabled = true;
+
+            Sk.configure({
+                output: outf,
+                read: builtinRead,
+                __future__: Sk.python3,
+                inputfunTakesPrompt: true, // Important for prompt in input()
+                inputfun: (prompt) => {
+                     // Show prompt and pause execution
+                    statusText.textContent = `等待輸入: ${prompt || ''}`;
+                    loadingIndicator.innerHTML = ''; // Hide spinner during prompt
+                    const userInput = window.prompt(prompt || "請輸入:");
+                     // Resume execution status
+                    statusText.textContent = "執行中...";
+                    loadingIndicator.innerHTML = '<div class="loading-animation"></div>';
+                    // Skulpt expects a Promise that resolves with the input
+                    // return Promise.resolve(userInput); // Simplified: directly return
+                    return userInput; // Skulpt handles this directly now
+                }
+            });
+
+            const code = codeEditor.value;
+            // Wrap Skulpt execution in a try-catch for Skulpt-specific setup errors
+            try {
+                const myPromise = Sk.misceval.asyncToPromise(() => {
+                    return Sk.importMainWithBody("<stdin>", false, code, true);
+                });
+
+                myPromise.then(
+                    function(mod) {
+                        statusText.textContent = "執行完成";
+                        if (output.textContent.trim() === '') {
+                            output.textContent = '程式執行完成，沒有產生輸出。';
+                        }
+                    },
+                    function(err) {
+                        output.textContent += `\n--- 執行錯誤 ---\n${err.toString()}`;
+                        statusText.textContent = "執行失敗";
+                        console.error(err); // Log detailed error to console
+                    }
+                ).finally(() => {
+                    loadingIndicator.innerHTML = '';
+                    runBtn.disabled = false;
+                    clearBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                 });
+             } catch (e) {
+                 // Catch errors during Skulpt setup/compilation
+                 output.textContent += `\n--- 執行前錯誤 ---\n${e.toString()}`;
+                 statusText.textContent = "執行失敗";
+                 loadingIndicator.innerHTML = '';
+                 runBtn.disabled = false;
+                 clearBtn.disabled = false;
+                 downloadBtn.disabled = false;
+                 console.error(e);
+             }
+        }
+
+        // --- Line Numbers and Scrolling ---
+        function updateLineNumbers() {
+             requestAnimationFrame(() => {
+                try { // Add try-catch for safety
+                    const lines = codeEditor.value.split('\n').length;
+                    // Avoid creating huge strings if editor accidentally gets massive content
+                    const maxLines = 5000;
+                    const displayLines = Math.min(lines, maxLines);
+                    const lineNumbersHtml = Array.from({ length: displayLines }, (_, i) => i + 1).join('<br>');
+
+                    if (lineNumbers.innerHTML !== lineNumbersHtml) {
+                        lineNumbers.innerHTML = lineNumbersHtml;
+                    }
+                     // Adjust scroll synchronization
+                     // Directly set scrollTop - might be slightly off if line heights differ subtly
+                     lineNumbers.scrollTop = codeEditor.scrollTop;
+
+                } catch(e) {
+                    console.error("Error updating line numbers:", e);
+                    // Optionally disable line numbers if problematic
+                    // lineNumbers.style.display = 'none';
+                }
+            });
+        }
+
+         // More robust scroll sync
+         let syncScrollTimeout;
+         function syncScroll() {
+             clearTimeout(syncScrollTimeout);
+             syncScrollTimeout = setTimeout(() => {
+                 lineNumbers.scrollTop = codeEditor.scrollTop;
+             }, 10); // Small delay to batch updates
+         }
+
+
+        // --- Download Function ---
+        function downloadToFile(content, filename, contentType) {
+            const blob = new Blob([content], { type: contentType });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        }
+
+        // --- Event Listeners ---
+        runBtn.addEventListener('click', runPython);
+
+        clearBtn.addEventListener('click', () => {
+            output.textContent = "";
+            statusText.textContent = "準備就緒";
+            loadingIndicator.innerHTML = '';
+        });
+
+        // Use the debounced scroll sync
+        codeEditor.addEventListener('scroll', syncScroll);
+        codeEditor.addEventListener('input', updateLineNumbers);
+
+
+        // Theme Toggle
+        themeToggle.addEventListener('change', () => {
+            const isDark = themeToggle.checked;
+            document.body.classList.toggle('dark-theme', isDark);
+            localStorage.setItem('pythonEditorTheme', isDark ? 'dark' : 'light');
+            // CSS should handle most style changes via .dark-theme class
+            // Force redraw/update if needed (usually not necessary)
+            // updateLineNumbers(); // Update styles based on theme might be needed if CSS doesn't cover everything perfectly
+        });
+
+        // Example Selection
+        document.querySelectorAll('.dropdown-content a').forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                const exampleKey = e.target.getAttribute('data-example');
+                if (examples[exampleKey]) {
+                    codeEditor.value = examples[exampleKey];
+                    updateLineNumbers(); // Update lines after changing content
+                    codeEditor.focus(); // Focus editor after loading example
+                     // Close dropdown manually if needed (optional)
+                     // e.target.closest('.dropdown-content').style.display = 'none';
+                     // setTimeout(() => { e.target.closest('.dropdown-content').style.display = ''; }, 100);
+                }
+            });
+        });
+
+        // Tab Key Handling
+        codeEditor.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault();
+                const start = codeEditor.selectionStart;
+                const end = codeEditor.selectionEnd;
+                const spaces = '    '; // 4 spaces for tab
+
+                // Insert spaces
+                codeEditor.value = codeEditor.value.substring(0, start) + spaces + codeEditor.value.substring(end);
+
+                // Move cursor
+                codeEditor.selectionStart = codeEditor.selectionEnd = start + spaces.length;
+                updateLineNumbers(); // Update lines if needed (rarely changes line count)
+            }
+        });
+
+        // Download Button
+        downloadBtn.addEventListener('click', () => {
+            const codeToDownload = codeEditor.value;
+            // Suggest a default filename
+            const filename = prompt("請輸入檔名 (例如: my_script.py):", "script.py");
+            if (filename) { // Only download if user provides a name
+                 downloadToFile(codeToDownload, filename, 'text/x-python;charset=utf-8'); // Use correct MIME type
+            }
+        });
+
+        // --- Initialization ---
+        function initializeEditor() {
+            updateLineNumbers();
+            output.textContent = '編輯器準備就緒。請輸入 Python 程式碼或選擇範例，然後點擊「執行」。';
+
+            // Load theme preference
+            if (localStorage.getItem('pythonEditorTheme') === 'dark') {
+                themeToggle.checked = true;
+                document.body.classList.add('dark-theme'); // Apply theme immediately
+            }
+             // Set initial scroll sync
+             syncScroll();
+        }
+
+        // Run initialization when the DOM is ready
+        if (document.readyState === 'loading') { // Loading hasn't finished yet
+            document.addEventListener('DOMContentLoaded', initializeEditor);
+        } else { // `DOMContentLoaded` has already fired
+            initializeEditor();
+        }
+
+     </script>
+</body>
+</html>
