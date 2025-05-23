@@ -2574,7 +2574,8 @@
                         t.showRemoveoptions = !0
                     }
                 }
-            }, [t._v("重置")]), i("el-button", {
+            
+           }, [t._v("重置")]), i("el-button", {
                 attrs: {
                     size: "mini"
                 },
@@ -2583,6 +2584,7 @@
                         t.showImport = !0
                     }
                 }
+
            }, [t._v("名單")]), i("el-button", {
                 attrs: {
                     size: "mini"

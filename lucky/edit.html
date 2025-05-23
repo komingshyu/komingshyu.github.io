@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>獎項名稱編修程式</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 300;
+            letter-spacing: 1px;
+        }
+
+        .main-button {
+            display: block;
+            margin: 0 auto 30px;
+            padding: 15px 40px;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(238, 90, 36, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(238, 90, 36, 0.4);
+            background: linear-gradient(45deg, #ee5a24, #ff6b6b);
+        }
+
+        .main-button:active {
+            transform: translateY(-1px);
+        }
+
+        #editArea {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.2);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            text-align: center;
+            font-weight: 400;
+            position: relative;
+        }
+
+        h2::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            margin: 10px auto;
+            border-radius: 2px;
+        }
+
+        #lotteryNamesContainer {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 30px;
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        #lotteryNamesContainer::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #lotteryNamesContainer::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        #lotteryNamesContainer::-webkit-scrollbar-thumb {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-radius: 10px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px 20px;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #fafbfc;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .input-group input:hover {
+            border-color: #c5d2ea;
+            background: white;
+        }
+
+        .input-label {
+            position: absolute;
+            left: 15px;
+            top: -8px;
+            background: white;
+            padding: 0 8px;
+            font-size: 0.8rem;
+            color: #667eea;
+            font-weight: 600;
+            border-radius: 4px;
+        }
+
+        .save-button {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(46, 204, 113, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .save-button:hover {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(46, 204, 113, 0.4);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+
+        .alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border-radius: 10px;
+            box-shadow: 0 8px 25px rgba(52, 152, 219, 0.3);
+            z-index: 1000;
+            font-weight: 600;
+            animation: alertSlide 0.5s ease-out;
+        }
+
+        @keyframes alertSlide {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .no-data {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border: 2px dashed #bdc3c7;
+        }
+
+        /* 響應式設計 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+            
+            #editArea {
+                padding: 20px;
+                margin: 0 10px;
+            }
+            
+            .main-button {
+                padding: 12px 30px;
+                font-size: 1rem;
+            }
+        }
+
+        /* 載入動畫 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+    <script>
+        function showCustomAlert(message, type = 'info') {
+            // 移除現有的 alert
+            const existingAlert = document.querySelector('.alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+            
+            const alert = document.createElement('div');
+            alert.className = 'alert';
+            alert.textContent = message;
+            
+            // 根據類型設置不同顏色
+            if (type === 'success') {
+                alert.style.background = 'linear-gradient(45deg, #2ecc71, #27ae60)';
+            } else if (type === 'error') {
+                alert.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+            }
+            
+            document.body.appendChild(alert);
+            
+            // 3秒後自動移除
+            setTimeout(() => {
+                alert.style.animation = 'alertSlide 0.5s ease-out reverse';
+                setTimeout(() => alert.remove(), 500);
+            }, 3000);
+        }
+
+        function loadLotteryNames() {
+            const newLottery = JSON.parse(localStorage.getItem('newLottery'));
+            const container = document.getElementById('lotteryNamesContainer');
+            container.innerHTML = ''; // 清空現有內容
+            
+            // 模擬資料載入延遲
+            const loadingDiv = document.createElement('div');
+            loadingDiv.innerHTML = '<div style="text-align: center; padding: 20px;"><div class="loading"></div>載入中...</div>';
+            container.appendChild(loadingDiv);
+            
+            setTimeout(() => {
+                container.innerHTML = '';
+                
+                if (newLottery && newLottery.length > 0) {
+                    newLottery.forEach((lottery, index) => {
+                        const inputGroup = document.createElement('div');
+                        inputGroup.className = 'input-group';
+                        
+                        const label = document.createElement('div');
+                        label.className = 'input-label';
+                        label.textContent = `獎項 ${index + 1}`;
+                        
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.value = lottery.name;
+                        input.placeholder = '請輸入獎項名稱';
+                        input.setAttribute('data-index', index);
+                        
+                        inputGroup.appendChild(label);
+                        inputGroup.appendChild(input);
+                        container.appendChild(inputGroup);
+                    });
+                } else {
+                    const noData = document.createElement('div');
+                    noData.className = 'no-data';
+                    noData.textContent = '📋 未找到獎項資料，請先設定獎項內容';
+                    container.appendChild(noData);
+                    showCustomAlert('⚠️ 未找到獎項資料', 'error');
+                }
+            }, 800);
+        }
+        
+        function showEditArea() {
+            const button = document.querySelector('.main-button');
+            button.innerHTML = '<div class="loading"></div>載入中...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                document.getElementById('editArea').style.display = 'block';
+                button.innerHTML = '獎項編修';
+                button.disabled = false;
+                loadLotteryNames();
+                
+                // 平滑滾動到編輯區域
+                document.getElementById('editArea').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 1000);
+        }
+        
+        function updateLotteryNames() {
+            const button = document.querySelector('.save-button');
+            const originalText = button.textContent;
+            button.innerHTML = '<div class="loading"></div>儲存中...';
+            button.disabled = true;
+            
+            setTimeout(() => {
+                const newLottery = JSON.parse(localStorage.getItem('newLottery'));
+                const inputs = document.querySelectorAll('#lotteryNamesContainer input');
+                let hasEmptyFields = false;
+                
+                inputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        hasEmptyFields = true;
+                        input.style.borderColor = '#e74c3c';
+                    } else {
+                        input.style.borderColor = '#e0e6ed';
+                        const index = input.getAttribute('data-index');
+                        if (newLottery && newLottery[index]) {
+                            newLottery[index].name = input.value; // 更新名稱
+                        }
+                    }
+                });
+                
+                if (hasEmptyFields) {
+                    showCustomAlert('⚠️ 請填寫所有獎項名稱', 'error');
+                } else if (newLottery) {
+                    localStorage.setItem('newLottery', JSON.stringify(newLottery)); // 儲存回 localStorage
+                    showCustomAlert('✅ 獎項名稱已成功更新！', 'success');
+                } else {
+                    showCustomAlert('⚠️ 找不到獎項資料', 'error');
+                }
+                
+                button.textContent = originalText;
+                button.disabled = false;
+            }, 1500);
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 獎項名稱編修程式</h1>
+        <button class="main-button" onclick="showEditArea()">獎項編修</button>
+        
+        <div id="editArea">
+            <h2>編修獎項名稱</h2>
+            <div id="lotteryNamesContainer"></div>
+            <button class="save-button" onclick="updateLotteryNames()">儲存修改</button>
+        </div>
+    </div>
+</body>
+</html>
