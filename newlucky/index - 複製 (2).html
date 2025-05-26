@@ -1,0 +1,1204 @@
+
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>陽明國中線上抽獎系統</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', 'Microsoft JhengHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        /* 跑馬燈樣式 */
+        .marquee-container {
+            background: linear-gradient(90deg, #ffd700, #ffed4e, #ffd700);
+            border: 2px solid #f39c12;
+            border-radius: 10px;
+            margin: 20px 10px;
+            padding: 15px 0;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
+        }
+
+        .marquee-title {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #e67e22;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            z-index: 2;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+
+        .marquee-content {
+            margin-left: 120px;
+            white-space: nowrap;
+            overflow: hidden;
+            height: 30px;
+            display: flex;
+            align-items: center;
+        }
+
+        .marquee-text {
+            display: inline-block;
+            animation: scroll-left 20s linear infinite;
+            color: #d35400;
+            font-weight: bold;
+            font-size: 26px;
+            text-shadow: 1px 1px 2px rgba(255,255,255,0.8);
+        }
+
+        @keyframes scroll-left {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .marquee-empty {
+            color: #7f8c8d;
+            font-style: italic;
+            animation: none;
+        }
+        
+        .content-wrapper {
+            padding: 10px;
+        }
+        
+        .top-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .control-btn {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.3);
+        }
+        
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(79, 172, 254, 0.4);
+        }
+        
+        .section {
+            background: white;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .section h3 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        
+        .draw-controls {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        select, input[type="number"], input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e6ed;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+        
+        button {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+        }
+        
+        button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
+        }
+        
+        button.danger {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        button.danger:hover {
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        #stop-button {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+        }
+        
+        #stop-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+        }
+        
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #prize-display {
+            min-height: 400px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: url('bg.png') no-repeat center center, linear-gradient(135deg, rgba(248,249,250,0.7), rgba(233,236,239,0.7));
+            background-size: cover;
+            border-radius: 15px;
+            margin: 20px 0;
+            perspective: 1000px;
+            border: 2px dashed #dee2e6;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #prize-display::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.6);
+            z-index: 0;
+        }
+        
+        #prize-display > * {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .winner-display {
+            font-size: 36px;
+            font-weight: bold;
+            color: #e74c3c;
+            text-align: center;
+            animation: zoomIn 0.5s forwards;
+            padding: 20px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.5); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #ecf0f1;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: #7f8c8d;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .close-modal:hover {
+            background: #ecf0f1;
+            color: #2c3e50;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .flex-row {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .flex-row input, .flex-row select {
+            flex: 1;
+        }
+        
+        .result-group {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            border-left: 4px solid #3498db;
+        }
+        
+        .result-group h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .result-group ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .result-group li {
+            background: white;
+            padding: 8px 15px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border-left: 3px solid #2ecc71;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            padding: 40px;
+        }
+        
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+        
+        @media (max-width: 768px) {
+            .draw-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .top-controls {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .content-wrapper {
+                padding: 15px;
+            }
+
+            .marquee-container {
+                margin: 20px 15px;
+            }
+
+            .marquee-title {
+                font-size: 12px;
+                padding: 3px 10px;
+            }
+
+            .marquee-content {
+                margin-left: 100px;
+            }
+
+            .marquee-text {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎉 陽明國中教職員工線上抽獎系統</h1>
+            
+        </div>
+        
+        <div class="content-wrapper">
+            <div class="top-controls">
+                <button class="control-btn" data-target="prize-management">🏆 獎項管理</button>
+                <button class="control-btn" data-target="participant-list">👥 參與者名單</button>
+                <button class="control-btn" data-target="result-display">📊 抽獎結果</button>
+                <button class="control-btn" data-target="data-backup">💾 資料備份</button>
+            </div>
+            <!-- 跑馬燈區域 -->
+            <div class="marquee-container">
+                <div class="marquee-title">🏆 即時結果</div>
+                <div class="marquee-content">
+                    <div class="marquee-text" id="marquee-text">
+                        尚無抽獎結果，請開始抽獎！
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🎯 陽明國中教職員工模彩抽獎活動</h3>
+                <div class="draw-controls">
+                    <select id="prize-select" disabled>
+                        <option value="">-- 選擇獎項 --</option>
+                    </select>
+                    <input type="number" id="draw-count" placeholder="抽獎名額" min="1" value="1">
+                    <div style="display: flex; gap: 15px;">
+                        <button id="draw-button" disabled>🎲 開始</button>
+                        <button id="stop-button" disabled style="background: linear-gradient(135deg, #e74c3c, #c0392b);">🛑 停止</button>
+                    </div>
+                </div>
+                <div id="prize-display">
+                    <div class="empty-state">
+                        請先設定獎項和參與者名單，然後開始抽獎！
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"></h3>
+                <button class="close-modal">×</button>
+            </div>
+            <div class="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+// 使用localStorage儲存數據
+let prizes = [];
+let participants = [];
+let results = [];
+let backgroundMusic = null; // 背景音樂 (bg.mp3)
+let drawMusic = null;      // 抽獎音樂 (mission1.m4a)
+let isDrawing = false;
+let animationFrameId = null;
+let winners = [];
+
+// 從localStorage加載數據
+function loadFromLocalStorage() {
+    const savedPrizes = localStorage.getItem('lotteryPrizes');
+    const savedParticipants = localStorage.getItem('lotteryParticipants');
+    const savedResults = localStorage.getItem('lotteryResults');
+    
+    if (savedPrizes) prizes = JSON.parse(savedPrizes);
+    if (savedParticipants) participants = JSON.parse(savedParticipants);
+    if (savedResults) results = JSON.parse(savedResults);
+}
+
+// 保存數據到localStorage
+function saveToLocalStorage() {
+    try {
+        localStorage.setItem('lotteryPrizes', JSON.stringify(prizes));
+        localStorage.setItem('lotteryParticipants', JSON.stringify(participants));
+        localStorage.setItem('lotteryResults', JSON.stringify(results));
+        console.log('數據保存成功:', {prizes, participants, results});
+    } catch (e) {
+        console.error('localStorage保存失敗:', e);
+        alert('數據保存失敗，請檢查瀏覽器存儲空間');
+    }
+}
+
+// 頁面載入時初始化
+document.addEventListener('DOMContentLoaded', function() {
+    loadFromLocalStorage();
+    initModalControls();
+    updatePrizeSelect();
+    updateDrawButton();
+    updateMarquee();
+    
+    // 抽獎按鈕事件
+    document.getElementById('draw-button').addEventListener('click', startDraw);
+    document.getElementById('stop-button').addEventListener('click', stopDraw);
+    
+    // 初始化背景音樂和抽獎音樂
+    backgroundMusic = new Audio('bg.mp3');
+    backgroundMusic.loop = true;
+    drawMusic = new Audio('mission1.m4a');
+    drawMusic.loop = true;
+    
+    // 頁面載入時自動播放背景音樂
+    backgroundMusic.play().catch(e => console.error('背景音樂播放失敗:', e));
+});
+
+// 更新跑馬燈內容（即時顯示最新結果）
+function updateMarquee() {
+    const marqueeText = document.getElementById('marquee-text');
+    
+    if (results.length === 0) {
+        marqueeText.textContent = '尚無抽獎結果，請開始抽獎！';
+        marqueeText.className = 'marquee-text marquee-empty';
+        return;
+    }
+    
+    // 生成跑馬燈文字，優先顯示最新結果
+    const latestResults = [...results].reverse();
+    const marqueeContent = latestResults
+        .slice(0, 10)
+        .map(result => `🎉 ${result.prizeName}: ${result.winner}`)
+        .join('　•　');
+    
+    marqueeText.textContent = marqueeContent + '　•　';
+    marqueeText.className = 'marquee-text';
+    
+    if (marqueeText.style.animation) {
+        const currentScroll = getComputedStyle(marqueeText).transform;
+        marqueeText.style.animation = 'none';
+        void marqueeText.offsetWidth;
+        marqueeText.style.animation = 'scroll-left 20s linear infinite';
+        marqueeText.style.transform = currentScroll;
+    } else {
+        marqueeText.style.animation = 'scroll-left 20s linear infinite';
+    }
+}
+
+// 模態框控制
+function initModalControls() {
+    const buttons = document.querySelectorAll('.control-btn');
+    const modal = document.getElementById('modal-overlay');
+    const closeBtn = modal.querySelector('.close-modal');
+    
+    buttons.forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            openModal(targetId, this.textContent.replace(/[🏆👥📊💾]/g, '').trim());
+        });
+    });
+    
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+function openModal(targetId, title) {
+    const modal = document.getElementById('modal-overlay');
+    const modalTitle = modal.querySelector('.modal-title');
+    const modalBody = modal.querySelector('.modal-body');
+    
+    modalTitle.textContent = title;
+    
+    let content = '';
+    
+    if (targetId === 'prize-management') {
+        content = `
+            <div class="flex-row">
+                <input type="text" id="modal-prize-name" placeholder="獎項名稱">
+                <input type="number" id="modal-prize-count" placeholder="名額" min="1" value="1">
+                <button id="modal-add-prize">新增獎項</button>
+            </div>
+            <table id="modal-prize-table">
+                <thead>
+                    <tr>
+                        <th>獎項名稱</th>
+                        <th>名額</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="modal-prize-list"></tbody>
+            </table>
+        `;
+    } else if (targetId === 'participant-list') {
+        content = `
+            <textarea id="modal-participants" placeholder="請輸入參與者名單，每行一個名字" rows="10">${participants.join('\n')}</textarea>
+            <div class="flex-row">
+                <button id="modal-save-participants">保存名單</button>
+                <div class="file-input-wrapper">
+                    <button id="modal-import-csv">CSV匯入</button>
+                    <input type="file" id="modal-csv-file" accept=".csv">
+                </div>
+                <button id="modal-export-csv">CSV匯出</button>
+            </div>
+        `;
+    } else if (targetId === 'result-display') {
+        content = `
+            <div class="flex-row">
+                <button id="modal-show-results">顯示結果</button>
+                <button id="modal-export-results">匯出結果</button>
+                <button id="modal-clear-results" class="danger">清除結果</button>
+            </div>
+            <div id="modal-results-display"></div>
+        `;
+    } else if (targetId === 'data-backup') {
+        content = `
+            <div class="flex-row">
+                <button id="modal-save-data">備份資料</button>
+                <div class="file-input-wrapper">
+                    <button id="modal-load-data">還原資料</button>
+                    <input type="file" id="modal-backup-file" accept=".json">
+                </div>
+            </div>
+            <p style="color: #7f8c8d; margin-top: 15px;">
+                💡 提示：備份檔案會包含所有獎項、參與者和抽獎結果
+            </p>
+        `;
+    }
+    
+    modalBody.innerHTML = content;
+    modal.style.display = 'flex';
+    
+    initModalFunctions(targetId);
+}
+
+function initModalFunctions(targetId) {
+    if (targetId === 'prize-management') {
+        const addBtn = document.getElementById('modal-add-prize');
+        const nameInput = document.getElementById('modal-prize-name');
+        const countInput = document.getElementById('modal-prize-count');
+        
+        addBtn.addEventListener('click', () => {
+            const name = nameInput.value.trim();
+            const count = parseInt(countInput.value);
+            
+            if (!name) {
+                alert('請輸入獎項名稱');
+                return;
+            }
+            
+            if (isNaN(count) || count < 1) {
+                alert('請輸入有效的名額數量');
+                return;
+            }
+            
+            prizes.push({ name, count });
+            saveToLocalStorage();
+            renderModalPrizeList();
+            updatePrizeSelect();
+            updateDrawButton();
+            
+            nameInput.value = '';
+            countInput.value = '1';
+        });
+        
+        renderModalPrizeList();
+        
+    } else if (targetId === 'participant-list') {
+        const saveBtn = document.getElementById('modal-save-participants');
+        const importBtn = document.getElementById('modal-import-csv');
+        const exportBtn = document.getElementById('modal-export-csv');
+        const fileInput = document.getElementById('modal-csv-file');
+        
+        saveBtn.addEventListener('click', () => {
+            const textarea = document.getElementById('modal-participants');
+            participants = textarea.value.split('\n')
+                .map(name => name.trim())
+                .filter(name => name !== '');
+            saveToLocalStorage();
+            updateDrawButton();
+            alert('參與者名單已保存');
+        });
+        
+        importBtn.addEventListener('click', () => {
+            fileInput.click();
+        });
+        
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const content = e.target.result;
+                const lines = content.split('\n');
+                const names = lines.map(line => line.split(',')[0].trim()).filter(name => name);
+                document.getElementById('modal-participants').value = names.join('\n');
+            };
+            reader.readAsText(file);
+        });
+        
+        exportBtn.addEventListener('click', () => {
+            if (participants.length === 0) {
+                alert('尚無參與者名單可匯出');
+                return;
+            }
+            
+            const csvContent = "data:text/csv;charset=utf-8,姓名\n" + participants.join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "參與者名單.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+        
+    } else if (targetId === 'result-display') {
+        const showBtn = document.getElementById('modal-show-results');
+        const exportBtn = document.getElementById('modal-export-results');
+        const clearBtn = document.getElementById('modal-clear-results');
+        
+        showBtn.addEventListener('click', showModalResults);
+        exportBtn.addEventListener('click', exportResults);
+        clearBtn.addEventListener('click', clearResults);
+        
+        showModalResults();
+        
+    } else if (targetId === 'data-backup') {
+        const saveBtn = document.getElementById('modal-save-data');
+        const loadBtn = document.getElementById('modal-load-data');
+        const fileInput = document.getElementById('modal-backup-file');
+        
+        saveBtn.addEventListener('click', saveData);
+        loadBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', loadDataFromFile);
+    }
+}
+
+function renderModalPrizeList() {
+    const tbody = document.getElementById('modal-prize-list');
+    tbody.innerHTML = '';
+    
+    prizes.forEach((prize, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${prize.name}</td>
+            <td>${prize.count}</td>
+            <td>
+                <button onclick="editPrize(${index})">編輯</button>
+                <button onclick="deletePrize(${index})" class="danger">刪除</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+}
+
+function editPrize(index) {
+    const newName = prompt('輸入新的獎項名稱', prizes[index].name);
+    if (newName === null) return;
+    
+    const newCount = parseInt(prompt('輸入新的名額數量', prizes[index].count));
+    if (isNaN(newCount) || newCount < 1) {
+        alert('無效的名額數量');
+        return;
+    }
+    
+    prizes[index] = { name: newName.trim(), count: newCount };
+    renderModalPrizeList();
+    updatePrizeSelect();
+}
+
+function deletePrize(index) {
+    if (confirm(`確定要刪除獎項 "${prizes[index].name}" 嗎？`)) {
+        prizes.splice(index, 1);
+        renderModalPrizeList();
+        updatePrizeSelect();
+        updateDrawButton();
+    }
+}
+
+function updatePrizeSelect() {
+    const select = document.getElementById('prize-select');
+    select.innerHTML = '<option value="">-- 選擇獎項 --</option>';
+    
+    prizes.forEach((prize, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${prize.name} (剩餘 ${prize.count} 名)`;
+        select.appendChild(option);
+    });
+    
+    select.disabled = prizes.length === 0;
+}
+
+function updateDrawButton() {
+    const drawButton = document.getElementById('draw-button');
+    const canDraw = prizes.length > 0 && participants.length > 0;
+    drawButton.disabled = !canDraw;
+}
+
+function startDraw() {
+    const prizeIndex = document.getElementById('prize-select').value;
+    const drawCount = parseInt(document.getElementById('draw-count').value);
+    
+    if (prizeIndex === '') {
+        alert('請選擇獎項');
+        return;
+    }
+    
+    if (isNaN(drawCount) || drawCount < 1) {
+        alert('請輸入有效的抽獎名額');
+        return;
+    }
+    
+    const prize = prizes[prizeIndex];
+    if (drawCount > prize.count) {
+        alert(`該獎項只剩 ${prize.count} 個名額`);
+        return;
+    }
+    
+    const availableParticipants = participants.filter(name => 
+        !results.some(r => r.winner === name)
+    );
+    
+    if (availableParticipants.length === 0) {
+        alert('沒有可用的參與者或所有參與者都已抽過此獎項');
+        return;
+    }
+    
+    if (drawCount > availableParticipants.length) {
+        alert(`參與者數量不足，只有 ${availableParticipants.length} 人可抽`);
+        return;
+    }
+    
+    // 停止背景音樂並播放抽獎音樂
+    backgroundMusic.pause();
+    backgroundMusic.currentTime = 0;
+    drawMusic.play().catch(e => console.error('抽獎音樂播放失敗:', e));
+    
+    const prizeDisplay = document.getElementById('prize-display');
+    prizeDisplay.innerHTML = '<div class="bouncing-container" id="bouncing-text"></div>';
+    const container = document.getElementById('bouncing-text');
+    
+    container.style.position = 'relative';
+    container.style.width = '100%';
+    container.style.height = '400px';
+    container.style.overflow = 'hidden';
+    
+    const bouncingTexts = [];
+    availableParticipants.forEach((name, i) => {
+        const textElement = document.createElement('div');
+        textElement.className = 'bouncing-text-item';
+        textElement.textContent = name;
+        
+        textElement.style.position = 'absolute';
+        textElement.style.fontSize = '72px';
+        textElement.style.fontWeight = 'bold';
+        textElement.style.whiteSpace = 'nowrap';
+        textElement.style.userSelect = 'none';
+        textElement.style.pointerEvents = 'none';
+        
+        const randomColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
+        textElement.style.color = randomColor;
+        textElement.style.textShadow = '2px 2px 4px rgba(0,0,0,0.5)';
+        
+        const containerRect = container.getBoundingClientRect();
+        const maxX = containerRect.width - 100;
+        const maxY = containerRect.height - 30;
+        
+        textElement.style.left = Math.random() * Math.max(maxX, 200) + 'px';
+        textElement.style.top = Math.random() * Math.max(maxY, 200) + 'px';
+        
+        const speed = 15 + Math.random() * 4;
+        const angle = Math.random() * Math.PI * 2;
+        
+        const textData = {
+            element: textElement,
+            x: parseFloat(textElement.style.left),
+            y: parseFloat(textElement.style.top),
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            baseSpeed: speed
+        };
+        
+        bouncingTexts.push(textData);
+        container.appendChild(textElement);
+    });
+    
+    function animateBouncing() {
+        if (!isDrawing) {
+            return;
+        }
+        
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = containerRect.width || 600;
+        const containerHeight = containerRect.height || 400;
+        
+        bouncingTexts.forEach(textData => {
+            const { element, baseSpeed } = textData;
+            
+            textData.x += textData.vx;
+            textData.y += textData.vy;
+            
+            const textWidth = element.offsetWidth || 100;
+            const textHeight = element.offsetHeight || 30;
+            
+            if (textData.x <= 0 || textData.x >= containerWidth - textWidth) {
+                textData.vx = -textData.vx;
+                textData.x = Math.max(0, Math.min(textData.x, containerWidth - textWidth));
+                textData.vx += (Math.random() - 0.5) * 2;
+                textData.vy += (Math.random() - 0.5) * 1;
+            }
+            
+            if (textData.y <= 0 || textData.y >= containerHeight - textHeight) {
+                textData.vy = -textData.vy;
+                textData.y = Math.max(0, Math.min(textData.y, containerHeight - textHeight));
+                textData.vx += (Math.random() - 0.5) * 1;
+                textData.vy += (Math.random() - 0.5) * 2;
+            }
+            
+            const currentSpeed = Math.sqrt(textData.vx * textData.vx + textData.vy * textData.vy);
+            if (currentSpeed > baseSpeed * 2) {
+                textData.vx = (textData.vx / currentSpeed) * baseSpeed * 2;
+                textData.vy = (textData.vy / currentSpeed) * baseSpeed * 2;
+            } else if (currentSpeed < baseSpeed * 0.5) {
+                textData.vx = (textData.vx / currentSpeed) * baseSpeed * 0.5;
+                textData.vy = (textData.vy / currentSpeed) * baseSpeed * 0.5;
+            }
+            
+            if (Math.random() < 0.02) {
+                textData.vx += (Math.random() - 0.5) * 0.5;
+                textData.vy += (Math.random() - 0.5) * 0.5;
+            }
+            
+            element.style.left = textData.x + 'px';
+            element.style.top = textData.y + 'px';
+            
+            if (Math.random() < 0.005) {
+                const newColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
+                element.style.color = newColor;
+            }
+        });
+        
+        animationFrameId = requestAnimationFrame(animateBouncing);
+    }
+    
+    isDrawing = true;
+    animationFrameId = requestAnimationFrame(animateBouncing);
+    
+    document.getElementById('draw-button').disabled = true;
+    document.getElementById('stop-button').disabled = false;
+}
+
+function stopDraw() {
+    if (!isDrawing) return;
+    
+    isDrawing = false;
+    
+    // 停止抽獎音樂並播放背景音樂
+    drawMusic.pause();
+    drawMusic.currentTime = 0;
+    backgroundMusic.play().catch(e => console.error('背景音樂播放失敗:', e));
+    
+    if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+    }
+    
+    document.getElementById('draw-button').disabled = false;
+    document.getElementById('stop-button').disabled = true;
+    
+    const prizeIndex = document.getElementById('prize-select').value;
+    const drawCount = parseInt(document.getElementById('draw-count').value);
+    const prizeName = prizes[prizeIndex].name;
+    const availableParticipants = participants.filter(name => 
+        !results.some(r => r.winner === name)
+    );
+    
+    winners = [];
+    const tempParticipants = [...availableParticipants];
+    
+    for (let i = 0; i < drawCount && tempParticipants.length > 0; i++) {
+        const randomIndex = Math.floor(Math.random() * tempParticipants.length);
+        winners.push(tempParticipants[randomIndex]);
+        tempParticipants.splice(randomIndex, 1);
+    }
+    
+    prizes[prizeIndex].count -= winners.length;
+    
+    winners.forEach(winner => {
+        results.push({
+            prizeIndex: parseInt(prizeIndex),
+            prizeName: prizeName,
+            winner: winner,
+            timestamp: new Date().toISOString()
+        });
+    });
+    
+    const prizeDisplay = document.getElementById('prize-display');
+    prizeDisplay.innerHTML = `
+        <div class="winner-display">
+            <div style="font-size: 28px; margin-bottom: 15px;">🎉 ${prizeName} 獲獎者</div>
+            <div style="font-size: 64px; line-height: 1.5; color: #e74c3c;">
+                ${winners.join('　')}
+            </div>
+        </div>
+    `;
+    
+    updatePrizeSelect();
+    updateMarquee();
+    saveToLocalStorage();
+}
+
+function showModalResults() {
+    const resultsDiv = document.getElementById('modal-results-display');
+    
+    if (results.length === 0) {
+        resultsDiv.innerHTML = '<div class="empty-state">尚無抽獎結果</div>';
+        return;
+    }
+    
+    const groupedResults = {};
+    results.forEach(result => {
+        if (!groupedResults[result.prizeName]) {
+            groupedResults[result.prizeName] = [];
+        }
+        groupedResults[result.prizeName].push(result.winner);
+    });
+    
+    let html = '';
+    for (const prizeName in groupedResults) {
+        html += `
+            <div class="result-group">
+                <h4>🏆 ${prizeName}</h4>
+                <ul>
+                    ${groupedResults[prizeName].map(winner => `<li>👤 ${winner}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+    }
+    
+    resultsDiv.innerHTML = html;
+}
+
+function exportResults() {
+    if (results.length === 0) {
+        alert('尚無抽獎結果可匯出');
+        return;
+    }
+    
+    const csvContent = "data:text/csv;charset=utf-8," 
+        + "獎項名稱,獲獎者,抽獎時間\n"
+        + results.map(result => 
+            `"${result.prizeName}","${result.winner}","${new Date(result.timestamp).toLocaleString()}"`
+        ).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "抽獎結果.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function clearResults() {
+    if (confirm('確定要清除所有抽獎結果嗎？此操作無法復原！')) {
+        const prizeCountMap = {};
+        results.forEach(result => {
+            if (!prizeCountMap[result.prizeName]) {
+                prizeCountMap[result.prizeName] = 0;
+            }
+            prizeCountMap[result.prizeName]++;
+        });
+        
+        prizes.forEach(prize => {
+            if (prizeCountMap[prize.name]) {
+                prize.count += prizeCountMap[prize.name];
+            }
+        });
+        
+        results = [];
+        saveToLocalStorage();
+        updatePrizeSelect();
+        updateMarquee();
+        showModalResults();
+        alert('已清除所有抽獎結果並重置獎項名額');
+    }
+}
+
+function saveData() {
+    const data = {
+        prizes: prizes,
+        participants: participants,
+        results: results,
+        exportTime: new Date().toISOString()
+    };
+    
+    const json = JSON.stringify(data, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `抽獎系統備份_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+function loadDataFromFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            
+            if (confirm('確定要載入此備份檔案嗎？當前資料將會被覆蓋！')) {
+                prizes = data.prizes || [];
+                participants = data.participants || [];
+                results = data.results || [];
+                
+                saveToLocalStorage();
+                updatePrizeSelect();
+                updateDrawButton();
+                updateMarquee();
+                alert('資料載入成功！');
+                
+                document.getElementById('modal-overlay').style.display = 'none';
+            }
+        } catch (error) {
+            alert('檔案解析失敗: ' + error.message);
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+</script>
