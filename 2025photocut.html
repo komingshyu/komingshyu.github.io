@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學生照片批量處理圖片裁切程式（四位數檔名）</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .upload-form { margin-bottom: 20px; }
+        #preview { max-width: 100%; margin-top: 20px; }
+        #downloadLinks { margin-top: 20px; display: flex; flex-wrap: wrap; }
+        #downloadLinks a, #processBtn, #downloadAllBtn, #toggleModeBtn, #clearCoordsBtn, #resetCoordsBtn, #saveCoordsBtn, #loadCoordsBtn, #toggleCustomPanelBtn { 
+            display: inline-block; margin: 5px; padding: 5px 10px; 
+            background-color: #4CAF50; color: white; text-decoration: none; 
+            border-radius: 3px; cursor: pointer; border: none;
+        }
+        #processBtn { background-color: #008CBA; }
+        #downloadAllBtn { background-color: #f44336; }
+        #toggleModeBtn { background-color: #9c27b0; }
+        #clearCoordsBtn { background-color: #ff9800; }
+        #resetCoordsBtn { background-color: #607d8b; }
+        #saveCoordsBtn { background-color: #3f51b5; }
+        #loadCoordsBtn { background-color: #009688; }
+        #toggleCustomPanelBtn { background-color: #795548; }
+        .hidden { display: none !important; }
+        .coord-container { margin-top: 20px; border: 1px solid #ddd; padding: 10px; }
+        .coord-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .coord-table th, .coord-table td { border: 1px solid #ddd; padding: 8px; text-align: center; }
+        .coord-table th { background-color: #f2f2f2; }
+        .image-container { position: relative; display: inline-block; margin-top: 20px; }
+        #customCanvas { border: 1px solid #ddd; cursor: crosshair; }
+        .selection-box { position: absolute; border: 2px dashed #ff0000; pointer-events: none; }
+        .mode-indicator { font-weight: bold; margin: 10px 0; padding: 5px; border-radius: 3px; }
+        .default-mode { background-color: #e3f2fd; color: #0d47a1; }
+        .custom-mode { background-color: #f3e5f5; color: #4a148c; }
+        .custom-upload { margin: 15px 0; padding: 10px; background-color: #f9f9f9; border-radius: 5px; }
+        .custom-upload input { margin-top: 10px; }
+        .notification { position: fixed; top: 20px; right: 20px; padding: 15px; background-color: #4CAF50; color: white; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; opacity: 0; transition: opacity 0.3s; }
+        .notification.show { opacity: 1; }
+        .resize-handle { position: absolute; width: 8px; height: 8px; background-color: #ff0000; border: 1px solid white; }
+        .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .panel-title { margin: 0; }
+        .panel-content { transition: all 0.3s ease; }
+        .collapsed { max-height: 0; overflow: hidden; margin: 0; padding: 0; }
+        .expanded { max-height: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>陽明國中學生照片批量處理圖片裁切程式（四位數檔名）</h1>
+         <font color=red>圖檔大小請注意是否為2480*3507</font>  網頁設計:koming 2025.09.01
+         
+        <div id="modeIndicator" class="mode-indicator default-mode">目前模式：預設座標</div>
+        
+        <button id="toggleModeBtn">切換到自訂座標模式</button>
+        
+        <form id="uploadForm" class="upload-form">
+            輸入班級：<input type="text" id="classInput" placeholder="請輸入班級（兩位數）" required maxlength="2" pattern="[0-9]{2}">
+            <br> 
+            第1張照片<input type="file" id="imageInput1" accept="image/*" required>
+            第2張照片<input type="file" id="imageInput2" accept="image/*" required>
+            <button type="submit" id="processBtn" class="hidden">開始處理照片</button>
+        </form>
+        
+        <div id="customModePanel" class="hidden">
+            <div class="panel-header">
+                <h3 class="panel-title">自訂座標模式</h3>
+                <button id="toggleCustomPanelBtn">隱藏自訂座標畫面</button>
+            </div>
+            
+            <div id="customPanelContent" class="panel-content expanded">
+                <p>請上傳圖片，然後在圖片上拖曳滑鼠選擇裁切區域。每張圖片需要選擇20個區域。</p>
+                
+                <div class="custom-upload">
+                    <label for="customImageInput">上傳圖片用於設定座標：</label>
+                    <input type="file" id="customImageInput" accept="image/*">
+                </div>
+                
+                <div class="image-container">
+                    <canvas id="customCanvas"></canvas>
+                    <div id="selectionBox" class="selection-box hidden"></div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <button id="saveCoordsBtn">儲存座標到瀏覽器</button>
+                    <button id="loadCoordsBtn">從瀏覽器載入座標</button>
+                    <button id="clearCoordsBtn">清除所有座標</button>
+                    <button id="resetCoordsBtn">重置為預設座標</button>
+                </div>
+                
+                <div id="coordContainer" class="coord-container">
+                    <h4>已選擇的座標</h4>
+                    <table id="coordTable" class="coord-table">
+                        <thead>
+                            <tr>
+                                <th>序號</th>
+                                <th>左上角 X</th>
+                                <th>左上角 Y</th>
+                                <th>右下角 X</th>
+                                <th>右下角 Y</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <div id="status"></div>
+        <canvas id="previewCanvas" style="display:none;"></canvas>
+        <div id="downloadLinks"></div>
+        <button id="downloadAllBtn" class="hidden">下載全部照片</button>
+    </div>
+
+    <div id="notification" class="notification"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.7.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script>
+        const defaultCoordinates = {
+            A: [
+                [77,551],[530,555],[1007,555],[1471,555],[1942,555],
+                [77,1270],[530,1270],[1007,1270],[1471,1270],[1942,1270],
+                [77,2002],[530,2002],[1007,2002],[1471,2002],[1942,2002],
+                [77,2720],[530,2720],[1007,2720],[1471,2720],[1942,2720]
+            ],
+            B: [
+                [534,1169],[992,1169],[1467,1169],[1929,1169],[2381,1169],
+                [534,1890],[992,1890],[1467,1890],[1929,1890],[2381,1890],
+                [534,2620],[992,2620],[1467,2620],[1929,2620],[2381,2620],
+                [534,3346],[992,3346],[1467,3346],[1929,3346],[2381,3346]
+            ]
+        };
+        
+        // 深度複製預設座標
+        let coordinates = JSON.parse(JSON.stringify(defaultCoordinates));
+        let customMode = false;
+        let isDrawing = false;
+        let isDragging = false;
+        let isResizing = false;
+        let startX, startY;
+        let currentImage = null;
+        let selectedBoxIndex = -1;
+        let dragOffsetX = 0;
+        let dragOffsetY = 0;
+        let resizeHandle = null; // 'nw', 'ne', 'sw', 'se'
+        
+        const form = document.getElementById('uploadForm');
+        const classInput = document.getElementById('classInput');
+        const imageInput1 = document.getElementById('imageInput1');
+        const imageInput2 = document.getElementById('imageInput2');
+        const processBtn = document.getElementById('processBtn');
+        const status = document.getElementById('status');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const ctx = previewCanvas.getContext('2d');
+        const downloadLinks = document.getElementById('downloadLinks');
+        const downloadAllBtn = document.getElementById('downloadAllBtn');
+        const toggleModeBtn = document.getElementById('toggleModeBtn');
+        const customModePanel = document.getElementById('customModePanel');
+        const modeIndicator = document.getElementById('modeIndicator');
+        const customCanvas = document.getElementById('customCanvas');
+        const customCtx = customCanvas.getContext('2d');
+        const selectionBox = document.getElementById('selectionBox');
+        const coordContainer = document.getElementById('coordContainer');
+        const coordTable = document.getElementById('coordTable');
+        const clearCoordsBtn = document.getElementById('clearCoordsBtn');
+        const resetCoordsBtn = document.getElementById('resetCoordsBtn');
+        const saveCoordsBtn = document.getElementById('saveCoordsBtn');
+        const loadCoordsBtn = document.getElementById('loadCoordsBtn');
+        const customImageInput = document.getElementById('customImageInput');
+        const notification = document.getElementById('notification');
+        const toggleCustomPanelBtn = document.getElementById('toggleCustomPanelBtn');
+        const customPanelContent = document.getElementById('customPanelContent');
+        
+        // 顯示通知
+        function showNotification(message, duration = 3000) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, duration);
+        }
+        
+        // 初始化座標表格
+        function initCoordTable() {
+            const tbody = coordTable.querySelector('tbody');
+            tbody.innerHTML = '';
+            
+            for (let i = 0; i < 20; i++) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td class="ax">${coordinates.A[i][0]}</td>
+                    <td class="ay">${coordinates.A[i][1]}</td>
+                    <td class="bx">${coordinates.B[i][0]}</td>
+                    <td class="by">${coordinates.B[i][1]}</td>
+                    <td><button class="delete-coord" data-index="${i}">刪除</button></td>
+                `;
+                tbody.appendChild(row);
+            }
+            
+            // 添加刪除按鈕事件
+            document.querySelectorAll('.delete-coord').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const index = parseInt(this.getAttribute('data-index'));
+                    // 重置為預設座標
+                    coordinates.A[index] = [...defaultCoordinates.A[index]];
+                    coordinates.B[index] = [...defaultCoordinates.B[index]];
+                    updateCoordTable();
+                    if (currentImage) {
+                        drawImageWithBoxes();
+                    }
+                    saveCoordinatesToStorage();
+                    showNotification(`已重置第 ${index + 1} 個座標為預設值`);
+                });
+            });
+        }
+        
+        // 更新座標表格
+        function updateCoordTable() {
+            const rows = coordTable.querySelectorAll('tbody tr');
+            rows.forEach((row, i) => {
+                row.querySelector('.ax').textContent = coordinates.A[i][0];
+                row.querySelector('.ay').textContent = coordinates.A[i][1];
+                row.querySelector('.bx').textContent = coordinates.B[i][0];
+                row.querySelector('.by').textContent = coordinates.B[i][1];
+            });
+        }
+        
+        // 切換模式
+        toggleModeBtn.addEventListener('click', function() {
+            customMode = !customMode;
+            
+            if (customMode) {
+                customModePanel.classList.remove('hidden');
+                toggleModeBtn.textContent = '切換到預設座標模式';
+                modeIndicator.textContent = '目前模式：自訂座標';
+                modeIndicator.className = 'mode-indicator custom-mode';
+            } else {
+                customModePanel.classList.add('hidden');
+                toggleModeBtn.textContent = '切換到自訂座標模式';
+                modeIndicator.textContent = '目前模式：預設座標';
+                modeIndicator.className = 'mode-indicator default-mode';
+            }
+        });
+        
+        // 切換自訂座標畫面顯示/隱藏
+        toggleCustomPanelBtn.addEventListener('click', function() {
+            if (customPanelContent.classList.contains('expanded')) {
+                customPanelContent.classList.remove('expanded');
+                customPanelContent.classList.add('collapsed');
+                toggleCustomPanelBtn.textContent = '顯示自訂座標畫面';
+            } else {
+                customPanelContent.classList.remove('collapsed');
+                customPanelContent.classList.add('expanded');
+                toggleCustomPanelBtn.textContent = '隱藏自訂座標畫面';
+            }
+        });
+        
+        // 清除所有座標
+        clearCoordsBtn.addEventListener('click', function() {
+            for (let i = 0; i < 20; i++) {
+                coordinates.A[i] = [0, 0];
+                coordinates.B[i] = [0, 0];
+            }
+            updateCoordTable();
+            if (currentImage) {
+                drawImageWithBoxes();
+            }
+            saveCoordinatesToStorage();
+            showNotification('已清除所有座標');
+        });
+        
+        // 重置為預設座標
+        resetCoordsBtn.addEventListener('click', function() {
+            coordinates = JSON.parse(JSON.stringify(defaultCoordinates));
+            updateCoordTable();
+            if (currentImage) {
+                drawImageWithBoxes();
+            }
+            saveCoordinatesToStorage();
+            showNotification('已重置為預設座標');
+        });
+        
+        // 儲存座標到localStorage
+        function saveCoordinatesToStorage() {
+            try {
+                localStorage.setItem('customCoordinates', JSON.stringify(coordinates));
+            } catch (e) {
+                console.error('儲存座標失敗:', e);
+            }
+        }
+        
+        saveCoordsBtn.addEventListener('click', function() {
+            saveCoordinatesToStorage();
+            showNotification('座標已儲存到瀏覽器');
+        });
+        
+        // 從localStorage載入座標
+        loadCoordsBtn.addEventListener('click', function() {
+            try {
+                const savedCoords = localStorage.getItem('customCoordinates');
+                if (savedCoords) {
+                    const parsedCoords = JSON.parse(savedCoords);
+                    // 檢查結構是否正確
+                    if (parsedCoords.A && parsedCoords.B && parsedCoords.A.length === 20 && parsedCoords.B.length === 20) {
+                        coordinates = parsedCoords;
+                        updateCoordTable();
+                        if (currentImage) {
+                            drawImageWithBoxes();
+                        }
+                        showNotification('座標已從瀏覽器載入');
+                    } else {
+                        showNotification('載入的座標格式不正確');
+                    }
+                } else {
+                    showNotification('沒有找到儲存的座標');
+                }
+            } catch (e) {
+                showNotification('載入座標失敗: ' + e.message);
+            }
+        });
+        
+        // 處理自訂圖片上傳
+        customImageInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const file = this.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        currentImage = img;
+                        customCanvas.width = img.width;
+                        customCanvas.height = img.height;
+                        drawImageWithBoxes();
+                        showNotification('圖片已載入，請拖曳滑鼠選擇裁切區域');
+                    };
+                    img.src = e.target.result;
+                };
+                
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // 處理圖片上傳並顯示在自訂模式畫布上
+        imageInput1.addEventListener('change', function() {
+            if (this.files.length > 0 && customMode) {
+                const file = this.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        currentImage = img;
+                        customCanvas.width = img.width;
+                        customCanvas.height = img.height;
+                        drawImageWithBoxes();
+                    };
+                    img.src = e.target.result;
+                };
+                
+                reader.readAsDataURL(file);
+            }
+            checkInputs();
+        });
+        
+        // 在畫布上繪製圖片和選擇框
+        function drawImageWithBoxes() {
+            if (!currentImage) return;
+            
+            customCtx.clearRect(0, 0, customCanvas.width, customCanvas.height);
+            customCtx.drawImage(currentImage, 0, 0);
+            
+            // 繪製所有選擇框
+            customCtx.strokeStyle = 'rgba(255, 0, 0, 0.7)';
+            customCtx.lineWidth = 2;
+            
+            for (let i = 0; i < 20; i++) {
+                const ax = coordinates.A[i][0];
+                const ay = coordinates.A[i][1];
+                const width = coordinates.B[i][0] - ax;
+                const height = coordinates.B[i][1] - ay;
+                
+                if (width > 0 && height > 0) {
+                    // 繪製矩形框
+                    customCtx.strokeRect(ax, ay, width, height);
+                    
+                    // 添加序號
+                    customCtx.fillStyle = 'rgba(255, 0, 0, 0.7)';
+                    customCtx.font = '14px Arial';
+                    customCtx.fillText(`${i + 1}`, ax + 5, ay + 20);
+                    
+                    // 繪製調整大小的控制點（四個角）
+                    const handleSize = 8;
+                    customCtx.fillStyle = 'rgba(255, 0, 0, 0.9)';
+                    
+                    // 左上角
+                    customCtx.fillRect(ax - handleSize/2, ay - handleSize/2, handleSize, handleSize);
+                    // 右上角
+                    customCtx.fillRect(ax + width - handleSize/2, ay - handleSize/2, handleSize, handleSize);
+                    // 左下角
+                    customCtx.fillRect(ax - handleSize/2, ay + height - handleSize/2, handleSize, handleSize);
+                    // 右下角
+                    customCtx.fillRect(ax + width - handleSize/2, ay + height - handleSize/2, handleSize, handleSize);
+                }
+            }
+        }
+        
+        // 檢查點是否在矩形內
+        function isPointInRect(x, y, rectX, rectY, rectWidth, rectHeight) {
+            return x >= rectX && x <= rectX + rectWidth && y >= rectY && y <= rectY + rectHeight;
+        }
+        
+        // 檢查點是否在控制點上
+        function getResizeHandle(x, y, ax, ay, bx, by) {
+            const handleSize = 8;
+            const width = bx - ax;
+            const height = by - ay;
+            
+            // 左上角
+            if (Math.abs(x - ax) < handleSize && Math.abs(y - ay) < handleSize) {
+                return 'nw';
+            }
+            // 右上角
+            if (Math.abs(x - bx) < handleSize && Math.abs(y - ay) < handleSize) {
+                return 'ne';
+            }
+            // 左下角
+            if (Math.abs(x - ax) < handleSize && Math.abs(y - by) < handleSize) {
+                return 'sw';
+            }
+            // 右下角
+            if (Math.abs(x - bx) < handleSize && Math.abs(y - by) < handleSize) {
+                return 'se';
+            }
+            
+            return null;
+        }
+        
+        // 滑鼠事件處理
+        customCanvas.addEventListener('mousedown', function(e) {
+            if (!customMode || !currentImage) return;
+            
+            const rect = customCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 檢查是否點擊了某個框的控制點
+            for (let i = 0; i < 20; i++) {
+                const ax = coordinates.A[i][0];
+                const ay = coordinates.A[i][1];
+                const bx = coordinates.B[i][0];
+                const by = coordinates.B[i][1];
+                const width = bx - ax;
+                const height = by - ay;
+                
+                if (width > 0 && height > 0) {
+                    // 檢查是否點擊了控制點
+                    const handle = getResizeHandle(x, y, ax, ay, bx, by);
+                    if (handle) {
+                        isResizing = true;
+                        selectedBoxIndex = i;
+                        resizeHandle = handle;
+                        startX = x;
+                        startY = y;
+                        return;
+                    }
+                    
+                    // 檢查是否點擊了框內部
+                    if (isPointInRect(x, y, ax, ay, width, height)) {
+                        isDragging = true;
+                        selectedBoxIndex = i;
+                        dragOffsetX = x - ax;
+                        dragOffsetY = y - ay;
+                        return;
+                    }
+                }
+            }
+            
+            // 如果沒有點擊任何框，則開始繪製新框
+            isDrawing = true;
+            startX = x;
+            startY = y;
+            
+            selectionBox.style.left = startX + 'px';
+            selectionBox.style.top = startY + 'px';
+            selectionBox.style.width = '0px';
+            selectionBox.style.height = '0px';
+            selectionBox.classList.remove('hidden');
+        });
+        
+        customCanvas.addEventListener('mousemove', function(e) {
+            if (!customMode || !currentImage) return;
+            
+            const rect = customCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            // 更新鼠標樣式
+            let cursorSet = false;
+            for (let i = 0; i < 20; i++) {
+                const ax = coordinates.A[i][0];
+                const ay = coordinates.A[i][1];
+                const bx = coordinates.B[i][0];
+                const by = coordinates.B[i][1];
+                const width = bx - ax;
+                const height = by - ay;
+                
+                if (width > 0 && height > 0) {
+                    // 檢查是否在控制點上
+                    const handle = getResizeHandle(x, y, ax, ay, bx, by);
+                    if (handle) {
+                        switch(handle) {
+                            case 'nw':
+                            case 'se':
+                                customCanvas.style.cursor = 'nw-resize';
+                                break;
+                            case 'ne':
+                            case 'sw':
+                                customCanvas.style.cursor = 'ne-resize';
+                                break;
+                        }
+                        cursorSet = true;
+                        break;
+                    }
+                    
+                    // 檢查是否在框內部
+                    if (isPointInRect(x, y, ax, ay, width, height)) {
+                        customCanvas.style.cursor = 'move';
+                        cursorSet = true;
+                        break;
+                    }
+                }
+            }
+            
+            if (!cursorSet) {
+                customCanvas.style.cursor = 'crosshair';
+            }
+            
+            // 處理拖曳框
+            if (isDragging && selectedBoxIndex >= 0) {
+                const ax = x - dragOffsetX;
+                const ay = y - dragOffsetY;
+                const width = coordinates.B[selectedBoxIndex][0] - coordinates.A[selectedBoxIndex][0];
+                const height = coordinates.B[selectedBoxIndex][1] - coordinates.A[selectedBoxIndex][1];
+                
+                // 更新座標
+                coordinates.A[selectedBoxIndex][0] = ax;
+                coordinates.A[selectedBoxIndex][1] = ay;
+                coordinates.B[selectedBoxIndex][0] = ax + width;
+                coordinates.B[selectedBoxIndex][1] = ay + height;
+                
+                // 重新繪製
+                drawImageWithBoxes();
+                updateCoordTable();
+                
+                // 立即儲存到localStorage
+                saveCoordinatesToStorage();
+            }
+            
+            // 處理調整大小
+            if (isResizing && selectedBoxIndex >= 0) {
+                const ax = coordinates.A[selectedBoxIndex][0];
+                const ay = coordinates.A[selectedBoxIndex][1];
+                const bx = coordinates.B[selectedBoxIndex][0];
+                const by = coordinates.B[selectedBoxIndex][1];
+                
+                // 根據不同的控制點調整大小
+                switch(resizeHandle) {
+                    case 'nw': // 左上角
+                        coordinates.A[selectedBoxIndex][0] = x;
+                        coordinates.A[selectedBoxIndex][1] = y;
+                        break;
+                    case 'ne': // 右上角
+                        coordinates.B[selectedBoxIndex][0] = x;
+                        coordinates.A[selectedBoxIndex][1] = y;
+                        break;
+                    case 'sw': // 左下角
+                        coordinates.A[selectedBoxIndex][0] = x;
+                        coordinates.B[selectedBoxIndex][1] = y;
+                        break;
+                    case 'se': // 右下角
+                        coordinates.B[selectedBoxIndex][0] = x;
+                        coordinates.B[selectedBoxIndex][1] = y;
+                        break;
+                }
+                
+                // 重新繪製
+                drawImageWithBoxes();
+                updateCoordTable();
+                
+                // 立即儲存到localStorage
+                saveCoordinatesToStorage();
+            }
+            
+            // 處理繪製新框
+            if (isDrawing) {
+                const width = Math.abs(x - startX);
+                const height = Math.abs(y - startY);
+                const left = Math.min(x, startX);
+                const top = Math.min(y, startY);
+                
+                selectionBox.style.left = left + 'px';
+                selectionBox.style.top = top + 'px';
+                selectionBox.style.width = width + 'px';
+                selectionBox.style.height = height + 'px';
+            }
+        });
+        
+        customCanvas.addEventListener('mouseup', function(e) {
+            if (!customMode || !currentImage) return;
+            
+            const rect = customCanvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (isDrawing) {
+                isDrawing = false;
+                selectionBox.classList.add('hidden');
+                
+                // 找到第一個未設置的座標位置
+                let index = -1;
+                for (let i = 0; i < 20; i++) {
+                    if (coordinates.A[i][0] === 0 && coordinates.A[i][1] === 0 && 
+                        coordinates.B[i][0] === 0 && coordinates.B[i][1] === 0) {
+                        index = i;
+                        break;
+                    }
+                }
+                
+                // 如果所有位置都已設置，則替換最後一個
+                if (index === -1) {
+                    index = 19;
+                }
+                
+                // 保存座標
+                coordinates.A[index] = [Math.min(startX, x), Math.min(startY, y)];
+                coordinates.B[index] = [Math.max(startX, x), Math.max(startY, y)];
+                
+                updateCoordTable();
+                drawImageWithBoxes();
+                
+                // 立即儲存到localStorage
+                saveCoordinatesToStorage();
+                
+                status.textContent = `已設定第 ${index + 1} 個裁切區域座標`;
+                showNotification(`已設定第 ${index + 1} 個裁切區域座標`);
+            }
+            
+            if (isDragging) {
+                isDragging = false;
+                selectedBoxIndex = -1;
+                showNotification('框位置已更新');
+            }
+            
+            if (isResizing) {
+                isResizing = false;
+                selectedBoxIndex = -1;
+                resizeHandle = null;
+                showNotification('框大小已調整');
+            }
+        });
+        
+        function checkInputs() {
+            if (classInput.value.length === 2 && imageInput1.files.length > 0 && imageInput2.files.length > 0) {
+                processBtn.classList.remove('hidden');
+            } else {
+                processBtn.classList.add('hidden');
+            }
+        }
+        
+        classInput.addEventListener('input', checkInputs);
+        imageInput2.addEventListener('change', checkInputs);
+        
+        async function processImage(file, startIndex) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = async function(e) {
+                    const img = new Image();
+                    img.onload = async function() {
+                        previewCanvas.width = img.width;
+                        previewCanvas.height = img.height;
+                        ctx.drawImage(img, 0, 0, img.width, img.height);
+                        const batchProcessedImages = [];
+                        for (let i = 0; i < 20; i++) {
+                            // 檢查座標是否有效
+                            if (coordinates.A[i][0] === coordinates.B[i][0] || 
+                                coordinates.A[i][1] === coordinates.B[i][1]) {
+                                status.textContent = `警告：第 ${i + 1} 個裁切區域座標無效，跳過處理`;
+                                continue;
+                            }
+                            
+                            const cropData = {
+                                x: coordinates.A[i][0],
+                                y: coordinates.A[i][1],
+                                width: coordinates.B[i][0] - coordinates.A[i][0],
+                                height: coordinates.B[i][1] - coordinates.A[i][1]
+                            };
+                            
+                            const croppedCanvas = document.createElement('canvas');
+                            croppedCanvas.width = cropData.width;
+                            croppedCanvas.height = cropData.height;
+                            const croppedCtx = croppedCanvas.getContext('2d');
+                            croppedCtx.drawImage(previewCanvas, 
+                                cropData.x, cropData.y, cropData.width, cropData.height, 
+                                0, 0, cropData.width, cropData.height);
+                            const blob = await new Promise(resolve => croppedCanvas.toBlob(resolve, 'image/jpeg'));
+                            const fileName = `${classInput.value}${(startIndex + i + 1).toString().padStart(2, '0')}.jpg`;
+                            batchProcessedImages.push({blob, fileName});
+                            status.textContent = `圖片 ${fileName} 處理完成`;
+                        }
+                        resolve(batchProcessedImages);
+                    }
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (classInput.value.length !== 2 || imageInput1.files.length === 0 || imageInput2.files.length === 0) {
+                alert('請確保已輸入兩位數班級編號並選擇兩張圖片');
+                return;
+            }
+            
+            // 檢查自訂模式下是否所有座標都已設置
+            if (customMode) {
+                let allCoordsSet = true;
+                for (let i = 0; i < 20; i++) {
+                    if (coordinates.A[i][0] === coordinates.A[i][1] || 
+                        coordinates.B[i][0] === coordinates.B[i][1] ||
+                        coordinates.A[i][0] === 0 || coordinates.A[i][1] === 0 ||
+                        coordinates.B[i][0] === 0 || coordinates.B[i][1] === 0) {
+                        allCoordsSet = false;
+                        break;
+                    }
+                }
+                
+                if (!allCoordsSet) {
+                    alert('自訂座標模式下，請確保所有20個裁切區域都已設置座標');
+                    return;
+                }
+            }
+            
+            downloadLinks.innerHTML = ''; // Clear previous links
+            processedImages = []; // Clear previous processed images
+            const batch1 = await processImage(imageInput1.files[0], 0);
+            const batch2 = await processImage(imageInput2.files[0], 20);
+            processedImages = [...batch1, ...batch2];
+            processedImages.forEach(img => {
+                const url = URL.createObjectURL(img.blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = img.fileName;
+                link.textContent = `下載 ${img.fileName}`;
+                downloadLinks.appendChild(link);
+            });
+            status.textContent = '所有圖片處理完成';
+            downloadAllBtn.classList.remove('hidden');
+            
+            // 處理完成後自動隱藏自訂座標畫面
+            if (customMode && customPanelContent.classList.contains('expanded')) {
+                customPanelContent.classList.remove('expanded');
+                customPanelContent.classList.add('collapsed');
+                toggleCustomPanelBtn.textContent = '顯示自訂座標畫面';
+            }
+        });
+        
+        downloadAllBtn.addEventListener('click', async () => {
+            const zip = new JSZip();
+            processedImages.forEach(img => {
+                zip.file(img.fileName, img.blob);
+            });
+            
+            const content = await zip.generateAsync({type: "blob"});
+            saveAs(content, "all_images.zip");
+        });
+        
+        // 初始化座標表格
+        initCoordTable();
+        
+        // 頁面載入時嘗試從localStorage載入座標
+        window.addEventListener('load', function() {
+            try {
+                const savedCoords = localStorage.getItem('customCoordinates');
+                if (savedCoords) {
+                    const parsedCoords = JSON.parse(savedCoords);
+                    // 檢查結構是否正確
+                    if (parsedCoords.A && parsedCoords.B && parsedCoords.A.length === 20 && parsedCoords.B.length === 20) {
+                        coordinates = parsedCoords;
+                        updateCoordTable();
+                        showNotification('已從瀏覽器載入儲存的座標');
+                    }
+                }
+            } catch (e) {
+                console.error('載入儲存的座標失敗', e);
+            }
+        });
+    </script>
+</body>
+</html>
