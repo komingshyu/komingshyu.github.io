@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>向量圖 vs 點陣圖 - 互動教學工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-code {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+        }
+
+        .btn-code:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .comparison-area {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            min-height: 600px;
+            flex: 1;
+        }
+
+        .image-panel {
+            background: #fafafa;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vector-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .pixel-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .zoom-btn {
+            width: 35px;
+            height: 35px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .zoom-btn:hover {
+            background: #764ba2;
+            transform: scale(1.1);
+        }
+
+        .zoom-display {
+            font-weight: bold;
+            color: #333;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .image-container {
+            flex: 1;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 2px dashed #ddd;
+            width: 100%;
+            height: 400px;
+        }
+
+        .image-container.has-image {
+            border: none;
+        }
+
+        .vector-display, .pixel-display {
+            transition: transform 0.3s ease;
+            max-width: 100%;
+            max-height: 100%;
+            width: 350px;
+            height: 350px;
+        }
+
+        .vector-display svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        .pixel-display {
+            image-rendering: auto;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+        }
+
+        .placeholder {
+            text-align: center;
+            color: #999;
+        }
+
+        .placeholder svg {
+            width: 100px;
+            height: 100px;
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 8px;
+        }
+
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            color: #555;
+            line-height: 1.8;
+        }
+
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .comparison-note {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 20px 30px;
+            text-align: center;
+            color: #856404;
+        }
+
+        .pixel-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 107, 107, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            display: none;
+            z-index: 10;
+        }
+
+        .pixel-indicator.visible {
+            display: block;
+        }
+
+        /* Code Display Section */
+        .code-section {
+            background: #f8f9fa;
+            border-top: 2px solid #e0e0e0;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .code-section.expanded {
+            max-height: 600px;
+        }
+
+        .code-header {
+            background: linear-gradient(135deg, #56ab2f 0%, #a8e063 100%);
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .code-header h3 {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.3em;
+        }
+
+        .code-toggle {
+            font-size: 1.5em;
+            transition: transform 0.3s ease;
+        }
+
+        .code-section.expanded .code-toggle {
+            transform: rotate(180deg);
+        }
+
+        .code-content-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 20px 30px;
+            background: #1e1e1e;
+        }
+
+        .code-column {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .code-column-header {
+            background: #2d2d2d;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px 8px 0 0;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 2px;
+        }
+
+        .vector-code-header {
+            border-left: 4px solid #667eea;
+        }
+
+        .pixel-code-header {
+            border-left: 4px solid #f5576c;
+        }
+
+        .code-content {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 350px;
+            border-radius: 0 0 8px 8px;
+            padding: 15px;
+        }
+
+        .code-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        /* Syntax Highlighting */
+        .tag { color: #569cd6; }
+        .attr { color: #9cdcfe; }
+        .value { color: #ce9178; }
+        .comment { color: #6a9955; }
+        .text { color: #d4d4d4; }
+        .pixel-info { color: #4ec9b0; }
+        .pixel-data { color: #dcdcaa; }
+
+        .code-actions {
+            display: flex;
+            gap: 10px;
+            padding: 15px 30px;
+            background: #2d2d2d;
+            justify-content: center;
+        }
+
+        .code-btn {
+            padding: 8px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .code-btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+
+        .pixel-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .stat-item {
+            background: #2d2d2d;
+            padding: 10px;
+            border-radius: 5px;
+            border-left: 3px solid #f5576c;
+        }
+
+        .stat-label {
+            color: #9cdcfe;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        /* Footer 樣式 */
+        footer {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .designer-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1em;
+        }
+
+        .designer-avatar {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #667eea;
+            font-weight: bold;
+            font-size: 1.2em;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .designer-name {
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .designer-title {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .footer-link {
+            color: white;
+            text-decoration: none;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .footer-link:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .copyright {
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-area {
+                grid-template-columns: 1fr;
+            }
+            
+            .code-content-wrapper {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .image-container {
+                height: 300px;
+            }
+            
+            .vector-display, .pixel-display {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .footer-content {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .code-content {
+                font-size: 12px;
+            }
+            
+            .pixel-stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 向量圖 vs 點陣圖</h1>
+            <p>探索兩種圖像格式的神奇差異</p>
+        </header>
+
+        <div class="control-panel">
+            <div class="control-group">
+                <div class="file-input-wrapper">
+                    <button class="btn btn-primary">
+                        📁 載入向量圖檔 (SVG)
+                    </button>
+                    <input type="file" id="fileInput" accept=".svg,image/svg+xml">
+                </div>
+                <button class="btn btn-secondary" onclick="loadSample('circle')">
+                    ⭕ 載入圓形範例
+                </button>
+                <button class="btn btn-secondary" onclick="loadSample('star')">
+                    ⭐ 載入星形範例
+                </button>
+                <button class="btn btn-secondary" onclick="loadSample('complex')">
+                    🎯 載入複雜圖形
+                </button>
+                <button class="btn btn-secondary" onclick="resetZoom()">
+                    🔄 重置縮放
+                </button>
+                <button class="btn btn-code" onclick="toggleCodeView()">
+                    📝 查看原始碼
+                </button>
+            </div>
+        </div>
+
+        <div class="comparison-note">
+            💡 <strong>提示：</strong>一開始兩邊看起來一樣，試著放大圖像，你會發現右邊的點陣圖會出現鋸齒狀，而左邊的向量圖依然清晰！
+        </div>
+
+        <div class="comparison-area">
+            <div class="image-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="vector-icon">⬡</div>
+                        向量圖 (Vector)
+                    </div>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="changeZoom('vector', -0.25)">−</button>
+                        <span class="zoom-display" id="vectorZoom">100%</span>
+                        <button class="zoom-btn" onclick="changeZoom('vector', 0.25)">+</button>
+                    </div>
+                </div>
+                <div class="image-container" id="vectorContainer">
+                    <div class="placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                            <polyline points="21 15 16 10 5 21"></polyline>
+                        </svg>
+                        <p>請載入向量圖檔或選擇範例</p>
+                    </div>
+                    <div class="loading" id="vectorLoading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+                <div class="info-box">
+                    <h3>向量圖特點</h3>
+                    <ul>
+                        <li>使用數學公式描述圖形</li>
+                        <li>無限放大不失真</li>
+                        <li>檔案通常較小</li>
+                        <li>適合Logo、圖標等</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="image-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <div class="pixel-icon">⬜</div>
+                        點陣圖 (Bitmap)
+                    </div>
+                    <div class="zoom-controls">
+                        <button class="zoom-btn" onclick="changeZoom('pixel', -0.25)">−</button>
+                        <span class="zoom-display" id="pixelZoom">100%</span>
+                        <button class="zoom-btn" onclick="changeZoom('pixel', 0.25)">+</button>
+                    </div>
+                </div>
+                <div class="image-container" id="pixelContainer">
+                    <div class="placeholder">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="9" x2="15" y2="15"></line>
+                            <line x1="15" y1="9" x2="9" y2="15"></line>
+                        </svg>
+                        <p>將從左邊擷取圖像</p>
+                    </div>
+                    <div class="loading" id="pixelLoading">
+                        <div class="spinner"></div>
+                    </div>
+                    <div class="pixel-indicator" id="pixelIndicator">
+                        📊 點陣圖 - 放大後會模糊
+                    </div>
+                </div>
+                <div class="info-box">
+                    <h3>點陣圖特點</h3>
+                    <ul>
+                        <li>由像素點組成</li>
+                        <li>放大會變模糊</li>
+                        <li>檔案大小取決於解析度</li>
+                        <li>適合照片、繪畫等</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Code Display Section -->
+        <div class="code-section" id="codeSection">
+            <div class="code-header" onclick="toggleCodeView()">
+                <h3>
+                    <span>📝</span>
+                    查看原始碼比較
+                </h3>
+                <span class="code-toggle">▼</span>
+            </div>
+            <div class="code-content-wrapper">
+                <!-- 向量圖原始碼 -->
+                <div class="code-column">
+                    <div class="code-column-header vector-code-header">
+                        <span>⬡</span>
+                        向量圖原始碼 (SVG)
+                    </div>
+                    <div class="code-content">
+                        <pre id="vectorCodeDisplay"></pre>
+                    </div>
+                </div>
+                
+                <!-- 點陣圖資訊 -->
+                <div class="code-column">
+                    <div class="code-column-header pixel-code-header">
+                        <span>⬜</span>
+                        點陣圖資訊 (Bitmap)
+                    </div>
+                    <div class="code-content">
+                        <div class="pixel-stats" id="pixelStats">
+                            <div class="stat-item">
+                                <div class="stat-label">解析度</div>
+                                <div class="stat-value" id="pixelResolution">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">總像素數</div>
+                                <div class="stat-value" id="pixelCount">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">檔案大小</div>
+                                <div class="stat-value" id="pixelSize">-</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-label">色彩深度</div>
+                                <div class="stat-value" id="pixelDepth">24位元</div>
+                            </div>
+                        </div>
+                        <pre id="pixelCodeDisplay"></pre>
+                    </div>
+                </div>
+            </div>
+            <div class="code-actions">
+                <button class="code-btn" onclick="copyVectorCode()">
+                    📋 複製向量圖代碼
+                </button>
+                <button class="code-btn" onclick="downloadVectorCode()">
+                    💾 下載向量圖
+                </button>
+                <button class="code-btn" onclick="downloadPixelCode()">
+                    🖼️ 下載點陣圖
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer 設計者資訊 -->
+    <footer>
+        <div class="footer-content">
+            <div class="designer-info">
+                <div class="designer-avatar">K</div>
+                <div>
+                    <div class="designer-name">設計者：koming</div>
+                    <div class="designer-title">互動教學工具開發</div>
+                </div>
+            </div>
+            <div class="footer-links">
+                <a href="#" class="footer-link" onclick="showAbout(); return false;">
+                    <span>ℹ️</span> 關於此工具
+                </a>
+                <a href="#" class="footer-link" onclick="showContact(); return false;">
+                    <span>📧</span> 聯絡方式
+                </a>
+            </div>
+        </div>
+        <div class="copyright">
+            © 2024 向量圖 vs 點陣圖 教學工具 | 版權所有
+        </div>
+    </footer>
+
+    <script>
+        let currentSVG = null;
+        let currentPixelData = null;
+        let vectorZoom = 1;
+        let pixelZoom = 1;
+        let originalBitmapData = null;
+        const DISPLAY_SIZE = 350; // 固定顯示尺寸
+
+        // 初始化檔案輸入
+        document.querySelector('.file-input-wrapper button').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file && file.type === 'image/svg+xml') {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    loadSVGContent(event.target.result);
+                };
+                reader.readAsText(file);
+            } else {
+                showNotification('請選擇SVG格式的向量圖檔！');
+            }
+        });
+
+        function loadSVGContent(svgContent) {
+            currentSVG = svgContent;
+            displayVectorImage(svgContent);
+            captureAndDisplayBitmap(svgContent);
+            updateCodeDisplay(svgContent);
+        }
+
+        function displayVectorImage(svgContent) {
+            const container = document.getElementById('vectorContainer');
+            container.classList.add('has-image');
+            
+            // 創建一個臨時的div來解析SVG
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = svgContent;
+            const svg = tempDiv.querySelector('svg');
+            
+            if (svg) {
+                // 獲取SVG的viewBox或尺寸
+                let viewBox = svg.getAttribute('viewBox');
+                let width = svg.getAttribute('width');
+                let height = svg.getAttribute('height');
+                
+                // 如果沒有viewBox，嘗試從width/height創建
+                if (!viewBox && width && height) {
+                    viewBox = `0 0 ${width} ${height}`;
+                }
+                
+                // 如果都沒有，使用默認值
+                if (!viewBox) {
+                    viewBox = '0 0 200 200';
+                }
+                
+                // 設置SVG屬性以確保正確縮放
+                svg.setAttribute('viewBox', viewBox);
+                svg.setAttribute('width', '100%');
+                svg.setAttribute('height', '100%');
+                svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                
+                container.innerHTML = `
+                    <div class="vector-display" id="vectorDisplay" style="transform: scale(${vectorZoom})">
+                        ${svg.outerHTML}
+                    </div>
+                `;
+            }
+        }
+
+        function captureAndDisplayBitmap(svgContent) {
+            const container = document.getElementById('pixelContainer');
+            container.classList.add('has-image');
+            
+            // 創建高解析度canvas
+            const highResolution = DISPLAY_SIZE * 4; // 4倍解析度
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = highResolution;
+            canvas.height = highResolution;
+            
+            // 創建圖像並繪製到canvas
+            const img = new Image();
+            const svgBlob = new Blob([svgContent], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+            
+            img.onload = function() {
+                // 繪製高解析度圖像
+                ctx.drawImage(img, 0, 0, highResolution, highResolution);
+                
+                // 保存點陣圖數據
+                currentPixelData = {
+                    width: highResolution,
+                    height: highResolution,
+                    dataUrl: canvas.toDataURL('image/png'),
+                    imageData: ctx.getImageData(0, 0, highResolution, highResolution)
+                };
+                
+                // 更新點陣圖統計信息
+                updatePixelStats(currentPixelData);
+                
+                // 創建顯示用的canvas（固定尺寸）
+                const displayCanvas = document.createElement('canvas');
+                const displayCtx = displayCanvas.getContext('2d');
+                displayCanvas.width = DISPLAY_SIZE;
+                displayCanvas.height = DISPLAY_SIZE;
+                
+                // 繪製到顯示canvas
+                displayCtx.drawImage(canvas, 0, 0, DISPLAY_SIZE, DISPLAY_SIZE);
+                
+                // 顯示點陣圖
+                container.innerHTML = `
+                    <canvas class="pixel-display" id="pixelDisplay" 
+                            width="${DISPLAY_SIZE}" 
+                            height="${DISPLAY_SIZE}"
+                            style="transform: scale(${pixelZoom})">
+                    </canvas>
+                    <div class="pixel-indicator" id="pixelIndicator">
+                        📊 點陣圖 - 放大後會模糊
+                    </div>
+                `;
+                
+                const finalCanvas = document.getElementById('pixelDisplay');
+                const finalCtx = finalCanvas.getContext('2d');
+                finalCtx.drawImage(displayCanvas, 0, 0);
+                
+                // 設置圖像渲染方式
+                finalCanvas.style.imageRendering = 'auto';
+                
+                URL.revokeObjectURL(url);
+            };
+            
+            img.src = url;
+        }
+
+        function updatePixelStats(pixelData) {
+            if (!pixelData) return;
+            
+            const width = pixelData.width;
+            const height = pixelData.height;
+            const totalPixels = width * height;
+            
+            // 計算檔案大小（估算）
+            const fileSize = Math.round(totalPixels * 3 / 1024); // RGB = 3 bytes per pixel
+            
+            document.getElementById('pixelResolution').textContent = `${width} × ${height}`;
+            document.getElementById('pixelCount').textContent = totalPixels.toLocaleString();
+            document.getElementById('pixelSize').textContent = `~${fileSize} KB`;
+            
+            // 顯示部分像素數據
+            const pixelInfo = generatePixelInfo(pixelData);
+            document.getElementById('pixelCodeDisplay').innerHTML = pixelInfo;
+        }
+
+        function generatePixelInfo(pixelData) {
+            const { imageData, width, height } = pixelData;
+            const data = imageData.data;
+            
+            let info = `<span class="pixel-info">// 點陣圖像素數據分析</span>\n\n`;
+            info += `<span class="pixel-info">圖像尺寸:</span> <span class="pixel-data">${width} × ${height}</span> 像素\n`;
+            info += `<span class="pixel-info">總像素數:</span> <span class="pixel-data">${(width * height).toLocaleString()}</span>\n`;
+            info += `<span class="pixel-info">數據長度:</span> <span class="pixel-data">${data.length}</span> bytes\n\n`;
+            
+            // 顯示前10個像素的RGB值
+            info += `<span class="pixel-info">// 前10個像素的RGB值:</span>\n`;
+            for (let i = 0; i < Math.min(10, data.length / 4); i++) {
+                const idx = i * 4;
+                const r = data[idx];
+                const g = data[idx + 1];
+                const b = data[idx + 2];
+                const a = data[idx + 3];
+                info += `像素[${i}]: <span class="pixel-data">RGB(${r}, ${g}, ${b})</span> `;
+                if ((i + 1) % 2 === 0) info += '\n';
+            }
+            
+            info += `\n\n<span class="pixel-info">// Base64 編碼預覽 (前100字元):</span>\n`;
+            const base64 = pixelData.dataUrl.split(',')[1];
+            info += `<span class="pixel-data">${base64.substring(0, 100)}...</span>`;
+            
+            return info;
+        }
+
+        function updateCodeDisplay(svgContent) {
+            const vectorCodeDisplay = document.getElementById('vectorCodeDisplay');
+            const highlightedCode = highlightSVGCode(svgContent);
+            vectorCodeDisplay.innerHTML = highlightedCode;
+        }
+
+        function highlightSVGCode(code) {
+            // 簡單的語法高亮
+            return code
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/(&lt;\/?)([a-zA-Z]+)/g, '<span class="tag">$1</span><span class="tag">$2</span>')
+                .replace(/([a-zA-Z-]+)(=)/g, '<span class="attr">$1</span>$2')
+                .replace(/="([^"]*)"/g, '=<span class="value">"$1"</span>')
+                .replace(/(&lt;!--.*?--&gt;)/g, '<span class="comment">$1</span>');
+        }
+
+        function toggleCodeView() {
+            const codeSection = document.getElementById('codeSection');
+            codeSection.classList.toggle('expanded');
+        }
+
+        function copyVectorCode() {
+            if (!currentSVG) {
+                showNotification('請先載入向量圖檔！');
+                return;
+            }
+            
+            navigator.clipboard.writeText(currentSVG).then(() => {
+                showNotification('向量圖代碼已複製到剪貼簿！');
+            }).catch(() => {
+                showNotification('複製失敗，請手動選擇複製');
+            });
+        }
+
+        function downloadVectorCode() {
+            if (!currentSVG) {
+                showNotification('請先載入向量圖檔！');
+                return;
+            }
+            
+            const blob = new Blob([currentSVG], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'vector-image.svg';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showNotification('向量圖檔案下載中...');
+        }
+
+        function downloadPixelCode() {
+            if (!currentPixelData) {
+                showNotification('請先載入圖像！');
+                return;
+            }
+            
+            const a = document.createElement('a');
+            a.href = currentPixelData.dataUrl;
+            a.download = 'bitmap-image.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            showNotification('點陣圖檔案下載中...');
+        }
+
+        function changeZoom(type, delta) {
+            if (type === 'vector') {
+                vectorZoom = Math.max(0.25, Math.min(4, vectorZoom + delta));
+                document.getElementById('vectorZoom').textContent = Math.round(vectorZoom * 100) + '%';
+                const display = document.getElementById('vectorDisplay');
+                if (display) {
+                    display.style.transform = `scale(${vectorZoom})`;
+                }
+            } else {
+                pixelZoom = Math.max(0.25, Math.min(4, pixelZoom + delta));
+                document.getElementById('pixelZoom').textContent = Math.round(pixelZoom * 100) + '%';
+                const display = document.getElementById('pixelDisplay');
+                if (display) {
+                    display.style.transform = `scale(${pixelZoom})`;
+                    
+                    // 當放大超過150%時，顯示像素化效果
+                    const indicator = document.getElementById('pixelIndicator');
+                    if (pixelZoom > 1.5) {
+                        display.style.imageRendering = 'pixelated';
+                        indicator.classList.add('visible');
+                    } else {
+                        display.style.imageRendering = 'auto';
+                        indicator.classList.remove('visible');
+                    }
+                }
+            }
+        }
+
+        function resetZoom() {
+            vectorZoom = 1;
+            pixelZoom = 1;
+            document.getElementById('vectorZoom').textContent = '100%';
+            document.getElementById('pixelZoom').textContent = '100%';
+            
+            const vectorDisplay = document.getElementById('vectorDisplay');
+            const pixelDisplay = document.getElementById('pixelDisplay');
+            
+            if (vectorDisplay) vectorDisplay.style.transform = 'scale(1)';
+            if (pixelDisplay) {
+                pixelDisplay.style.transform = 'scale(1)';
+                pixelDisplay.style.imageRendering = 'auto';
+                const indicator = document.getElementById('pixelIndicator');
+                if (indicator) indicator.classList.remove('visible');
+            }
+        }
+
+        function loadSample(type) {
+            let svgContent = '';
+            
+            switch(type) {
+                case 'circle':
+                    svgContent = `
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <circle cx="100" cy="100" r="80" fill="url(#grad1)" stroke="#333" stroke-width="3"/>
+                            <circle cx="100" cy="100" r="40" fill="white" opacity="0.8"/>
+                        </svg>
+                    `;
+                    break;
+                    
+                case 'star':
+                    svgContent = `
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="grad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#f093fb;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#f5576c;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M100,20 L120,70 L170,70 L130,100 L150,150 L100,120 L50,150 L70,100 L30,70 L80,70 Z" 
+                                  fill="url(#grad2)" stroke="#333" stroke-width="2"/>
+                        </svg>
+                    `;
+                    break;
+                    
+                case 'complex':
+                    svgContent = `
+                        <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="grad3" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#4facfe;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#00f2fe;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <rect x="20" y="20" width="160" height="160" rx="20" fill="url(#grad3)" stroke="#333" stroke-width="2"/>
+                            <polygon points="100,40 140,80 140,120 100,160 60,120 60,80" fill="white" opacity="0.9"/>
+                            <circle cx="100" cy="100" r="30" fill="#ff6b6b"/>
+                            <text x="100" y="105" text-anchor="middle" fill="white" font-size="20" font-weight="bold">SVG</text>
+                        </svg>
+                    `;
+                    break;
+            }
+            
+            loadSVGContent(svgContent);
+        }
+
+        function showNotification(message) {
+            // 創建通知元素
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #ff6b6b;
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // 3秒後移除
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        function showAbout() {
+            showNotification('這是一個專為國中學生設計的向量圖與點陣圖比較教學工具');
+        }
+
+        function showContact() {
+            showNotification('設計者 koming - 感謝使用此教學工具！');
+        }
+
+        // 添加動畫樣式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // 載入預設範例
+        window.addEventListener('load', () => {
+            loadSample('circle');
+        });
+    </script>
+</body>
+</html>

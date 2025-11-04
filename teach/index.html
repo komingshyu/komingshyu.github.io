@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>與AI合作設計的有用網頁</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #1a5276;
+            --secondary-color: #2980b9;
+            --accent-color: #3498db;
+            --light-color: #ecf0f1;
+            --dark-color: #2c3e50;
+            --success-color: #27ae60;
+            --warning-color: #f39c12;
+            --danger-color: #e74c3c;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 1rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(45deg);
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .header .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .intro {
+            background-color: white;
+            padding: 2rem;
+            text-align: center;
+            max-width: 800px;
+            margin: 2rem auto;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        .intro p {
+            color: #555;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .links {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+
+        .link-box {
+            background-color: white;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .link-box::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--accent-color), var(--secondary-color));
+        }
+
+        .link-box:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .link-box .icon {
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            transition: var(--transition);
+        }
+
+        .link-box:hover .icon {
+            transform: scale(1.2);
+            color: var(--secondary-color);
+        }
+
+        .link-box a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .link-box:hover a {
+            color: var(--secondary-color);
+        }
+
+        .link-box p {
+            font-size: 1rem;
+            color: #666;
+            margin: 0;
+        }
+
+        .footer {
+            background-color: var(--dark-color);
+            color: white;
+            text-align: center;
+            padding: 2rem;
+            margin-top: 3rem;
+        }
+
+        .footer p {
+            margin: 0;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .links {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .header {
+                padding: 2rem 1rem;
+            }
+            
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            
+            .links {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>國中資訊科技教學使用的網頁</h1>
+        <div class="subtitle">使用AI協助設計完成</div>
+    </div>
+    
+    <div class="container">
+        <div class="intro">
+            <p>這是透過AI協助設計的網頁工具，提供大家參考使用，資料不會上傳，都在電腦本機處理。</p>
+        </div>
+        
+        <div class="links" id="links">
+            <!-- Links will be dynamically inserted here -->
+        </div>
+    </div>
+    
+    <div class="footer">
+        <p>© 2025 Koming與AI合作設計 | 所有工具均在本地運行，保護您的隱私安全</p>
+    </div>
+
+    <script src="data.js"></script>
+    <script>
+        // 校園與風景相關圖標集合
+        const iconClasses = [
+            // 校園相關圖標
+            'fa-school', 'fa-graduation-cap', 'fa-book', 'fa-chalkboard-teacher',
+            'fa-user-graduate', 'fa-laptop', 'fa-flask', 'fa-microscope',
+            'fa-calculator', 'fa-ruler-combined', 'fa-clipboard-list', 'fa-pen',
+            
+            // 風景相關圖標
+            'fa-mountain', 'fa-tree', 'fa-sun', 'fa-cloud-sun',
+            'fa-water', 'fa-leaf', 'fa-campground', 'fa-umbrella-beach',
+            'fa-snowflake', 'fa-wind', 'fa-cloud-rain', 'fa-bridge',
+            'fa-landmark', 'fa-monument', 'fa-mosque', 'fa-church',
+            'fa-synagogue', 'fa-hindu', 'fa-vihara', 'fa-torii-gate',
+            'fa-archway', 'fa-dharmachakra', 'fa-om', 'fa-star-and-crescent',
+            'fa-menorah', 'fa-cross', 'fa-yin-yang', 'fa-peace'
+        ];
+        
+        // 專業配色方案
+        const colorSchemes = [
+            { primary: '#3498db', secondary: '#2980b9' },
+            { primary: '#2ecc71', secondary: '#27ae60' },
+            { primary: '#e74c3c', secondary: '#c0392b' },
+            { primary: '#f39c12', secondary: '#d35400' },
+            { primary: '#9b59b6', secondary: '#8e44ad' },
+            { primary: '#1abc9c', secondary: '#16a085' },
+            { primary: '#34495e', secondary: '#2c3e50' }
+        ];
+        
+        function getRandomIcon() {
+            return iconClasses[Math.floor(Math.random() * iconClasses.length)];
+        }
+        
+        function getRandomColorScheme() {
+            return colorSchemes[Math.floor(Math.random() * colorSchemes.length)];
+        }
+        
+        function loadLinks(data) {
+            const linksContainer = document.getElementById('links');
+            
+            data.forEach(item => {
+                const colorScheme = getRandomColorScheme();
+                const linkBox = document.createElement('div');
+                linkBox.className = 'link-box';
+                
+                // 添加自定義樣式
+                linkBox.style.setProperty('--accent-color', colorScheme.primary);
+                linkBox.style.setProperty('--secondary-color', colorScheme.secondary);
+                
+                linkBox.innerHTML = `
+                    <div class="icon">
+                        <i class="fas ${getRandomIcon()}"></i>
+                    </div>
+                    <a href="${item.link}" target="_blank">${item.name}</a>
+                    <p>${item.description}</p>
+                `;
+                
+                linksContainer.appendChild(linkBox);
+            });
+        }
+        
+        // 頁面載入後執行
+        window.addEventListener('DOMContentLoaded', function() {
+            if (typeof linksData !== 'undefined') {
+                loadLinks(linksData);
+            } else {
+                console.error('linksData is not defined');
+            }
+        });
+    </script>
+</body>
+</html>

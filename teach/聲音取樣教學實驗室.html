@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>聲音取樣教學實驗室 - 探索數位音訊的奧秘</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .control-panel {
+            background: #f8f9fa;
+            padding: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .control-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-upload {
+            position: relative;
+            display: inline-block;
+        }
+
+        .file-upload input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-upload-label {
+            display: inline-block;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-upload-label:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .sample-rate-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: white;
+            padding: 15px 25px;
+            border-radius: 50px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sample-rate-control label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .sample-rate-control input[type="range"] {
+            width: 200px;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .sample-rate-control input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .sample-rate-value {
+            font-weight: bold;
+            color: #667eea;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 1em;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #48c774 0%, #3ec46d 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(72, 199, 116, 0.4);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(72, 199, 116, 0.6);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 107, 107, 0.4);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 107, 107, 0.6);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        .audio-panel {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .audio-panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .panel-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .panel-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .badge-original {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .badge-sampled {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .waveform-container {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            position: relative;
+            height: 200px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 5px;
+        }
+
+        .audio-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .audio-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .play-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .play-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .play-btn.playing {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+        }
+
+        .download-btn {
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: none;
+            background: linear-gradient(135deg, #48c774 0%, #3ec46d 100%);
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(72, 199, 116, 0.4);
+        }
+
+        .download-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .info-tooltip {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: help;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        @media (max-width: 768px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 1.8em;
+            }
+            
+            .control-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>🎵 聲音取樣教學實驗室</h1>
+            <p>探索數位音訊的奧秘 - 理解取樣頻率如何影響音質</p>
+        </header>
+
+        <section class="control-panel">
+            <div class="control-group">
+                <div class="file-upload">
+                    <input type="file" id="audioFile" accept="audio/*">
+                    <label for="audioFile" class="file-upload-label">
+                        📁 選擇音檔
+                    </label>
+                </div>
+
+                <div class="sample-rate-control">
+                    <label for="sampleRate">取樣頻率:</label>
+                    <input type="range" id="sampleRate" min="1000" max="48000" value="8000" step="1000">
+                    <span class="sample-rate-value" id="sampleRateValue">8000 Hz</span>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary" id="processBtn" disabled>
+                        🔧 開始取樣
+                    </button>
+                    <button class="btn btn-secondary" id="resetBtn">
+                        🔄 重置
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <main class="comparison-container">
+            <div class="audio-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">原始音檔</h2>
+                    <span class="panel-badge badge-original">Original</span>
+                </div>
+
+                <div class="waveform-container">
+                    <canvas id="originalWaveform"></canvas>
+                    <div class="info-tooltip" title="這是原始音檔的完整波形">?</div>
+                </div>
+
+                <div class="audio-info">
+                    <div class="info-item">
+                        <span class="info-label">檔案名稱</span>
+                        <span class="info-value" id="originalFileName">尚未載入</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">取樣率</span>
+                        <span class="info-value" id="originalSampleRate">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">時長</span>
+                        <span class="info-value" id="originalDuration">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">檔案大小</span>
+                        <span class="info-value" id="originalFileSize">-</span>
+                    </div>
+                </div>
+
+                <div class="audio-controls">
+                    <button class="play-btn" id="playOriginal" disabled>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="originalProgress"></div>
+                </div>
+            </div>
+
+            <div class="audio-panel">
+                <div class="panel-header">
+                    <h2 class="panel-title">取樣後音檔</h2>
+                    <span class="panel-badge badge-sampled">Sampled</span>
+                </div>
+
+                <div class="waveform-container">
+                    <canvas id="sampledWaveform"></canvas>
+                    <div class="info-tooltip" title="這是經過取樣處理後的波形">?</div>
+                </div>
+
+                <div class="audio-info">
+                    <div class="info-item">
+                        <span class="info-label">檔案名稱</span>
+                        <span class="info-value" id="sampledFileName">尚未處理</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">取樣率</span>
+                        <span class="info-value" id="sampledSampleRate">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">時長</span>
+                        <span class="info-value" id="sampledDuration">-</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">壓縮比例</span>
+                        <span class="info-value" id="compressionRatio">-</span>
+                    </div>
+                </div>
+
+                <div class="audio-controls">
+                    <button class="play-btn" id="playSampled" disabled>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    </button>
+                    <button class="download-btn" id="downloadBtn" disabled>
+                        ⬇ 下載音檔
+                    </button>
+                </div>
+
+                <div class="progress-bar">
+                    <div class="progress-fill" id="sampledProgress"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        class AudioSampler {
+            constructor() {
+                this.audioContext = null;
+                this.originalBuffer = null;
+                this.sampledBuffer = null;
+                this.originalSource = null;
+                this.sampledSource = null;
+                this.originalAudio = null;
+                this.sampledAudio = null;
+                this.isPlayingOriginal = false;
+                this.isPlayingSampled = false;
+                
+                this.initializeElements();
+                this.attachEventListeners();
+            }
+
+            initializeElements() {
+                this.elements = {
+                    audioFile: document.getElementById('audioFile'),
+                    sampleRate: document.getElementById('sampleRate'),
+                    sampleRateValue: document.getElementById('sampleRateValue'),
+                    processBtn: document.getElementById('processBtn'),
+                    resetBtn: document.getElementById('resetBtn'),
+                    playOriginal: document.getElementById('playOriginal'),
+                    playSampled: document.getElementById('playSampled'),
+                    downloadBtn: document.getElementById('downloadBtn'),
+                    originalWaveform: document.getElementById('originalWaveform'),
+                    sampledWaveform: document.getElementById('sampledWaveform'),
+                    originalFileName: document.getElementById('originalFileName'),
+                    originalSampleRate: document.getElementById('originalSampleRate'),
+                    originalDuration: document.getElementById('originalDuration'),
+                    originalFileSize: document.getElementById('originalFileSize'),
+                    sampledFileName: document.getElementById('sampledFileName'),
+                    sampledSampleRate: document.getElementById('sampledSampleRate'),
+                    sampledDuration: document.getElementById('sampledDuration'),
+                    compressionRatio: document.getElementById('compressionRatio'),
+                    originalProgress: document.getElementById('originalProgress'),
+                    sampledProgress: document.getElementById('sampledProgress'),
+                    loadingOverlay: document.getElementById('loadingOverlay')
+                };
+            }
+
+            attachEventListeners() {
+                this.elements.audioFile.addEventListener('change', (e) => this.handleFileUpload(e));
+                this.elements.sampleRate.addEventListener('input', (e) => {
+                    this.elements.sampleRateValue.textContent = `${e.target.value} Hz`;
+                });
+                this.elements.processBtn.addEventListener('click', () => this.processAudio());
+                this.elements.resetBtn.addEventListener('click', () => this.reset());
+                this.elements.playOriginal.addEventListener('click', () => this.togglePlayOriginal());
+                this.elements.playSampled.addEventListener('click', () => this.togglePlaySampled());
+                this.elements.downloadBtn.addEventListener('click', () => this.downloadSampled());
+            }
+
+            async handleFileUpload(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                this.showLoading(true);
+                
+                try {
+                    if (!this.audioContext) {
+                        this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+
+                    const arrayBuffer = await file.arrayBuffer();
+                    this.originalBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+                    
+                    this.updateOriginalInfo(file);
+                    this.drawWaveform(this.elements.originalWaveform, this.originalBuffer);
+                    this.elements.processBtn.disabled = false;
+                    this.elements.playOriginal.disabled = false;
+                    
+                    // Create audio element for playback
+                    this.originalAudio = new Audio(URL.createObjectURL(file));
+                    this.originalAudio.addEventListener('timeupdate', () => {
+                        this.updateProgress('original');
+                    });
+                    this.originalAudio.addEventListener('ended', () => {
+                        this.isPlayingOriginal = false;
+                        this.updatePlayButton('original');
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading audio:', error);
+                    alert('載入音檔失敗，請確認檔案格式是否正確');
+                } finally {
+                    this.showLoading(false);
+                }
+            }
+
+            processAudio() {
+                if (!this.originalBuffer) return;
+
+                this.showLoading(true);
+                
+                setTimeout(() => {
+                    const targetSampleRate = parseInt(this.elements.sampleRate.value);
+                    const originalSampleRate = this.originalBuffer.sampleRate;
+                    
+                    // Calculate resampling ratio
+                    const ratio = targetSampleRate / originalSampleRate;
+                    const newLength = Math.floor(this.originalBuffer.length * ratio);
+                    
+                    // Create new buffer
+                    this.sampledBuffer = this.audioContext.createBuffer(
+                        this.originalBuffer.numberOfChannels,
+                        newLength,
+                        targetSampleRate
+                    );
+                    
+                    // Resample each channel
+                    for (let channel = 0; channel < this.originalBuffer.numberOfChannels; channel++) {
+                        const originalData = this.originalBuffer.getChannelData(channel);
+                        const sampledData = this.sampledBuffer.getChannelData(channel);
+                        
+                        for (let i = 0; i < newLength; i++) {
+                            const originalIndex = Math.floor(i / ratio);
+                            sampledData[i] = originalData[originalIndex];
+                        }
+                    }
+                    
+                    this.updateSampledInfo();
+                    this.drawWaveform(this.elements.sampledWaveform, this.sampledBuffer);
+                    this.elements.playSampled.disabled = false;
+                    this.elements.downloadBtn.disabled = false;
+                    
+                    // Create audio element for sampled audio
+                    this.createSampledAudio();
+                    
+                    this.showLoading(false);
+                }, 100);
+            }
+
+            createSampledAudio() {
+                // Convert buffer to WAV
+                const wav = this.bufferToWave(this.sampledBuffer);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                
+                if (this.sampledAudio) {
+                    URL.revokeObjectURL(this.sampledAudio.src);
+                }
+                
+                this.sampledAudio = new Audio(url);
+                this.sampledAudio.addEventListener('timeupdate', () => {
+                    this.updateProgress('sampled');
+                });
+                this.sampledAudio.addEventListener('ended', () => {
+                    this.isPlayingSampled = false;
+                    this.updatePlayButton('sampled');
+                });
+            }
+
+            bufferToWave(buffer) {
+                const length = buffer.length * buffer.numberOfChannels * 2 + 44;
+                const arrayBuffer = new ArrayBuffer(length);
+                const view = new DataView(arrayBuffer);
+                const channels = [];
+                let offset = 0;
+                let pos = 0;
+                
+                // Write WAV header
+                const setUint16 = (data) => {
+                    view.setUint16(pos, data, true);
+                    pos += 2;
+                };
+                
+                const setUint32 = (data) => {
+                    view.setUint32(pos, data, true);
+                    pos += 4;
+                };
+                
+                // RIFF identifier
+                setUint32(0x46464952);
+                // file length
+                setUint32(length - 8);
+                // WAVE identifier
+                setUint32(0x45564157);
+                // fmt chunk identifier
+                setUint32(0x20746d66);
+                // chunk length
+                setUint32(16);
+                // sample format (PCM)
+                setUint16(1);
+                // channel count
+                setUint16(buffer.numberOfChannels);
+                // sample rate
+                setUint32(buffer.sampleRate);
+                // byte rate
+                setUint32(buffer.sampleRate * 2 * buffer.numberOfChannels);
+                // block align
+                setUint16(buffer.numberOfChannels * 2);
+                // bits per sample
+                setUint16(16);
+                // data chunk identifier
+                setUint32(0x61746164);
+                // data length
+                setUint32(length - pos - 4);
+                
+                // Write interleaved data
+                for (let i = 0; i < buffer.numberOfChannels; i++) {
+                    channels.push(buffer.getChannelData(i));
+                }
+                
+                while (pos < length) {
+                    for (let i = 0; i < buffer.numberOfChannels; i++) {
+                        let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                        sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                        view.setInt16(pos, sample, true);
+                        pos += 2;
+                    }
+                    offset++;
+                }
+                
+                return arrayBuffer;
+            }
+
+            drawWaveform(canvas, buffer) {
+                const ctx = canvas.getContext('2d');
+                const width = canvas.offsetWidth;
+                const height = canvas.offsetHeight;
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                ctx.fillStyle = '#f8f9fa';
+                ctx.fillRect(0, 0, width, height);
+                
+                const data = buffer.getChannelData(0);
+                const step = Math.ceil(data.length / width);
+                const amp = height / 2;
+                
+                ctx.beginPath();
+                ctx.moveTo(0, amp);
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 2;
+                
+                for (let i = 0; i < width; i++) {
+                    let min = 1.0;
+                    let max = -1.0;
+                    
+                    for (let j = 0; j < step; j++) {
+                        const datum = data[(i * step) + j];
+                        if (datum < min) min = datum;
+                        if (datum > max) max = datum;
+                    }
+                    
+                    ctx.lineTo(i, (1 + min) * amp);
+                    ctx.lineTo(i, (1 + max) * amp);
+                }
+                
+                ctx.stroke();
+                
+                // Draw center line
+                ctx.beginPath();
+                ctx.moveTo(0, amp);
+                ctx.lineTo(width, amp);
+                ctx.strokeStyle = '#ddd';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+            }
+
+            updateOriginalInfo(file) {
+                this.elements.originalFileName.textContent = file.name;
+                this.elements.originalSampleRate.textContent = `${this.originalBuffer.sampleRate} Hz`;
+                this.elements.originalDuration.textContent = this.formatTime(this.originalBuffer.duration);
+                this.elements.originalFileSize.textContent = this.formatFileSize(file.size);
+            }
+
+            updateSampledInfo() {
+                const originalName = this.elements.originalFileName.textContent;
+                const baseName = originalName.substring(0, originalName.lastIndexOf('.'));
+                this.elements.sampledFileName.textContent = `${baseName}_sampled.wav`;
+                this.elements.sampledSampleRate.textContent = `${this.sampledBuffer.sampleRate} Hz`;
+                this.elements.sampledDuration.textContent = this.formatTime(this.sampledBuffer.duration);
+                
+                const originalSize = this.originalBuffer.length * this.originalBuffer.numberOfChannels * 2;
+                const sampledSize = this.sampledBuffer.length * this.sampledBuffer.numberOfChannels * 2;
+                const ratio = ((1 - sampledSize / originalSize) * 100).toFixed(1);
+                this.elements.compressionRatio.textContent = `${ratio}%`;
+            }
+
+            togglePlayOriginal() {
+                if (!this.originalAudio) return;
+                
+                if (this.isPlayingOriginal) {
+                    this.originalAudio.pause();
+                    this.isPlayingOriginal = false;
+                } else {
+                    // Stop sampled audio if playing
+                    if (this.isPlayingSampled) {
+                        this.sampledAudio.pause();
+                        this.isPlayingSampled = false;
+                        this.updatePlayButton('sampled');
+                    }
+                    
+                    this.originalAudio.play();
+                    this.isPlayingOriginal = true;
+                }
+                
+                this.updatePlayButton('original');
+            }
+
+            togglePlaySampled() {
+                if (!this.sampledAudio) return;
+                
+                if (this.isPlayingSampled) {
+                    this.sampledAudio.pause();
+                    this.isPlayingSampled = false;
+                } else {
+                    // Stop original audio if playing
+                    if (this.isPlayingOriginal) {
+                        this.originalAudio.pause();
+                        this.isPlayingOriginal = false;
+                        this.updatePlayButton('original');
+                    }
+                    
+                    this.sampledAudio.play();
+                    this.isPlayingSampled = true;
+                }
+                
+                this.updatePlayButton('sampled');
+            }
+
+            updatePlayButton(type) {
+                const button = type === 'original' ? this.elements.playOriginal : this.elements.playSampled;
+                const isPlaying = type === 'original' ? this.isPlayingOriginal : this.isPlayingSampled;
+                
+                if (isPlaying) {
+                    button.classList.add('playing');
+                    button.innerHTML = `
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                        </svg>
+                    `;
+                } else {
+                    button.classList.remove('playing');
+                    button.innerHTML = `
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                    `;
+                }
+            }
+
+            updateProgress(type) {
+                const audio = type === 'original' ? this.originalAudio : this.sampledAudio;
+                const progressBar = type === 'original' ? this.elements.originalProgress : this.elements.sampledProgress;
+                
+                if (audio && audio.duration) {
+                    const progress = (audio.currentTime / audio.duration) * 100;
+                    progressBar.style.width = `${progress}%`;
+                }
+            }
+
+            downloadSampled() {
+                if (!this.sampledBuffer) return;
+                
+                const wav = this.bufferToWave(this.sampledBuffer);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = this.elements.sampledFileName.textContent;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+
+            reset() {
+                // Stop all playback
+                if (this.originalAudio) {
+                    this.originalAudio.pause();
+                    this.originalAudio = null;
+                }
+                if (this.sampledAudio) {
+                    this.sampledAudio.pause();
+                    this.sampledAudio = null;
+                }
+                
+                // Reset states
+                this.isPlayingOriginal = false;
+                this.isPlayingSampled = false;
+                this.originalBuffer = null;
+                this.sampledBuffer = null;
+                
+                // Reset UI
+                this.elements.audioFile.value = '';
+                this.elements.processBtn.disabled = true;
+                this.elements.playOriginal.disabled = true;
+                this.elements.playSampled.disabled = true;
+                this.elements.downloadBtn.disabled = true;
+                
+                // Clear waveforms
+                this.clearCanvas(this.elements.originalWaveform);
+                this.clearCanvas(this.elements.sampledWaveform);
+                
+                // Reset info
+                this.elements.originalFileName.textContent = '尚未載入';
+                this.elements.originalSampleRate.textContent = '-';
+                this.elements.originalDuration.textContent = '-';
+                this.elements.originalFileSize.textContent = '-';
+                this.elements.sampledFileName.textContent = '尚未處理';
+                this.elements.sampledSampleRate.textContent = '-';
+                this.elements.sampledDuration.textContent = '-';
+                this.elements.compressionRatio.textContent = '-';
+                
+                // Reset progress bars
+                this.elements.originalProgress.style.width = '0%';
+                this.elements.sampledProgress.style.width = '0%';
+                
+                // Reset play buttons
+                this.updatePlayButton('original');
+                this.updatePlayButton('sampled');
+            }
+
+            clearCanvas(canvas) {
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+
+            formatTime(seconds) {
+                const minutes = Math.floor(seconds / 60);
+                const secs = Math.floor(seconds % 60);
+                return `${minutes}:${secs.toString().padStart(2, '0')}`;
+            }
+
+            formatFileSize(bytes) {
+                if (bytes < 1024) return bytes + ' B';
+                if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+                return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            }
+
+            showLoading(show) {
+                this.elements.loadingOverlay.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', () => {
+            new AudioSampler();
+        });
+    </script>
+</body>
+</html>

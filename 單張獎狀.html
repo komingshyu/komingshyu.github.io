@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>獎狀套印系統</title>
+    <style>
+        body {
+            font-family: "DFKai-SB", Arial, sans-serif;
+            display: flex;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        #settings {
+            width: 36%;
+            padding: 25px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            margin-right: 20px;
+            overflow-y: auto;
+            max-height: 95vh;
+        }
+        #preview {
+            width: 210mm;
+            position: relative;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.2);
+            overflow: hidden;
+        }
+        #canvas {
+            width: 210mm;
+            height: 297mm;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border: 1px solid #e0e0e0;
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        #imagePreview {
+            width: 210mm;
+            height: 297mm;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-size: contain;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .text-input {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .text-input:nth-child(odd) {
+            background-color: #f0f4f8;
+        }
+        input[type="text"] {
+            width: calc(100% - 20px);
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background-color: #fff;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+        }
+        input[type="number"] {
+            width: 55px;
+            padding: 8px;
+            margin: 5px 8px 5px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            text-align: center;
+        }
+        label {
+            font-weight: bold;
+            color: #333;
+            margin-right: 5px;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        button {
+            padding: 12px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #exportPDF {
+            background-color: #dc3545;
+        }
+        #exportPDF:hover {
+            background-color: #c82333;
+        }
+        #loadDemo {
+            background-color: #17a2b8;
+        }
+        #loadDemo:hover {
+            background-color: #138496;
+        }
+        #saveSettings {
+            background-color: #007bff;
+        }
+        #saveSettings:hover {
+            background-color: #0056b3;
+        }
+        #resetSettings {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        #resetSettings:hover {
+            background-color: #e0a800;
+        }
+        h2 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+            margin-top: 0;
+            text-align: center;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .file-input-wrapper {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .file-input-wrapper input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px dashed #007bff;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+        }
+        select {
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            margin: 10px 0;
+            width: 100%;
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 25px 0 15px 0;
+            color: #007bff;
+        }
+    </style>
+</head>
+<body>
+
+<div id="settings">
+    <h2>🏆 獎狀套印系統 🏆</h2>
+    
+    <div class="file-input-wrapper">
+        <label for="imageInput"><strong>上傳獎狀背景圖片：</strong></label><br>
+        <input type="file" id="imageInput" accept="image/*">
+    </div>
+    
+    <div class="section-title">字體設定</div>
+    <label for="fontSelect">選擇字體：</label>
+    <select id="fontSelect">
+        <option value="DFKai-SB">標楷體</option>
+        <option value="Microsoft JhengHei">微軟正黑體</option>
+        <option value="MingLiU">細明體</option>
+    </select>
+
+    <!-- 6組文字輸入區 -->
+    <div class="section-title">文字內容與位置設定</div>
+    
+    <div class="text-input">
+        <label>第1列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="123">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="490">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="39">
+        </div>
+        <input type="text" class="textInput" placeholder="輸入文字" value="舉辦項目：第一次段考">
+    </div>
+    <div class="text-input">
+        <label>第2列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="123">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="550">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="39">
+        </div>
+        <input type="text" class="textInput" placeholder="輸入文字" value="舉行年度：113學年度第1學期">
+    </div>
+    <div class="text-input">
+        <label>第3列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="123">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="615">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="39">
+        </div>
+        <input type="text" class="textInput" placeholder="輸入文字" value="參加學生：103班 王大同">
+    </div>
+    <div class="text-input">
+        <label>第4列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="123">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="675">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="39">
+        </div>
+        <input type="text" class="textInput" placeholder="輸入文字" value="評定成績：全班第1名">
+    </div>
+    <div class="text-input">
+        <label>第5列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="123">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="740">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="39">
+        </div>
+        <input type="text" class="textInput" placeholder="輸入文字" value="特頒此狀以茲鼓勵">
+    </div>
+    <div class="text-input">
+        <label>第6列文字</label>
+        <div class="input-group">
+            <label>X座標</label>
+            <input type="number" class="xCoord" value="123">
+            <label>Y座標</label>
+            <input type="number" class="yCoord" value="1060">
+            <label>字型大小</label>
+            <input type="number" class="fontSize" value="39">
+        </div>
+        <input type="text" class="textInput" placeholder="輸入文字" value="中華民國  113  年  12 月 15   日">
+    </div>
+
+    <div class="button-group">
+        <button id="exportPDF">🖨️ 開啟PDF列印</button>
+        <button id="loadDemo">🖼️ 載入DEMO範本</button>
+        <button id="saveSettings">💾 儲存設定</button>
+        <button id="resetSettings">🔄 使用預設設定</button>
+    </div>
+</div>
+
+<div id="preview">
+    <div id="imagePreview"></div>
+    <canvas id="canvas" width="1240" height="1754"></canvas>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const imagePreview = document.getElementById('imagePreview');
+    const textInputs = document.querySelectorAll('.textInput');
+    const fontSelect = document.getElementById('fontSelect');
+
+    let img = new Image();
+
+    // 預設設定
+    const defaultSettings = [
+        { text: "舉辦項目：第一次段考", x: 123, y: 490, size: 39 },
+        { text: "舉行年度：113學年度第1學期", x: 123, y: 550, size: 39 },
+        { text: "參加學生：103班 王大同", x: 123, y: 615, size: 39 },
+        { text: "評定成績：全班第1名", x: 123, y: 675, size: 39 },
+        { text: "特頒此狀以茲鼓勵", x: 123, y: 740, size: 39 },
+        { text: "中華民國  113 年  12  月 15  日", x: 123, y: 1060, size: 39 }
+    ];
+
+    window.onload = function() {
+        // 從 localStorage 讀取設定
+        let settings = JSON.parse(localStorage.getItem('certificateSettings')) || defaultSettings;
+        
+        // 初始化輸入框
+        document.querySelectorAll('.text-input').forEach((textInput, index) => {
+            if (settings[index]) {
+                textInput.querySelector('.textInput').value = settings[index].text;
+                textInput.querySelector('.xCoord').value = settings[index].x;
+                textInput.querySelector('.yCoord').value = settings[index].y;
+                textInput.querySelector('.fontSize').value = settings[index].size;
+            }
+        });
+        
+        drawText();
+    };
+
+    // 更新 localStorage
+    function updateLocalStorage() {
+        const updatedSettings = [];
+        document.querySelectorAll('.text-input').forEach(textInput => {
+            updatedSettings.push({
+                text: textInput.querySelector('.textInput').value,
+                x: parseInt(textInput.querySelector('.xCoord').value),
+                y: parseInt(textInput.querySelector('.yCoord').value),
+                size: parseInt(textInput.querySelector('.fontSize').value)
+            });
+        });
+        localStorage.setItem('certificateSettings', JSON.stringify(updatedSettings));
+        alert('設定已成功儲存！');
+    }
+
+    // 儲存設定按鈕
+    document.getElementById('saveSettings').addEventListener('click', function() {
+        updateLocalStorage();
+    });
+
+    // 使用預設設定按鈕
+    document.getElementById('resetSettings').addEventListener('click', function() {
+        if (confirm('確定要恢復為預設設定嗎？')) {
+            // 重置所有輸入框為預設值
+            document.querySelectorAll('.text-input').forEach((textInput, index) => {
+                textInput.querySelector('.textInput').value = defaultSettings[index].text;
+                textInput.querySelector('.xCoord').value = defaultSettings[index].x;
+                textInput.querySelector('.yCoord').value = defaultSettings[index].y;
+                textInput.querySelector('.fontSize').value = defaultSettings[index].size;
+            });
+            
+            // 儲存到 localStorage
+            localStorage.setItem('certificateSettings', JSON.stringify(defaultSettings));
+            
+            // 重新繪製文字
+            drawText();
+            
+            alert('已恢復為預設設定！');
+        }
+    });
+
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            img.src = e.target.result;
+            img.onload = function() {
+                // 自動調整圖片大小
+                const aspectRatio = img.width / img.height;
+                const targetWidth = 1240; // 150 DPI 的 A4 寬度
+                const targetHeight = 1754; // 150 DPI 的 A4 高度
+                const canvasAspectRatio = targetWidth / targetHeight;
+
+                if (aspectRatio > canvasAspectRatio) {
+                    // 圖片較寬，依寬度調整
+                    img.width = targetWidth;
+                    img.height = targetWidth / aspectRatio;
+                } else {
+                    // 圖片較高，依高度調整
+                    img.height = targetHeight;
+                    img.width = targetHeight * aspectRatio;
+                }
+
+                imagePreview.style.backgroundImage = `url(${e.target.result})`;
+                imagePreview.style.backgroundSize = 'contain';
+                imagePreview.style.backgroundRepeat = 'no-repeat';
+                imagePreview.style.backgroundPosition = 'center';
+                drawText(); // 載入圖片後繪製文字
+            }
+        }
+        reader.readAsDataURL(file);
+    });
+
+    // 當任何文字輸入框的內容改變時，重新繪製文字
+    textInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            drawText();
+        });
+    });
+
+    // 當任何 XY 座標或字型大小輸入框的內容改變時，重新繪製文字
+    document.querySelectorAll('.xCoord, .yCoord, .fontSize').forEach(input => {
+        input.addEventListener('input', function() {
+            drawText();
+        });
+    });
+
+    // 當字體選擇改變時，重新繪製文字
+    fontSelect.addEventListener('change', drawText);
+
+    function drawText() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+
+        const selectedFont = fontSelect.value;
+        const textInputs = document.querySelectorAll('.text-input');
+        textInputs.forEach((textInput) => {
+            const x = parseInt(textInput.querySelector('.xCoord').value) || 0;
+            const y = parseInt(textInput.querySelector('.yCoord').value) || 0;
+            const size = parseInt(textInput.querySelector('.fontSize').value) || 20;
+            const text = textInput.querySelector('.textInput').value;
+
+            ctx.font = `${size * 1.4173}px "${selectedFont}"`; // 將字型大小轉換為 150 DPI 的大小
+            ctx.fillStyle = 'black';
+            ctx.fillText(text, x * 1.4173, y * 1.4173); // 將座標轉換為 150 DPI 的座標
+        });
+    }
+
+    document.getElementById('exportPDF').addEventListener('click', function() {
+        const { jsPDF } = window.jspdf; // 確保正確引用 jsPDF
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const imgData = canvas.toDataURL('image/png');
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        //pdf.save('獎狀.pdf');
+        // 直接開啟 PDF
+        window.open(pdf.output('bloburl'), '_blank');
+    });
+
+    // DEMO 按鈕功能
+    document.getElementById('loadDemo').addEventListener('click', function() {
+        // 載入獎狀範本 demoprize.jpg
+        const demoImage = new Image();
+        demoImage.src = 'demoprize.jpg';
+        demoImage.onerror = function() {
+            alert('無法載入DEMO範本圖片，請確認 demoprize.jpg 檔案是否存在！');
+            // 如果找不到圖片，至少清除現有背景
+            imagePreview.style.backgroundImage = 'none';
+        };
+        demoImage.onload = function() {
+            const aspectRatio = demoImage.width / demoImage.height;
+            const targetWidth = 1240; // 150 DPI 的 A4 寬度
+            const targetHeight = 1754; // 150 DPI 的 A4 高度
+            const canvasAspectRatio = targetWidth / targetHeight;
+
+            if (aspectRatio > canvasAspectRatio) {
+                // 圖片較寬，依寬度調整
+                demoImage.width = targetWidth;
+                demoImage.height = targetWidth / aspectRatio;
+            } else {
+                // 圖片較高，依高度調整
+                demoImage.height = targetHeight;
+                demoImage.width = targetHeight * aspectRatio;
+            }
+
+            imagePreview.style.backgroundImage = `url(${demoImage.src})`;
+            imagePreview.style.backgroundSize = 'contain';
+            imagePreview.style.backgroundRepeat = 'no-repeat';
+            imagePreview.style.backgroundPosition = 'center';
+            
+            // 同時也更新預設文字（如果使用者想要）
+            if (confirm('是否同時載入DEMO的預設文字內容？')) {
+                document.querySelectorAll('.text-input').forEach((textInput, index) => {
+                    textInput.querySelector('.textInput').value = defaultSettings[index].text;
+                    textInput.querySelector('.xCoord').value = defaultSettings[index].x;
+                    textInput.querySelector('.yCoord').value = defaultSettings[index].y;
+                    textInput.querySelector('.fontSize').value = defaultSettings[index].size;
+                });
+                drawText();
+            }
+        }
+    });
+
+    // 在頁面關閉前自動儲存設定
+    window.addEventListener('beforeunload', function() {
+        updateLocalStorage();
+    });
+</script>
+</body>
+</html>
