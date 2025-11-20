@@ -6,7 +6,9 @@ const linksData = [
   { name: "向量圖與點陣圖的比較", description: "藉由向量圖與點陣圖放大比較了解差異", link: "向量圖 vs 點陣圖 - 互動教學工具.html" },
   { name: "點陣圖像位元深度比較教學工具", description: "點陣圖像位元深度比較", link: "點陣圖像位元深度比較教學工具.html" },
   { name: "圖像取樣教學工具", description: "圖像取樣的比較工具", link: "圖像取樣教學工具.html" },
-   { name: "RGB色彩疊合實驗室", description: "RGB色彩疊合實驗室", link: "RGB色彩疊合實驗室.html" },
+  { name: "RGB色彩疊合實驗室", description: "RGB色彩疊合實驗室", link: "RGB色彩疊合實驗室.html" },
+  { name: "RGB三原色光互動教學 - 色光照射模擬", description: "RGB三原色光互動教學", link: "RGB三原色光互動教學 - 色光照射模擬.html" },
+
 
 
 ];

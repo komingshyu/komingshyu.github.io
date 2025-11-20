@@ -1,0 +1,1223 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RGB三原色光互動教學 - 色光照射模擬</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        /* 拖疊區域 */
+        .drag-area {
+            background: #0a0a0a;
+            border-radius: 15px;
+            height: 500px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 20px;
+            cursor: move;
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.8);
+        }
+
+        .drag-area::before {
+            content: '🎯 拖動圓形來混合顏色或照射圖像';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 1.2rem;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .drag-area.has-circles::before {
+            display: none;
+        }
+
+        /* 圖像容器 */
+        .image-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 220px;
+            height: 220px;
+            border-radius: 15px;
+            overflow: hidden;
+            z-index: 2;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: all 0.3s ease;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.4) saturate(0.8);
+            transition: filter 0.3s ease;
+        }
+
+        .color-circle {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            position: absolute;
+            cursor: grab;
+            transition: transform 0.1s ease, box-shadow 0.3s ease;
+            mix-blend-mode: screen;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.3rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .color-circle:active {
+            cursor: grabbing;
+        }
+
+        .color-circle.dragging {
+            z-index: 100;
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+
+        .color-circle.red {
+            background: radial-gradient(circle, rgba(255,0,0,1) 0%, rgba(255,0,0,0.8) 50%, rgba(255,0,0,0.4) 100%);
+            filter: brightness(1.2);
+        }
+
+        .color-circle.green {
+            background: radial-gradient(circle, rgba(0,255,0,1) 0%, rgba(0,255,0,0.8) 50%, rgba(0,255,0,0.4) 100%);
+            filter: brightness(1.2);
+        }
+
+        .color-circle.blue {
+            background: radial-gradient(circle, rgba(0,0,255,1) 0%, rgba(0,0,255,0.8) 50%, rgba(0,0,255,0.4) 100%);
+            filter: brightness(1.2);
+        }
+
+        .color-circle:hover {
+            box-shadow: 0 0 40px currentColor;
+        }
+
+        /* RGB強度控制區 */
+        .intensity-controls {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .intensity-controls h3 {
+            margin-bottom: 15px;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        .intensity-group {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+
+        .intensity-item {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .intensity-label {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .intensity-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 15px;
+            color: white;
+            font-size: 0.85rem;
+        }
+
+        .red-badge { background: #ff4444; }
+        .green-badge { background: #44ff44; }
+        .blue-badge { background: #4444ff; }
+
+        .intensity-slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .intensity-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        .intensity-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .intensity-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        #redIntensity {
+            background: linear-gradient(to right, rgba(255,0,0,0.1), rgba(255,0,0,1));
+        }
+
+        #greenIntensity {
+            background: linear-gradient(to right, rgba(0,255,0,0.1), rgba(0,255,0,1));
+        }
+
+        #blueIntensity {
+            background: linear-gradient(to right, rgba(0,0,255,0.1), rgba(0,0,255,1));
+        }
+
+        .intensity-value {
+            background: #f0f0f0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        /* 控制面板 */
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .control-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .control-btn:active {
+            transform: translateY(0);
+        }
+
+        .control-btn.toggle {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        }
+
+        /* 圖片選擇器 */
+        .image-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .image-option {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .image-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-option.active {
+            border-color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .image-option:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        /* 混合結果顯示 */
+        .mix-result {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .result-preview {
+            width: 100%;
+            height: 80px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .result-info {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            text-align: center;
+        }
+
+        .info-item {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .info-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 調色板 */
+        .color-display {
+            width: 100%;
+            height: 200px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .color-code {
+            background: rgba(255,255,255,0.95);
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .slider-group {
+            margin-bottom: 25px;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .color-label {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            color: white;
+            font-size: 0.9rem;
+        }
+
+        .red-label { background: #ff4444; }
+        .green-label { background: #44ff44; }
+        .blue-label { background: #4444ff; }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 10px;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        #redSlider {
+            background: linear-gradient(to right, #000000, #ff0000);
+        }
+
+        #greenSlider {
+            background: linear-gradient(to right, #000000, #00ff00);
+        }
+
+        #blueSlider {
+            background: linear-gradient(to right, #000000, #0000ff);
+        }
+
+        .value-display {
+            background: #f0f0f0;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        /* 預設色彩 */
+        .color-presets {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 10px;
+        }
+
+        .preset-color {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .preset-color:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .preset-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            font-size: 0.7rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .preset-color:hover .preset-info {
+            transform: translateY(0);
+        }
+
+        /* 說明區域 */
+        .instructions {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .instructions h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .instructions ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .instructions li {
+            padding: 8px 0;
+            padding-left: 25px;
+            position: relative;
+            color: #555;
+        }
+
+        .instructions li:before {
+            content: '✨';
+            position: absolute;
+            left: 0;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .drag-area {
+                height: 450px;
+            }
+            
+            .color-circle {
+                width: 140px;
+                height: 140px;
+            }
+            
+            .image-container {
+                width: 180px;
+                height: 180px;
+            }
+            
+            .intensity-group {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 RGB三原色光互動教學</h1>
+            <p class="subtitle">拖動圓形混合顏色，或照射彩色圖像觀察色光效果</p>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">🎯 拖疊混合區</h2>
+                
+                <!-- 圖片選擇器 -->
+                <div class="image-selector">
+                    <div class="image-option active" onclick="changeImage(0)">
+                        <img src="https://picsum.photos/seed/nature1/60/60.jpg" alt="自然風景">
+                    </div>
+                    <div class="image-option" onclick="changeImage(1)">
+                        <img src="https://picsum.photos/seed/portrait1/60/60.jpg" alt="人物肖像">
+                    </div>
+                    <div class="image-option" onclick="changeImage(2)">
+                        <img src="https://picsum.photos/seed/city1/60/60.jpg" alt="城市建築">
+                    </div>
+                    <div class="image-option" onclick="changeImage(3)">
+                        <img src="https://picsum.photos/seed/flower1/60/60.jpg" alt="花朵">
+                    </div>
+                    <div class="image-option" onclick="changeImage(4)">
+                        <img src="https://picsum.photos/seed/food1/60/60.jpg" alt="美食">
+                    </div>
+                </div>
+                
+                <div class="drag-area" id="dragArea">
+                    <div class="image-container" id="imageContainer">
+                        <img src="https://picsum.photos/seed/nature1/220/220.jpg" alt="測試圖像" id="testImage">
+                    </div>
+                    <div class="color-circle red" id="redCircle" data-color="red">R</div>
+                    <div class="color-circle green" id="greenCircle" data-color="green">G</div>
+                    <div class="color-circle blue" id="blueCircle" data-color="blue">B</div>
+                </div>
+                
+                <!-- RGB強度控制 -->
+                <div class="intensity-controls">
+                    <h3>💡 RGB強度調整</h3>
+                    <div class="intensity-group">
+                        <div class="intensity-item">
+                            <div class="intensity-label">
+                                <span class="intensity-badge red-badge">紅色</span>
+                                <span class="intensity-value" id="redIntensityValue">100%</span>
+                            </div>
+                            <input type="range" class="intensity-slider" id="redIntensity" min="0" max="100" value="100">
+                        </div>
+                        <div class="intensity-item">
+                            <div class="intensity-label">
+                                <span class="intensity-badge green-badge">綠色</span>
+                                <span class="intensity-value" id="greenIntensityValue">100%</span>
+                            </div>
+                            <input type="range" class="intensity-slider" id="greenIntensity" min="0" max="100" value="100">
+                        </div>
+                        <div class="intensity-item">
+                            <div class="intensity-label">
+                                <span class="intensity-badge blue-badge">藍色</span>
+                                <span class="intensity-value" id="blueIntensityValue">100%</span>
+                            </div>
+                            <input type="range" class="intensity-slider" id="blueIntensity" min="0" max="100" value="100">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-btn" onclick="resetPositions()">🔄 重置位置</button>
+                    <button class="control-btn" onclick="randomPositions()">🎲 隨機位置</button>
+                    <button class="control-btn" onclick="alignCircles()">📐 對齊圓心</button>
+                    <button class="control-btn toggle" id="imageToggle" onclick="toggleImage()">🖼️ 隱藏圖像</button>
+                </div>
+
+                <div class="mix-result">
+                    <h3 style="margin-bottom: 15px;">混合結果分析</h3>
+                    <div class="result-preview" id="resultPreview">
+                        拖動圓形查看混合效果
+                    </div>
+                    <div class="result-info">
+                        <div class="info-item">
+                            <div class="info-label">重疊區域</div>
+                            <div class="info-value" id="overlapCount">0</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">混合顏色</div>
+                            <div class="info-value" id="mixedColor">-</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">RGB值</div>
+                            <div class="info-value" id="mixedRGB">-</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="instructions">
+                    <h3>📖 使用說明</h3>
+                    <ul>
+                        <li>選擇不同的彩色圖像進行實驗</li>
+                        <li>拖動RGB色光圓照射圖像觀察效果</li>
+                        <li>調整強度滑塊改變色光強度</li>
+                        <li>觀察不同色光對彩色圖像的影響</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2 style="margin-bottom: 20px;">🎚️ 精確調色板</h2>
+                <div class="color-display" id="colorDisplay">
+                    <div class="color-code" id="colorCode">RGB(128, 128, 128)</div>
+                </div>
+                
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span class="color-label red-label">紅色 (R)</span>
+                        <span class="value-display" id="redValue">128</span>
+                    </div>
+                    <input type="range" class="slider" id="redSlider" min="0" max="255" value="128">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span class="color-label green-label">綠色 (G)</span>
+                        <span class="value-display" id="greenValue">128</span>
+                    </div>
+                    <input type="range" class="slider" id="greenSlider" min="0" max="255" value="128">
+                </div>
+
+                <div class="slider-group">
+                    <div class="slider-label">
+                        <span class="color-label blue-label">藍色 (B)</span>
+                        <span class="value-display" id="blueValue">128</span>
+                    </div>
+                    <input type="range" class="slider" id="blueSlider" min="0" max="255" value="128">
+                </div>
+
+                <h3 style="margin-top: 30px; margin-bottom: 15px;">🎨 快速色彩</h3>
+                <div class="color-presets" id="colorPresets"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 預設色彩範例
+        const presetColors = [
+            { name: '紅', rgb: [255, 0, 0] },
+            { name: '綠', rgb: [0, 255, 0] },
+            { name: '藍', rgb: [0, 0, 255] },
+            { name: '黃', rgb: [255, 255, 0] },
+            { name: '青', rgb: [0, 255, 255] },
+            { name: '洋紅', rgb: [255, 0, 255] },
+            { name: '白', rgb: [255, 255, 255] },
+            { name: '黑', rgb: [0, 0, 0] },
+            { name: '橙', rgb: [255, 165, 0] },
+            { name: '紫', rgb: [128, 0, 128] },
+            { name: '粉', rgb: [255, 192, 203] },
+            { name: '灰', rgb: [128, 128, 128] }
+        ];
+
+        // 圖像選項
+        const imageOptions = [
+            { seed: 'nature1', name: '自然風景' },
+            { seed: 'portrait1', name: '人物肖像' },
+            { seed: 'city1', name: '城市建築' },
+            { seed: 'flower1', name: '花朵' },
+            { seed: 'food1', name: '美食' }
+        ];
+
+        let isDragging = false;
+        let currentCircle = null;
+        let startX, startY, initialX, initialY;
+        let imageVisible = true;
+        let currentImageIndex = 0;
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeDragAndDrop();
+            initializeIntensitySliders();
+            initializeSliders();
+            initializePresets();
+            resetPositions();
+            updateColor();
+        });
+
+        // 初始化拖放功能
+        function initializeDragAndDrop() {
+            const circles = document.querySelectorAll('.color-circle');
+            const dragArea = document.getElementById('dragArea');
+
+            circles.forEach(circle => {
+                // 滑鼠事件
+                circle.addEventListener('mousedown', startDrag);
+                
+                // 觸摸事件
+                circle.addEventListener('touchstart', startDrag, { passive: false });
+            });
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDrag);
+            document.addEventListener('touchmove', drag, { passive: false });
+            document.addEventListener('touchend', stopDrag);
+        }
+
+        // 初始化強度滑塊
+        function initializeIntensitySliders() {
+            const redIntensity = document.getElementById('redIntensity');
+            const greenIntensity = document.getElementById('greenIntensity');
+            const blueIntensity = document.getElementById('blueIntensity');
+
+            redIntensity.addEventListener('input', function() {
+                updateCircleIntensity('red', this.value);
+            });
+            
+            greenIntensity.addEventListener('input', function() {
+                updateCircleIntensity('green', this.value);
+            });
+            
+            blueIntensity.addEventListener('input', function() {
+                updateCircleIntensity('blue', this.value);
+            });
+        }
+
+        // 更新圓形強度
+        function updateCircleIntensity(color, intensity) {
+            const value = intensity / 100;
+            const circle = document.getElementById(color + 'Circle');
+            const valueDisplay = document.getElementById(color + 'IntensityValue');
+            
+            valueDisplay.textContent = intensity + '%';
+            
+            // 更新圓形背景和透明度
+            if (color === 'red') {
+                circle.style.background = `radial-gradient(circle, rgba(255,0,0,${value}) 0%, rgba(255,0,0,${0.8 * value}) 50%, rgba(255,0,0,${0.4 * value}) 100%)`;
+                circle.style.opacity = 0.4 + (0.6 * value);
+            } else if (color === 'green') {
+                circle.style.background = `radial-gradient(circle, rgba(0,255,0,${value}) 0%, rgba(0,255,0,${0.8 * value}) 50%, rgba(0,255,0,${0.4 * value}) 100%)`;
+                circle.style.opacity = 0.4 + (0.6 * value);
+            } else if (color === 'blue') {
+                circle.style.background = `radial-gradient(circle, rgba(0,0,255,${value}) 0%, rgba(0,0,255,${0.8 * value}) 50%, rgba(0,0,255,${0.4 * value}) 100%)`;
+                circle.style.opacity = 0.4 + (0.6 * value);
+            }
+            
+            updateImageLighting();
+            updateMixResult();
+        }
+
+        // 更新圖像光照效果
+        function updateImageLighting() {
+            if (!imageVisible) return;
+            
+            const redIntensity = document.getElementById('redIntensity').value / 100;
+            const greenIntensity = document.getElementById('greenIntensity').value / 100;
+            const blueIntensity = document.getElementById('blueIntensity').value / 100;
+            
+            const redCircle = document.getElementById('redCircle');
+            const greenCircle = document.getElementById('greenCircle');
+            const blueCircle = document.getElementById('blueCircle');
+            const imageContainer = document.getElementById('imageContainer');
+            const testImage = document.getElementById('testImage');
+            
+            const imageRect = imageContainer.getBoundingClientRect();
+            const dragAreaRect = document.getElementById('dragArea').getBoundingClientRect();
+            
+            const imageCenterX = imageRect.left - dragAreaRect.left + imageRect.width / 2;
+            const imageCenterY = imageRect.top - dragAreaRect.top + imageRect.height / 2;
+            
+            // 計算每個色光圓與圖像的距離
+            const redPos = {
+                x: parseFloat(redCircle.style.left) + 90,
+                y: parseFloat(redCircle.style.top) + 90
+            };
+            const greenPos = {
+                x: parseFloat(greenCircle.style.left) + 90,
+                y: parseFloat(greenCircle.style.top) + 90
+            };
+            const bluePos = {
+                x: parseFloat(blueCircle.style.left) + 90,
+                y: parseFloat(blueCircle.style.top) + 90
+            };
+            
+            const redDistance = Math.sqrt(Math.pow(redPos.x - imageCenterX, 2) + Math.pow(redPos.y - imageCenterY, 2));
+            const greenDistance = Math.sqrt(Math.pow(greenPos.x - imageCenterX, 2) + Math.pow(greenPos.y - imageCenterY, 2));
+            const blueDistance = Math.sqrt(Math.pow(bluePos.x - imageCenterX, 2) + Math.pow(bluePos.y - imageCenterY, 2));
+            
+            // 計算光照強度（距離越近光照越強）
+            const maxDistance = 150;
+            const redLight = Math.max(0, 1 - redDistance / maxDistance) * redIntensity;
+            const greenLight = Math.max(0, 1 - greenDistance / maxDistance) * greenIntensity;
+            const blueLight = Math.max(0, 1 - blueDistance / maxDistance) * blueIntensity;
+            
+            // 計算整體亮度和色彩效果
+            const totalLight = Math.min(1, redLight + greenLight + blueLight);
+            const brightness = 0.4 + (0.6 * totalLight);
+            
+            // 計算色偏效果
+            const colorMix = `drop-shadow(0 0 ${20 * redLight}px rgba(255,0,0,0.5)) drop-shadow(0 0 ${20 * greenLight}px rgba(0,255,0,0.5)) drop-shadow(0 0 ${20 * blueLight}px rgba(0,0,255,0.5))`;
+            
+            // 應用濾鏡效果 - 保留彩色圖像的原始色彩
+            testImage.style.filter = `brightness(${brightness}) saturate(${0.8 + totalLight * 0.4}) contrast(1.1)`;
+            testImage.style.boxShadow = colorMix;
+            
+            // 添加容器發光效果
+            if (totalLight > 0.3) {
+                imageContainer.style.boxShadow = `0 0 ${30 * totalLight}px rgba(${Math.round(255 * redLight)}, ${Math.round(255 * greenLight)}, ${Math.round(255 * blueLight)}, 0.6)`;
+            } else {
+                imageContainer.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+            }
+        }
+
+        // 切換圖像
+        function changeImage(index) {
+            currentImageIndex = index;
+            const testImage = document.getElementById('testImage');
+            const imageOptions = document.querySelectorAll('.image-option');
+            
+            // 更新圖像
+            testImage.src = `https://picsum.photos/seed/${imageOptions[index].seed}/220/220.jpg`;
+            
+            // 更新選中狀態
+            imageOptions.forEach((option, i) => {
+                if (i === index) {
+                    option.classList.add('active');
+                } else {
+                    option.classList.remove('active');
+                }
+            });
+            
+            // 重新應用光照效果
+            updateImageLighting();
+        }
+
+        // 切換圖像顯示
+        function toggleImage() {
+            const imageContainer = document.getElementById('imageContainer');
+            const toggleBtn = document.getElementById('imageToggle');
+            
+            imageVisible = !imageVisible;
+            
+            if (imageVisible) {
+                imageContainer.style.display = 'block';
+                toggleBtn.textContent = '🖼️ 隱藏圖像';
+            } else {
+                imageContainer.style.display = 'none';
+                toggleBtn.textContent = '🖼️ 顯示圖像';
+            }
+        }
+
+        function startDrag(e) {
+            e.preventDefault();
+            isDragging = true;
+            currentCircle = e.target;
+            currentCircle.classList.add('dragging');
+            
+            const touch = e.touches ? e.touches[0] : e;
+            startX = touch.clientX;
+            startY = touch.clientY;
+            
+            const rect = currentCircle.getBoundingClientRect();
+            const parentRect = currentCircle.parentElement.getBoundingClientRect();
+            initialX = rect.left - parentRect.left;
+            initialY = rect.top - parentRect.top;
+            
+            document.getElementById('dragArea').classList.add('has-circles');
+        }
+
+        function drag(e) {
+            if (!isDragging || !currentCircle) return;
+            e.preventDefault();
+            
+            const touch = e.touches ? e.touches[0] : e;
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+            
+            const dragArea = document.getElementById('dragArea');
+            const areaRect = dragArea.getBoundingClientRect();
+            
+            let newX = initialX + deltaX;
+            let newY = initialY + deltaY;
+            
+            // 限制在拖曳區域內
+            const circleSize = 180;
+            newX = Math.max(0, Math.min(newX, areaRect.width - circleSize));
+            newY = Math.max(0, Math.min(newY, areaRect.height - circleSize));
+            
+            currentCircle.style.left = newX + 'px';
+            currentCircle.style.top = newY + 'px';
+            
+            updateImageLighting();
+            updateMixResult();
+        }
+
+        function stopDrag() {
+            if (currentCircle) {
+                currentCircle.classList.remove('dragging');
+            }
+            isDragging = false;
+            currentCircle = null;
+        }
+
+        // 重置位置
+        function resetPositions() {
+            const dragArea = document.getElementById('dragArea');
+            const areaRect = dragArea.getBoundingClientRect();
+            const circleSize = 180;
+            
+            const positions = [
+                { x: areaRect.width * 0.15 - circleSize/2, y: areaRect.height * 0.2 - circleSize/2 },
+                { x: areaRect.width * 0.5 - circleSize/2, y: areaRect.height * 0.2 - circleSize/2 },
+                { x: areaRect.width * 0.85 - circleSize/2, y: areaRect.height * 0.2 - circleSize/2 }
+            ];
+            
+            document.getElementById('redCircle').style.left = positions[0].x + 'px';
+            document.getElementById('redCircle').style.top = positions[0].y + 'px';
+            document.getElementById('greenCircle').style.left = positions[1].x + 'px';
+            document.getElementById('greenCircle').style.top = positions[1].y + 'px';
+            document.getElementById('blueCircle').style.left = positions[2].x + 'px';
+            document.getElementById('blueCircle').style.top = positions[2].y + 'px';
+            
+            // 重置強度
+            document.getElementById('redIntensity').value = 100;
+            document.getElementById('greenIntensity').value = 100;
+            document.getElementById('blueIntensity').value = 100;
+            updateCircleIntensity('red', 100);
+            updateCircleIntensity('green', 100);
+            updateCircleIntensity('blue', 100);
+            
+            document.getElementById('dragArea').classList.add('has-circles');
+            updateMixResult();
+        }
+
+        // 隨機位置
+        function randomPositions() {
+            const dragArea = document.getElementById('dragArea');
+            const areaRect = dragArea.getBoundingClientRect();
+            const circleSize = 180;
+            
+            const circles = ['redCircle', 'greenCircle', 'blueCircle'];
+            
+            circles.forEach(id => {
+                const circle = document.getElementById(id);
+                const maxX = areaRect.width - circleSize;
+                const maxY = areaRect.height - circleSize;
+                
+                const randomX = Math.random() * maxX;
+                const randomY = Math.random() * maxY;
+                
+                circle.style.left = randomX + 'px';
+                circle.style.top = randomY + 'px';
+            });
+            
+            document.getElementById('dragArea').classList.add('has-circles');
+            updateImageLighting();
+            updateMixResult();
+        }
+
+        // 對齊圓心
+        function alignCircles() {
+            const dragArea = document.getElementById('dragArea');
+            const areaRect = dragArea.getBoundingClientRect();
+            const circleSize = 180;
+            
+            const centerX = areaRect.width / 2 - circleSize / 2;
+            const centerY = areaRect.height / 2 - circleSize / 2;
+            
+            ['redCircle', 'greenCircle', 'blueCircle'].forEach(id => {
+                const circle = document.getElementById(id);
+                circle.style.left = centerX + 'px';
+                circle.style.top = centerY + 'px';
+            });
+            
+            document.getElementById('dragArea').classList.add('has-circles');
+            updateImageLighting();
+            updateMixResult();
+        }
+
+        // 更新混合結果
+        function updateMixResult() {
+            const redCircle = document.getElementById('redCircle');
+            const greenCircle = document.getElementById('greenCircle');
+            const blueCircle = document.getElementById('blueCircle');
+            
+            const redPos = {
+                x: parseFloat(redCircle.style.left) + 90,
+                y: parseFloat(redCircle.style.top) + 90
+            };
+            const greenPos = {
+                x: parseFloat(greenCircle.style.left) + 90,
+                y: parseFloat(greenCircle.style.top) + 90
+            };
+            const bluePos = {
+                x: parseFloat(blueCircle.style.left) + 90,
+                y: parseFloat(blueCircle.style.top) + 90
+            };
+            
+            // 計算距離
+            const rgDistance = Math.sqrt(Math.pow(redPos.x - greenPos.x, 2) + Math.pow(redPos.y - greenPos.y, 2));
+            const gbDistance = Math.sqrt(Math.pow(greenPos.x - bluePos.x, 2) + Math.pow(greenPos.y - bluePos.y, 2));
+            const rbDistance = Math.sqrt(Math.pow(redPos.x - bluePos.x, 2) + Math.pow(redPos.y - bluePos.y, 2));
+            
+            // 獲取強度值
+            const redIntensity = document.getElementById('redIntensity').value / 100;
+            const greenIntensity = document.getElementById('greenIntensity').value / 100;
+            const blueIntensity = document.getElementById('blueIntensity').value / 100;
+            
+            const overlapThreshold = 90;
+            let overlapCount = 0;
+            let mixedColor = '無';
+            let mixedRGB = '-';
+            
+            if (rgDistance < overlapThreshold && redIntensity > 0.1 && greenIntensity > 0.1) overlapCount++;
+            if (gbDistance < overlapThreshold && greenIntensity > 0.1 && blueIntensity > 0.1) overlapCount++;
+            if (rbDistance < overlapThreshold && redIntensity > 0.1 && blueIntensity > 0.1) overlapCount++;
+            
+            if (overlapCount === 3) {
+                // 計算實際混合顏色
+                const r = Math.round(255 * redIntensity);
+                const g = Math.round(255 * greenIntensity);
+                const b = Math.round(255 * blueIntensity);
+                
+                if (r === 255 && g === 255 && b === 255) {
+                    mixedColor = '純白色';
+                } else {
+                    mixedColor = '混合色';
+                }
+                mixedRGB = `RGB(${r}, ${g}, ${b})`;
+                document.getElementById('resultPreview').style.background = `rgb(${r}, ${g}, ${b})`;
+                document.getElementById('resultPreview').style.color = (r + g + b) / 3 > 128 ? '#333' : 'white';
+                document.getElementById('resultPreview').textContent = mixedColor + ' - 三圓重疊';
+            } else if (overlapCount === 2) {
+                if (rgDistance < overlapThreshold) {
+                    const r = Math.round(255 * redIntensity);
+                    const g = Math.round(255 * greenIntensity);
+                    mixedColor = '黃色系';
+                    mixedRGB = `RGB(${r}, ${g}, 0)`;
+                    document.getElementById('resultPreview').style.background = `rgb(${r}, ${g}, 0)`;
+                    document.getElementById('resultPreview').style.color = (r + g) / 2 > 128 ? '#333' : 'white';
+                    document.getElementById('resultPreview').textContent = '黃色系 - 紅+綠';
+                } else if (gbDistance < overlapThreshold) {
+                    const g = Math.round(255 * greenIntensity);
+                    const b = Math.round(255 * blueIntensity);
+                    mixedColor = '青色系';
+                    mixedRGB = `RGB(0, ${g}, ${b})`;
+                    document.getElementById('resultPreview').style.background = `rgb(0, ${g}, ${b})`;
+                    document.getElementById('resultPreview').style.color = (g + b) / 2 > 128 ? '#333' : 'white';
+                    document.getElementById('resultPreview').textContent = '青色系 - 綠+藍';
+                } else {
+                    const r = Math.round(255 * redIntensity);
+                    const b = Math.round(255 * blueIntensity);
+                    mixedColor = '洋紅系';
+                    mixedRGB = `RGB(${r}, 0, ${b})`;
+                    document.getElementById('resultPreview').style.background = `rgb(${r}, 0, ${b})`;
+                    document.getElementById('resultPreview').style.color = (r + b) / 2 > 128 ? '#333' : 'white';
+                    document.getElementById('resultPreview').textContent = '洋紅系 - 紅+藍';
+                }
+            } else if (overlapCount === 1) {
+                document.getElementById('resultPreview').style.background = '#666';
+                document.getElementById('resultPreview').style.color = 'white';
+                document.getElementById('resultPreview').textContent = '部分重疊';
+            } else {
+                document.getElementById('resultPreview').style.background = '#333';
+                document.getElementById('resultPreview').style.color = 'white';
+                document.getElementById('resultPreview').textContent = '無重疊';
+            }
+            
+            document.getElementById('overlapCount').textContent = overlapCount;
+            document.getElementById('mixedColor').textContent = mixedColor;
+            document.getElementById('mixedRGB').textContent = mixedRGB;
+        }
+
+        // 初始化滑塊
+        function initializeSliders() {
+            const redSlider = document.getElementById('redSlider');
+            const greenSlider = document.getElementById('greenSlider');
+            const blueSlider = document.getElementById('blueSlider');
+
+            [redSlider, greenSlider, blueSlider].forEach(slider => {
+                slider.addEventListener('input', updateColor);
+            });
+        }
+
+        // 初始化預設色彩
+        function initializePresets() {
+            const presetsContainer = document.getElementById('colorPresets');
+            
+            presetColors.forEach(preset => {
+                const presetDiv = document.createElement('div');
+                presetDiv.className = 'preset-color';
+                presetDiv.style.background = `rgb(${preset.rgb.join(',')})`;
+                presetDiv.onclick = () => applyPreset(preset.rgb);
+                
+                const infoDiv = document.createElement('div');
+                infoDiv.className = 'preset-info';
+                infoDiv.innerHTML = preset.name;
+                
+                presetDiv.appendChild(infoDiv);
+                presetsContainer.appendChild(presetDiv);
+            });
+        }
+
+        // 更新顏色顯示
+        function updateColor() {
+            const red = document.getElementById('redSlider').value;
+            const green = document.getElementById('greenSlider').value;
+            const blue = document.getElementById('blueSlider').value;
+            
+            document.getElementById('redValue').textContent = red;
+            document.getElementById('greenValue').textContent = green;
+            document.getElementById('blueValue').textContent = blue;
+            
+            const color = `rgb(${red}, ${green}, ${blue})`;
+            document.getElementById('colorDisplay').style.background = color;
+            document.getElementById('colorCode').textContent = `RGB(${red}, ${green}, ${blue})`;
+            
+            const brightness = (parseInt(red) * 299 + parseInt(green) * 587 + parseInt(blue) * 114) / 1000;
+            document.getElementById('colorCode').style.color = brightness > 128 ? '#333' : '#fff';
+        }
+
+        // 應用預設色彩
+        function applyPreset(rgb) {
+            document.getElementById('redSlider').value = rgb[0];
+            document.getElementById('greenSlider').value = rgb[1];
+            document.getElementById('blueSlider').value = rgb[2];
+            updateColor();
+        }
+    </script>
+</body>
+</html>
