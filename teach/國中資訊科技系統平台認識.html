@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>國中資訊科技教學系統平台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+        
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .system-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .system-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
+        
+        .windows-card {
+            background: linear-gradient(135deg, #0078d4 0%, #00bcf2 100%);
+        }
+        
+        .mac-card {
+            background: linear-gradient(135deg, #555555 0%, #888888 100%);
+        }
+        
+        .linux-card {
+            background: linear-gradient(135deg, #fcc624 0%, #fdb813 100%);
+        }
+        
+        .ios-card {
+            background: linear-gradient(135deg, #000000 0%, #434343 100%);
+        }
+        
+        .android-card {
+            background: linear-gradient(135deg, #3ddc84 0%, #00c853 100%);
+        }
+        
+        .floating-icon {
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* 全屏模式樣式 */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 9999;
+            display: none;
+        }
+
+        .fullscreen-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .close-fullscreen {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .close-fullscreen:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-desktop text-3xl text-purple-600"></i>
+                    <h1 class="text-2xl font-bold text-gray-800">國中資訊科技教學系統平台</h1>
+                </div>
+                
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12">
+        <!-- Welcome Section -->
+        <section class="text-center mb-12">
+            <h2 class="text-4xl font-bold text-gray-800 mb-4">選擇操作系統模擬器</h2>
+            <p class="text-gray-600 text-lg">點擊下方系統圖標，開始體驗不同操作系統的界面與操作</p>
+        </section>
+
+        <!-- Desktop Systems -->
+        <section class="mb-12">
+            <h3 class="text-2xl font-bold text-gray-700 mb-6 flex items-center">
+                <i class="fas fa-desktop mr-3 text-blue-600"></i>
+                桌面作業系統
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Windows Card -->
+                <div class="system-card windows-card rounded-xl p-8 text-white" onclick="openSimulator('windows')">
+                    <div class="text-center">
+                        <i class="fab fa-windows text-6xl mb-4 floating-icon"></i>
+                        <h4 class="text-2xl font-bold mb-2">Windows 11</h4>
+                        <p class="text-sm opacity-90">微軟作業系統</p>
+                        
+                    </div>
+                </div>
+
+                <!-- macOS Card -->
+                <div class="system-card mac-card rounded-xl p-8 text-white" onclick="openSimulator('macos')">
+                    <div class="text-center">
+                        <i class="fab fa-apple text-6xl mb-4 floating-icon"></i>
+                        <h4 class="text-2xl font-bold mb-2">macOS</h4>
+                        <p class="text-sm opacity-90">蘋果作業系統</p>
+                       
+                    </div>
+                </div>
+
+                <!-- Linux Card -->
+                <div class="system-card linux-card rounded-xl p-8 text-white" onclick="openSimulator('linux')">
+                    <div class="text-center">
+                        <i class="fab fa-linux text-6xl mb-4 floating-icon"></i>
+                        <h4 class="text-2xl font-bold mb-2">Linux Ubuntu</h4>
+                        <p class="text-sm opacity-90">開源作業系統</p>
+                       
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mobile Systems -->
+        <section>
+            <h3 class="text-2xl font-bold text-gray-700 mb-6 flex items-center">
+                <i class="fas fa-mobile-alt mr-3 text-green-600"></i>
+                行動作業系統
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                <!-- iOS Card -->
+                <div class="system-card ios-card rounded-xl p-8 text-white" onclick="openSimulator('ios')">
+                    <div class="text-center">
+                        <i class="fab fa-apple text-6xl mb-4 floating-icon"></i>
+                        <h4 class="text-2xl font-bold mb-2">iOS</h4>
+                        <p class="text-sm opacity-90">蘋果行動系統</p>
+                       
+                    </div>
+                </div>
+
+                <!-- Android Card -->
+                <div class="system-card android-card rounded-xl p-8 text-white" onclick="openSimulator('android')">
+                    <div class="text-center">
+                        <i class="fab fa-android text-6xl mb-4 floating-icon"></i>
+                        <h4 class="text-2xl font-bold mb-2">Android</h4>
+                        <p class="text-sm opacity-90">谷歌行動系統</p>
+                       
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="mt-16 bg-white rounded-2xl shadow-xl p-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">教學功能特色</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="text-center">
+                    <div class="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-chalkboard-teacher text-purple-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-2">教師演示模式</h4>
+                    <p class="text-gray-600 text-sm">老師可以操作並展示給全班學生觀看</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-laptop-code text-blue-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-2">學生實作練習</h4>
+                    <p class="text-gray-600 text-sm">學生可以親自體驗各種系統操作</p>
+                </div>
+                <div class="text-center">
+                    <div class="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-tasks text-green-600 text-2xl"></i>
+                    </div>
+                    <h4 class="font-bold text-gray-800 mb-2">互動式學習</h4>
+                    <p class="text-gray-600 text-sm">包含步驟指導和即時回饋</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 mt-16">
+        <div class="container mx-auto px-6 text-center">
+            <p class="mb-2">© 2025 國中資訊科技教學系統平台</p>
+            <p class="text-sm text-gray-400">為資訊教育而設計的互動學習工具</p>
+        </div>
+    </footer>
+
+    <!-- 全屏覆蓋層 -->
+    <div id="fullscreen-overlay" class="fullscreen-overlay">
+        <iframe id="simulator-iframe" class="fullscreen-iframe" src=""></iframe>
+        <button class="close-fullscreen" onclick="closeFullscreen()">
+            <i class="fas fa-times text-xl text-gray-700"></i>
+        </button>
+    </div>
+
+    <script>
+        function openSimulator(system) {
+            // 根據不同系統設置對應的模擬器URL
+            const urls = {
+                'windows': 'windows11模擬.html',
+                'macos': 'macos模擬.html',
+                'linux': 'linux模擬.html',
+                'ios': 'ios模擬.html',
+                'android': 'android-simulator.html'
+            };
+            
+            // 獲取全屏覆蓋層和iframe元素
+            const overlay = document.getElementById('fullscreen-overlay');
+            const iframe = document.getElementById('simulator-iframe');
+            
+            // 設置iframe的src
+            iframe.src = urls[system];
+            
+            // 顯示全屏覆蓋層
+            overlay.style.display = 'block';
+            
+            // 防止body滾動
+            document.body.style.overflow = 'hidden';
+            
+            // 監聽iframe加載完成事件
+            iframe.onload = function() {
+                // 可以在這裡添加加載完成的處理邏輯
+                console.log(`${system} 模擬器已加載完成`);
+            };
+        }
+
+        function closeFullscreen() {
+            // 隱藏全屏覆蓋層
+            const overlay = document.getElementById('fullscreen-overlay');
+            overlay.style.display = 'none';
+            
+            // 恢復body滾動
+            document.body.style.overflow = 'auto';
+            
+            // 清空iframe的src以釋放資源
+            const iframe = document.getElementById('simulator-iframe');
+            iframe.src = '';
+        }
+
+        // 添加鍵盤快捷鍵支持（ESC鍵關閉全屏）
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeFullscreen();
+            }
+        });
+
+        // 添加頁面載入動畫
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.system-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 100);
+            });
+        });
+
+        // 添加全屏模式的進度指示器
+        function showLoadingIndicator() {
+            const indicator = document.createElement('div');
+            indicator.id = 'loading-indicator';
+            indicator.className = 'fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10000';
+            indicator.innerHTML = `
+                <div class="bg-white rounded-lg shadow-lg p-6 text-center">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                    <p class="text-gray-700">正在載入模擬器...</p>
+                </div>
+            `;
+            document.body.appendChild(indicator);
+        }
+
+        function hideLoadingIndicator() {
+            const indicator = document.getElementById('loading-indicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        // 修改openSimulator函數以包含加載指示器
+        function openSimulator(system) {
+            const urls = {
+                'windows': 'windows11模擬.html',
+                'macos': 'macos模擬.html',
+                'linux': 'linux模擬.html',
+                'ios': 'ios模擬.html',
+                'android': 'android模擬.html'
+            };
+            
+            showLoadingIndicator();
+            
+            const overlay = document.getElementById('fullscreen-overlay');
+            const iframe = document.getElementById('simulator-iframe');
+            
+            iframe.src = urls[system];
+            overlay.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+            
+            iframe.onload = function() {
+                hideLoadingIndicator();
+                console.log(`${system} 模擬器已加載完成`);
+            };
+            
+            // 設置超時以防加載失敗
+            setTimeout(() => {
+                hideLoadingIndicator();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

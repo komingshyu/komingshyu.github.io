@@ -8,7 +8,7 @@ const linksData = [
   { name: "圖像取樣教學工具", description: "圖像取樣的比較工具", link: "圖像取樣教學工具.html" },
   { name: "RGB色彩疊合實驗室", description: "RGB色彩疊合實驗室", link: "RGB色彩疊合實驗室.html" },
   { name: "RGB三原色光互動教學 - 色光照射模擬", description: "RGB三原色光互動教學", link: "RGB三原色光互動教學 - 色光照射模擬.html" },
-
+  { name: "國中資訊科技系統平台認識", description: "國中資訊科技系統平台認識與模擬網頁", link: "國中資訊科技系統平台認識.html" },
 
 
 ];
