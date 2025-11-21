@@ -110,12 +110,11 @@
         .btn-accent:hover {
             background-color: #E07A00;
         }
-
-        .btn-group {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
+        
+        .btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .form-group {
@@ -298,6 +297,9 @@
             margin: 15px 0;
             overflow-x: auto;
             position: relative;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         .copy-btn {
@@ -340,7 +342,8 @@
             transform: translateX(120%);
             transition: transform 0.3s ease;
             z-index: 2000;
-            max-width: 300px;
+            max-width: 400px;
+            word-wrap: break-word;
         }
 
         .notification.show {
@@ -440,11 +443,6 @@
             
             h1 {
                 font-size: 2rem;
-            }
-            
-            .btn-group {
-                flex-direction: column;
-                gap: 10px;
             }
             
             .tabs {
@@ -593,20 +591,35 @@
             <span class="close-modal" id="close-help">&times;</span>
             <h2><i class="fas fa-info-circle"></i> 系統說明</h2>
             
-            <h3>部署步驟</h3>
+            <h3>部署與使用說明</h3>
+            <div class="code-block">
+                <strong>【重要】如何解決 CORS 錯誤？</strong><br><br>
+                如果您看到 "Access to fetch at '...' from origin 'null' has been blocked by CORS policy" 錯誤，<br>
+                這是因為您直接在瀏覽器中打開了 HTML 檔案 (file://...)。<br><br>
+                <strong>解決方案：</strong><br>
+                1. <strong>【推薦】使用本地伺服器：</strong>安裝 VSCode 編輯器，並安裝 "Live Server" 擴充功能。在 HTML 檔案上點擊右鍵，選擇 "Open with Live Server"。<br>
+                2. <strong>【推薦】部署到網路：</strong>將整個專案上傳到 GitHub Pages，獲得一個正式的網址。<br><br>
+                <strong>請不要直接雙擊打開 HTML 檔案！</strong>
+            </div>
+
+            <h3>GAS 後端部署步驟</h3>
             <ol>
-                <li>複製下面的 GAS 程式碼</li>
                 <li>前往 <a href="https://script.google.com" target="_blank">Google Apps Script</a> 建立新專案</li>
-                <li>貼上程式碼並儲存</li>
+                <li>刪除預設程式碼，將下方提供的 GAS 程式碼完整貼上</li>
+                <li>點擊「儲存專案」</li>
                 <li>點擊「部署」→「新增部署作業」</li>
-                <li>選擇「網頁應用程式」類型</li>
-                <li>設定執行身分為「我自己」，存取權限為「任何人」</li>
-                <li>部署後複製 Web App URL</li>
-                <li>回到本系統，點擊設定按鈕，貼上 URL</li>
+                <li>選擇類型為「網頁應用程式」，說明填寫「設備報修系統 API」</li>
+                <li>設定：<br>
+                    - 執行身分：我自己<br>
+                    - 誰可以存取：任何人
+                </li>
+                <li>點擊「部署」，並完成 Google 帳號授權</li>
+                <li>部署成功後，複製「Web App URL」</li>
+                <li>回到本系統，點擊右下角設定按鈕 (⚙️)，貼上 URL 並儲存</li>
             </ol>
             
-            <h3>GAS 程式碼</h3>
-            <div class="code-block">
+            <h3>GAS 程式碼 (Code.gs)</h3>
+            <div class="code-block" style="max-height: 300px; overflow-y: scroll;">
                 <button class="copy-btn" id="copy-code-btn">複製程式碼</button>
                 <pre id="gas-code"></pre>
             </div>
@@ -619,65 +632,33 @@
     <script>
         // GAS 程式碼 (將在說明模態框中顯示)
         const gasCode = `// 設備報修系統 - Google Apps Script 後端
-// 版本: 1.1 (修正 CORS 問題)
+// 版本: 1.3 (穩定版)
 
 // 全域變數
 const SPREADSHEET_NAME = "設備報修系統";
 const SHEET_NAME = "報修記錄";
 const HEADERS = [
-  "報修時間",
-  "報修人姓名",
-  "部門",
-  "設備位置",
-  "設備名稱",
-  "問題描述",
-  "緊急程度",
-  "維修狀態",
-  "處理人員",
-  "處理時間",
-  "處理備註",
-  "問題照片"
+  "報修時間", "報修人姓名", "部門", "設備位置", "設備名稱", 
+  "問題描述", "緊急程度", "維修狀態", "處理人員", "處理時間", "處理備註", "問題照片"
 ];
 
-// 初始化函數 - 建立試算表和工作表
+// 初始化試算表
 function initialize() {
   try {
-    let spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+    if (spreadsheet.getName() !== SPREADSHEET_NAME) spreadsheet.rename(SPREADSHEET_NAME);
     
-    // 如果試算表名稱不正確，重命名
-    if (spreadsheet.getName() !== SPREADSHEET_NAME) {
-      spreadsheet.rename(SPREADSHEET_NAME);
-    }
-    
-    // 檢查是否存在報修記錄工作表
     let sheet = spreadsheet.getSheetByName(SHEET_NAME);
-    
     if (!sheet) {
-      // 建立新的工作表
       sheet = spreadsheet.insertSheet(SHEET_NAME);
-      
-      // 設定標題行
       sheet.getRange(1, 1, 1, HEADERS.length).setValues([HEADERS])
-        .setFontWeight("bold")
-        .setBackground("#8ECAE6")
-        .setFontColor("#FFFFFF");
-      
-      // 設定欄位寬度
+        .setFontWeight("bold").setBackground("#8ECAE6").setFontColor("#FFFFFF");
       sheet.setColumnWidths(1, HEADERS.length, 150);
-      sheet.setColumnWidth(7, 100); // 緊急程度
-      sheet.setColumnWidth(8, 100); // 維修狀態
       sheet.setColumnWidth(12, 300); // 問題照片
-      
-      // 凍結第一行
       sheet.setFrozenRows(1);
-      
-      // 設定資料驗證
       setValidationRules(sheet);
-      
-      // 設定條件式格式
       setConditionalFormatting(sheet);
     }
-    
     return { success: true, message: "初始化完成" };
   } catch (error) {
     return { success: false, message: "初始化失敗: " + error.toString() };
@@ -686,19 +667,8 @@ function initialize() {
 
 // 設定資料驗證規則
 function setValidationRules(sheet) {
-  // 緊急程度選項
-  const urgencyRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(["普通", "緊急", "非常緊急"])
-    .setAllowInvalid(false)
-    .build();
-  
-  // 維修狀態選項
-  const statusRule = SpreadsheetApp.newDataValidation()
-    .requireValueInList(["待處理", "處理中", "已完成"])
-    .setAllowInvalid(false)
-    .build();
-  
-  // 應用資料驗證到相應欄位
+  const urgencyRule = SpreadsheetApp.newDataValidation().requireValueInList(["普通", "緊急", "非常緊急"]).setAllowInvalid(false).build();
+  const statusRule = SpreadsheetApp.newDataValidation().requireValueInList(["待處理", "處理中", "已完成"]).setAllowInvalid(false).build();
   const lastRow = sheet.getLastRow();
   if (lastRow > 1) {
     sheet.getRange(2, 7, lastRow - 1, 1).setDataValidation(urgencyRule); // 緊急程度
@@ -708,120 +678,47 @@ function setValidationRules(sheet) {
 
 // 設定條件式格式
 function setConditionalFormatting(sheet) {
-  // 緊急程度格式
-  const urgentRange = sheet.getRange("G2:G");
-  urgentRange.setFontWeight("normal");
-  
-  // 緊急程度為「緊急」或「非常緊急」時，背景色為紅色
-  const urgentRule = SpreadsheetApp.newConditionalFormatRule()
-    .whenTextContains("緊急")
-    .setBackground("#FFB3BA")
-    .setFontWeight("bold")
-    .setRanges([urgentRange])
-    .build();
-  
-  // 維修狀態格式
-  const statusRange = sheet.getRange("H2:H");
-  statusRange.setFontWeight("normal");
-  
-  // 維修狀態為「已完成」時，背景色為綠色
-  const completedRule = SpreadsheetApp.newConditionalFormatRule()
-    .whenTextEqualTo("已完成")
-    .setBackground("#D4EDDA")
-    .setFontWeight("bold")
-    .setRanges([statusRange])
-    .build();
-  
-  // 維修狀態為「處理中」時，背景色為藍色
-  const inProgressRule = SpreadsheetApp.newConditionalFormatRule()
-    .whenTextEqualTo("處理中")
-    .setBackground("#CCE5FF")
-    .setFontWeight("bold")
-    .setRanges([statusRange])
-    .build();
-  
-  // 應用條件式格式規則
+  const urgentRule = SpreadsheetApp.newConditionalFormatRule().whenTextContains("緊急").setBackground("#FFB3BA").setFontWeight("bold").setRanges([sheet.getRange("G2:G")]).build();
+  const completedRule = SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo("已完成").setBackground("#D4EDDA").setFontWeight("bold").setRanges([sheet.getRange("H2:H")]).build();
+  const inProgressRule = SpreadsheetApp.newConditionalFormatRule().whenTextEqualTo("處理中").setBackground("#CCE5FF").setFontWeight("bold").setRanges([sheet.getRange("H2:H")]).build();
   const rules = sheet.getConditionalFormatRules();
   rules.push(urgentRule, completedRule, inProgressRule);
   sheet.setConditionalFormatRules(rules);
 }
 
-// doGet 函數 - 處理 GET 請求
+// 處理 GET 請求
 function doGet(e) {
-  return handleRequest(e, 'GET');
+  return handleRequest(e);
 }
 
-// doPost 函數 - 處理 POST 請求
+// 處理 POST 請求
 function doPost(e) {
-  return handleRequest(e, 'POST');
+  return handleRequest(e);
 }
 
-// 統一處理請求的函數
-function handleRequest(e, method) {
-  // 初始化試算表
+// 統一處理請求
+function handleRequest(e) {
   const initResult = initialize();
-  if (!initResult.success) {
-    return createJsonResponse({ success: false, message: initResult.message });
-  }
+  if (!initResult.success) return createJsonResponse({ success: false, message: initResult.message });
   
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
-  
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
   try {
-    // 處理預檢請求 (OPTIONS)
-    if (method === 'POST' && !e.postData) {
-      return createOptionsResponse();
+    let data;
+    if (e.postData) { // POST request
+      data = JSON.parse(e.postData.contents);
+    } else { // GET request
+      data = e.parameter;
     }
-    
-    // 獲取請求參數
-    const action = e.parameter.action || "list";
-    const search = e.parameter.search || "";
-    
-    if (method === 'GET') {
-      if (action === "list") {
-        // 獲取報修列表
-        const data = getRepairList(sheet, search);
-        return createJsonResponse({ success: true, data: data });
-      } else if (action === "get") {
-        // 獲取特定報修單
-        const id = parseInt(e.parameter.id);
-        if (isNaN(id)) {
-          return createJsonResponse({ success: false, message: "無效的報修單 ID" });
-        }
-        
-        const data = getRepairById(sheet, id);
-        if (data) {
-          return createJsonResponse({ success: true, data: data });
-        } else {
-          return createJsonResponse({ success: false, message: "找不到指定的報修單" });
-        }
-      } else if (action === "submit") {
-        // 提交新的報修單
-        const result = submitRepair(sheet, e.parameter);
-        return createJsonResponse(result);
-      } else if (action === "update") {
-        // 更新報修單狀態
-        const result = updateRepairStatus(sheet, e.parameter);
-        return createJsonResponse(result);
-      } else {
-        return createJsonResponse({ success: false, message: "不支援的操作" });
-      }
-    } else if (method === 'POST') {
-      // 解析請求內容
-      const requestData = JSON.parse(e.postData.contents);
-      const action = requestData.action || "submit";
-      
-      if (action === "submit") {
-        // 提交新的報修單
-        const result = submitRepair(sheet, requestData);
-        return createJsonResponse(result);
-      } else if (action === "update") {
-        // 更新報修單狀態
-        const result = updateRepairStatus(sheet, requestData);
-        return createJsonResponse(result);
-      } else {
-        return createJsonResponse({ success: false, message: "不支援的操作" });
-      }
+
+    const action = data.action || "list";
+    if (action === "list") {
+      return createJsonResponse({ success: true, data: getRepairList(sheet, data.search || "") });
+    } else if (action === "submit") {
+      return createJsonResponse(submitRepair(sheet, data));
+    } else if (action === "update") {
+      return createJsonResponse(updateRepairStatus(sheet, data));
+    } else {
+      return createJsonResponse({ success: false, message: "不支援的操作" });
     }
   } catch (error) {
     return createJsonResponse({ success: false, message: "處理請求時發生錯誤: " + error.toString() });
@@ -832,154 +729,66 @@ function handleRequest(e, method) {
 function getRepairList(sheet, search) {
   const data = sheet.getDataRange().getValues();
   const headers = data[0];
-  const rows = data.slice(1);
-  
-  // 找到各欄位的索引
-  const columnIndex = {};
-  headers.forEach((header, index) => {
-    columnIndex[header] = index;
-  });
-  
-  // 轉換資料格式
-  let repairs = rows.map((row, index) => {
+  let repairs = data.slice(1).map((row, index) => {
     const repair = {};
-    headers.forEach((header, i) => {
-      repair[header] = row[i];
-    });
-    repair.id = index + 2; // 試算表中的行號 (從2開始，因為第一行是標題)
+    headers.forEach((header, i) => repair[header] = row[i]);
+    repair.id = index + 2;
     return repair;
   });
-  
-  // 如果有搜尋條件，進行過濾
-  if (search) {
-    repairs = repairs.filter(repair => {
-      const searchLower = search.toLowerCase();
-      return Object.values(repair).some(value => 
-        value && value.toString().toLowerCase().includes(searchLower)
-      );
-    });
-  }
-  
-  // 按報修時間降序排列
-  repairs.sort((a, b) => {
-    const dateA = new Date(a["報修時間"]);
-    const dateB = new Date(b["報修時間"]);
-    return dateB - dateA;
-  });
-  
-  return repairs;
-}
 
-// 根據 ID 獲取報修單
-function getRepairById(sheet, id) {
-  const data = sheet.getDataRange().getValues();
-  const headers = data[0];
-  
-  if (id < 2 || id >= data.length) {
-    return null;
+  if (search) {
+    repairs = repairs.filter(repair => Object.values(repair).some(value => 
+      value && value.toString().toLowerCase().includes(search.toLowerCase())
+    ));
   }
   
-  const row = data[id - 1];
-  const repair = {};
-  headers.forEach((header, i) => {
-    repair[header] = row[i];
-  });
-  repair.id = id;
-  
-  return repair;
+  repairs.sort((a, b) => new Date(b["報修時間"]) - new Date(a["報修時間"]));
+  return repairs;
 }
 
 // 提交報修單
 function submitRepair(sheet, requestData) {
-  try {
-    // 驗證必要欄位
-    const requiredFields = ["報修人姓名", "部門", "設備位置", "設備名稱", "問題描述", "緊急程度"];
-    for (const field of requiredFields) {
-      if (!requestData[field]) {
-        return { success: false, message: \`缺少必要欄位: \${field}\` };
-      }
-    }
-    
-    // 準備新的一行資料
-    const now = new Date();
-    const newRow = [
-      now, // 報修時間
-      requestData["報修人姓名"],
-      requestData["部門"],
-      requestData["設備位置"],
-      requestData["設備名稱"],
-      requestData["問題描述"],
-      requestData["緊急程度"],
-      "待處理", // 維修狀態
-      "", // 處理人員
-      "", // 處理時間
-      "", // 處理備註
-      requestData["問題照片"] || "" // 問題照片
-    ];
-    
-    // 添加新行
-    sheet.appendRow(newRow);
-    
-    // 獲取新添加行的 ID
-    const id = sheet.getLastRow();
-    
-    // 重新應用資料驗證和條件式格式
-    setValidationRules(sheet);
-    setConditionalFormatting(sheet);
-    
-    return { 
-      success: true, 
-      message: "報修單提交成功", 
-      id: id 
-    };
-  } catch (error) {
-    return { success: false, message: "提交報修單時發生錯誤: " + error.toString() };
+  const requiredFields = ["報修人姓名", "部門", "設備位置", "設備名稱", "問題描述", "緊急程度"];
+  for (const field of requiredFields) {
+    if (!requestData[field]) return { success: false, message: \`缺少必要欄位: \${field}\` };
   }
+  
+  const newRow = [
+    new Date(), requestData["報修人姓名"], requestData["部門"], requestData["設備位置"], 
+    requestData["設備名稱"], requestData["問題描述"], requestData["緊急程度"], "待處理", "", "", "",
+    requestData["問題照片"] || ""
+  ];
+  
+  sheet.appendRow(newRow);
+  setValidationRules(sheet); // Re-apply for new row
+  return { success: true, message: "報修單提交成功", id: sheet.getLastRow() };
 }
 
-// 更新報修單狀態
+// 更新報修狀態
 function updateRepairStatus(sheet, requestData) {
-  try {
-    const id = parseInt(requestData.id);
-    if (isNaN(id) || id < 2 || id > sheet.getLastRow()) {
-      return { success: false, message: "無效的報修單 ID" };
-    }
-    
-    // 獲取當前行資料
-    const row = sheet.getRange(id, 1, 1, sheet.getLastColumn()).getValues()[0];
-    
-    // 更新欄位
-    const updates = {};
-    if (requestData["維修狀態"]) {
-      updates["維修狀態"] = requestData["維修狀態"];
-    }
-    if (requestData["處理人員"]) {
-      updates["處理人員"] = requestData["處理人員"];
-    }
-    if (requestData["處理備註"]) {
-      updates["處理備註"] = requestData["處理備註"];
-    }
-    
-    // 如果狀態變更為已完成，記錄處理時間
-    if (requestData["維修狀態"] === "已完成" && row[7] !== "已完成") {
-      updates["處理時間"] = new Date();
-    }
-    
-    // 獲取標題行
-    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
-    
-    // 應用更新
-    for (const [field, value] of Object.entries(updates)) {
-      const columnIndex = headers.indexOf(field);
-      if (columnIndex !== -1) {
-        sheet.getRange(id, columnIndex + 1).setValue(value);
-      }
-    }
-    
-    return { success: true, message: "報修單狀態更新成功" };
-  } catch (error) {
-    return { success: false, message: "更新報修單狀態時發生錯誤: " + error.toString() };
+  const id = parseInt(requestData.id);
+  if (isNaN(id) || id < 2 || id > sheet.getLastRow()) {
+    return { success: false, message: "無效的報修單 ID" };
   }
+  
+  const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+  const updates = {};
+  if (requestData["維修狀態"]) updates["維修狀態"] = requestData["維修狀態"];
+  if (requestData["處理人員"]) updates["處理人員"] = requestData["處理人員"];
+  if (requestData["處理備註"]) updates["處理備註"] = requestData["處理備註"];
+  
+  if (requestData["維修狀態"] === "已完成") {
+    updates["處理時間"] = new Date();
+  }
+
+  for (const [field, value] of Object.entries(updates)) {
+    const columnIndex = headers.indexOf(field);
+    if (columnIndex !== -1) {
+      sheet.getRange(id, columnIndex + 1).setValue(value);
+    }
+  }
+  
+  return { success: true, message: "報修單狀態更新成功" };
 }
 
 // 創建 JSON 回應
@@ -989,32 +798,13 @@ function createJsonResponse(data) {
     .setHeader('Access-Control-Allow-Origin', '*')
     .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     .setHeader('Access-Control-Allow-Headers', 'Content-Type');
-}
-
-// 處理 OPTIONS 預檢請求
-function createOptionsResponse() {
-  return ContentService.createTextOutput('')
-    .setMimeType(ContentService.MimeType.TEXT)
-    .setHeader('Access-Control-Allow-Origin', '*')
-    .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }`;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 檢查 URL 參數
             checkUrlParams();
-            
-            // 檢查 LocalStorage 中是否有 GAS URL
             checkGasUrl();
-            
-            // 載入報修列表
-            loadRepairList();
-            
-            // 設定事件監聽器
             setupEventListeners();
-            
-            // 顯示 GAS 程式碼
             document.getElementById('gas-code').textContent = gasCode;
         });
 
@@ -1022,16 +812,10 @@ function createOptionsResponse() {
         function checkUrlParams() {
             const urlParams = new URLSearchParams(window.location.search);
             const configParam = urlParams.get('config');
-            
             if (configParam) {
                 try {
-                    // 解碼 Base64
                     const gasUrl = atob(configParam);
-                    
-                    // 儲存到 LocalStorage
                     localStorage.setItem('gasUrl', gasUrl);
-                    
-                    // 顯示通知
                     showNotification('已自動設定系統連接', 'success');
                 } catch (error) {
                     console.error('解碼 URL 參數失敗:', error);
@@ -1042,13 +826,11 @@ function createOptionsResponse() {
         // 檢查 GAS URL
         function checkGasUrl() {
             const gasUrl = localStorage.getItem('gasUrl');
-            
             if (gasUrl) {
                 document.getElementById('gas-url').value = gasUrl;
                 return true;
-            } else {
-                return false;
             }
+            return false;
         }
 
         // 設定事件監聽器
@@ -1056,23 +838,16 @@ function createOptionsResponse() {
             // Tab 切換
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', function() {
-                    // 移除所有 active 類別
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    
-                    // 添加 active 類別到當前 tab
                     this.classList.add('active');
                     const tabId = this.getAttribute('data-tab');
                     document.getElementById(`${tabId}-tab`).classList.add('active');
-                    
-                    // 如果是列表 tab，載入報修列表
-                    if (tabId === 'list') {
-                        loadRepairList();
-                    }
+                    if (tabId === 'list') loadRepairList();
                 });
             });
             
-            // 報修表單提交
+            // 表單提交
             document.getElementById('repair-form').addEventListener('submit', function(e) {
                 e.preventDefault();
                 submitRepairForm();
@@ -1084,59 +859,29 @@ function createOptionsResponse() {
             });
             
             // 搜尋功能
-            document.getElementById('search-btn').addEventListener('click', function() {
-                loadRepairList();
-            });
-            
+            document.getElementById('search-btn').addEventListener('click', loadRepairList);
             document.getElementById('search-input').addEventListener('keyup', function(e) {
-                if (e.key === 'Enter') {
-                    loadRepairList();
-                }
+                if (e.key === 'Enter') loadRepairList();
             });
             
             // 設定按鈕
-            document.getElementById('settings-btn').addEventListener('click', function() {
-                document.getElementById('settings-modal').classList.add('active');
-            });
+            document.getElementById('settings-btn').addEventListener('click', () => document.getElementById('settings-modal').classList.add('active'));
+            document.getElementById('close-settings').addEventListener('click', () => document.getElementById('settings-modal').classList.remove('active'));
+            document.getElementById('save-settings').addEventListener('click', saveSettings);
             
-            document.getElementById('close-settings').addEventListener('click', function() {
-                document.getElementById('settings-modal').classList.remove('active');
-            });
-            
-            document.getElementById('save-settings').addEventListener('click', function() {
-                saveSettings();
-            });
-            
-            // 產生分享連結
-            document.getElementById('generate-share-link').addEventListener('click', function() {
-                generateShareLink();
-            });
-            
-            // 複製分享連結
-            document.getElementById('copy-share-link').addEventListener('click', function() {
-                copyToClipboard(document.getElementById('share-link').value, '分享連結已複製');
-            });
+            // 分享功能
+            document.getElementById('generate-share-link').addEventListener('click', generateShareLink);
+            document.getElementById('copy-share-link').addEventListener('click', () => copyToClipboard(document.getElementById('share-link').value, '分享連結已複製'));
             
             // 說明按鈕
-            document.getElementById('help-btn').addEventListener('click', function() {
-                document.getElementById('help-modal').classList.add('active');
-            });
-            
-            document.getElementById('close-help').addEventListener('click', function() {
-                document.getElementById('help-modal').classList.remove('active');
-            });
-            
-            // 複製 GAS 程式碼
-            document.getElementById('copy-code-btn').addEventListener('click', function() {
-                copyToClipboard(gasCode, 'GAS 程式碼已複製');
-            });
+            document.getElementById('help-btn').addEventListener('click', () => document.getElementById('help-modal').classList.add('active'));
+            document.getElementById('close-help').addEventListener('click', () => document.getElementById('help-modal').classList.remove('active'));
+            document.getElementById('copy-code-btn').addEventListener('click', () => copyToClipboard(gasCode, 'GAS 程式碼已複製'));
             
             // 點擊模態框外部關閉
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', function(e) {
-                    if (e.target === this) {
-                        this.classList.remove('active');
-                    }
+                    if (e.target === this) this.classList.remove('active');
                 });
             });
         }
@@ -1144,16 +889,14 @@ function createOptionsResponse() {
         // 預覽圖片
         function previewImage(file) {
             if (!file) return;
-            
             const reader = new FileReader();
             reader.onload = function(e) {
-                const preview = document.getElementById('image-preview');
-                preview.innerHTML = `<img src="${e.target.result}" alt="預覽圖片">`;
+                document.getElementById('image-preview').innerHTML = `<img src="${e.target.result}" alt="預覽圖片">`;
             };
             reader.readAsDataURL(file);
         }
 
-        // 壓縮圖片並轉為 Base64
+        // 壓縮圖片
         function compressImage(file, maxWidth = 800) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1162,34 +905,19 @@ function createOptionsResponse() {
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        
-                        // 計算壓縮後的尺寸
-                        let width = img.width;
-                        let height = img.height;
-                        
+                        let width = img.width, height = img.height;
                         if (width > maxWidth) {
                             height = Math.round((maxWidth / width) * height);
                             width = maxWidth;
                         }
-                        
-                        canvas.width = width;
-                        canvas.height = height;
-                        
-                        // 繪製壓縮後的圖片
+                        canvas.width = width; canvas.height = height;
                         ctx.drawImage(img, 0, 0, width, height);
-                        
-                        // 轉為 Base64
-                        const base64 = canvas.toDataURL('image/jpeg', 0.8);
-                        resolve(base64);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
                     };
-                    img.onerror = function() {
-                        reject(new Error('圖片載入失敗'));
-                    };
+                    img.onerror = () => reject(new Error('圖片載入失敗'));
                     img.src = e.target.result;
                 };
-                reader.onerror = function() {
-                    reject(new Error('檔案讀取失敗'));
-                };
+                reader.onerror = () => reject(new Error('檔案讀取失敗'));
                 reader.readAsDataURL(file);
             });
         }
@@ -1197,72 +925,47 @@ function createOptionsResponse() {
         // 提交報修表單
         async function submitRepairForm() {
             const gasUrl = localStorage.getItem('gasUrl');
+            if (!gasUrl) { showNotification('請先設定系統連接', 'error'); return; }
             
-            if (!gasUrl) {
-                showNotification('請先設定系統連接', 'error');
-                return;
-            }
-            
-            // 獲取表單資料
             const formData = new FormData(document.getElementById('repair-form'));
             const data = {};
+            for (let [key, value] of formData.entries()) data[key] = value;
             
-            // 轉換 FormData 到普通物件
-            for (let [key, value] of formData.entries()) {
-                data[key] = value;
-            }
-            
-            // 處理圖片
             const imageFile = document.getElementById('image').files[0];
             if (imageFile) {
                 try {
                     showNotification('正在壓縮圖片...', 'info');
-                    const compressedImage = await compressImage(imageFile);
-                    data['問題照片'] = compressedImage;
+                    data['問題照片'] = await compressImage(imageFile);
                 } catch (error) {
                     showNotification('圖片處理失敗: ' + error.message, 'error');
                     return;
                 }
             }
             
-            // 顯示載入中
             const submitBtn = document.querySelector('#repair-form button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<span class="loading"></span> 提交中...';
             submitBtn.disabled = true;
             
-            // 發送請求 - 使用 URL 參數方式而不是 JSON Body
             try {
-                // 構建 URL 參數
-                const params = new URLSearchParams();
-                params.append('action', 'submit');
-                for (const [key, value] of Object.entries(data)) {
-                    params.append(key, value);
-                }
-                
-                const response = await fetch(`${gasUrl}?${params.toString()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'submit', ...data })
                 });
-                
                 const result = await response.json();
                 
                 if (result.success) {
                     showNotification(result.message, 'success');
                     document.getElementById('repair-form').reset();
                     document.getElementById('image-preview').innerHTML = '';
-                    
-                    // 切換到列表 tab
                     document.querySelector('[data-tab="list"]').click();
                 } else {
                     showNotification(result.message, 'error');
                 }
             } catch (error) {
-                showNotification('提交失敗: ' + error.message, 'error');
+                handleFetchError(error, '提交');
             } finally {
-                // 恢復按鈕狀態
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
@@ -1271,25 +974,13 @@ function createOptionsResponse() {
         // 載入報修列表
         async function loadRepairList() {
             const gasUrl = localStorage.getItem('gasUrl');
-            
-            if (!gasUrl) {
-                document.getElementById('repair-list').innerHTML = '<p>請先設定系統連接</p>';
-                return;
-            }
+            if (!gasUrl) { document.getElementById('repair-list').innerHTML = '<p>請先設定系統連接</p>'; return; }
             
             const searchTerm = document.getElementById('search-input').value;
-            
-            // 顯示載入中
             document.getElementById('repair-list').innerHTML = '<p><span class="loading"></span> 載入中...</p>';
             
             try {
-                // 構建 URL 參數
-                const params = new URLSearchParams();
-                params.append('action', 'list');
-                if (searchTerm) {
-                    params.append('search', searchTerm);
-                }
-                
+                const params = new URLSearchParams({ action: 'list', ...(searchTerm && { search: searchTerm }) });
                 const response = await fetch(`${gasUrl}?${params.toString()}`);
                 const result = await response.json();
                 
@@ -1299,190 +990,145 @@ function createOptionsResponse() {
                     document.getElementById('repair-list').innerHTML = `<p>載入失敗: ${result.message}</p>`;
                 }
             } catch (error) {
-                document.getElementById('repair-list').innerHTML = `<p>載入失敗: ${error.message}</p>`;
+                handleFetchError(error, '載入列表');
+                document.getElementById('repair-list').innerHTML = `<p>載入失敗，請檢查網路連線與系統設定</p>`;
             }
         }
 
         // 顯示報修列表
         function displayRepairList(data) {
             const listContainer = document.getElementById('repair-list');
-            
-            if (!data || data.length === 0) {
-                listContainer.innerHTML = '<p>沒有找到報修記錄</p>';
-                return;
-            }
+            if (!data || data.length === 0) { listContainer.innerHTML = '<p>沒有找到報修記錄</p>'; return; }
             
             let html = '';
-            
             data.forEach(item => {
                 const urgencyClass = item['緊急程度'].includes('緊急') ? 'urgent' : '';
                 const statusClass = item['維修狀態'] === '已完成' ? 'completed' : '';
                 const statusBadgeClass = getStatusBadgeClass(item['維修狀態']);
                 
-                html += `
-                    <div class="repair-item ${urgencyClass} ${statusClass}">
-                        <h3>${item['設備名稱']} <span class="status-badge ${statusBadgeClass}">${item['維修狀態']}</span></h3>
-                        <p><i class="fas fa-user"></i> 報修人: ${item['報修人姓名']} (${item['部門']})</p>
-                        <p><i class="fas fa-map-marker-alt"></i> 位置: ${item['設備位置']}</p>
-                        <p><i class="fas fa-exclamation-triangle"></i> 緊急程度: ${item['緊急程度']}</p>
-                        <p><i class="fas fa-clock"></i> 報修時間: ${formatDate(item['報修時間'])}</p>
-                        <p><i class="fas fa-comment-alt"></i> 問題描述: ${item['問題描述']}</p>
-                        
-                        ${item['問題照片'] ? `<p><img src="${item['問題照片']}" alt="問題照片" style="max-width: 200px; border-radius: 5px;"></p>` : ''}
-                        
-                        ${item['處理人員'] ? `<p><i class="fas fa-wrench"></i> 處理人員: ${item['處理人員']}</p>` : ''}
-                        ${item['處理時間'] ? `<p><i class="fas fa-calendar-check"></i> 處理時間: ${formatDate(item['處理時間'])}</p>` : ''}
-                        ${item['處理備註'] ? `<p><i class="fas fa-sticky-note"></i> 處理備註: ${item['處理備註']}</p>` : ''}
-                        
-                        <div style="margin-top: 15px;">
-                            ${item['維修狀態'] !== '已完成' ? `
-                                <button class="btn" onclick="updateRepairStatus(${item.id}, '處理中')">
-                                    <i class="fas fa-play"></i> 開始處理
-                                </button>
-                                <button class="btn btn-accent" onclick="updateRepairStatus(${item.id}, '已完成')">
-                                    <i class="fas fa-check"></i> 標記完成
-                                </button>
-                            ` : ''}
-                        </div>
-                    </div>
-                `;
+                // 使用字串串接來避免模板字符串的潛在問題
+                html += '<div class="repair-item ' + urgencyClass + ' ' + statusClass + '">';
+                html += '<h3>' + item['設備名稱'] + ' <span class="status-badge ' + statusBadgeClass + '">' + item['維修狀態'] + '</span></h3>';
+                html += '<p><i class="fas fa-user"></i> 報修人: ' + item['報修人姓名'] + ' (' + item['部門'] + ')</p>';
+                html += '<p><i class="fas fa-map-marker-alt"></i> 位置: ' + item['設備位置'] + '</p>';
+                html += '<p><i class="fas fa-exclamation-triangle"></i> 緊急程度: ' + item['緊急程度'] + '</p>';
+                html += '<p><i class="fas fa-clock"></i> 報修時間: ' + formatDate(item['報修時間']) + '</p>';
+                html += '<p><i class="fas fa-comment-alt"></i> 問題描述: ' + item['問題描述'] + '</p>';
+                
+                if (item['問題照片']) {
+                    html += '<p><img src="' + item['問題照片'] + '" alt="問題照片" style="max-width: 200px; border-radius: 5px;"></p>';
+                }
+                
+                if (item['處理人員']) {
+                    html += '<p><i class="fas fa-wrench"></i> 處理人員: ' + item['處理人員'] + '</p>';
+                }
+                
+                if (item['處理時間']) {
+                    html += '<p><i class="fas fa-calendar-check"></i> 處理時間: ' + formatDate(item['處理時間']) + '</p>';
+                }
+                
+                if (item['處理備註']) {
+                    html += '<p><i class="fas fa-sticky-note"></i> 處理備註: ' + item['處理備註'] + '</p>';
+                }
+                
+                html += '<div style="margin-top: 15px;">';
+                if (item['維修狀態'] !== '已完成') {
+                    html += '<button class="btn" onclick="updateRepairStatus(' + item.id + ', \'處理中\')"><i class="fas fa-play"></i> 開始處理</button>';
+                    html += '<button class="btn btn-accent" onclick="updateRepairStatus(' + item.id + ', \'已完成\')"><i class="fas fa-check"></i> 標記完成</button>';
+                }
+                html += '</div>';
+                html += '</div>';
             });
-            
             listContainer.innerHTML = html;
         }
 
-        // 獲取狀態徽章類別
+        // 更新報修狀態
+        async function updateRepairStatus(id, status) {
+            const gasUrl = localStorage.getItem('gasUrl');
+            if (!gasUrl) { showNotification('請先設定系統連接', 'error'); return; }
+            
+            let notes = '';
+            if (status === '已完成') { notes = prompt('請輸入處理備註 (可選):'); }
+            
+            try {
+                const response = await fetch(gasUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'update', id, '維修狀態': status, '處理人員': '管理員', '處理備註': notes })
+                });
+                const result = await response.json();
+                
+                if (result.success) {
+                    showNotification(result.message, 'success');
+                    loadRepairList();
+                } else {
+                    showNotification(result.message, 'error');
+                }
+            } catch (error) {
+                handleFetchError(error, '更新狀態');
+            }
+        }
+
+        // 統一處理 Fetch 錯誤
+        function handleFetchError(error, action) {
+            let errorMessage = action + '失敗: ' + error.message;
+            if (error.message.includes('CORS') || error.message.includes('Failed to fetch')) {
+                errorMessage = 'CORS 錯誤！這通常是因為您直接在本地開啟 HTML 檔案造成的。' +
+                              '請嘗試以下解決方案：' +
+                              '1. 使用本地伺服器運行 (如 VSCode 的 Live Server 擴充功能)' +
+                              '2. 上傳到 GitHub Pages 等靜態網頁服務' +
+                              '詳細錯誤: ' + error.message;
+            }
+            showNotification(errorMessage, 'error');
+        }
+
+        // 狀態徽章類別
         function getStatusBadgeClass(status) {
             switch (status) {
-                case '待處理':
-                    return 'status-pending';
-                case '處理中':
-                    return 'status-in-progress';
-                case '已完成':
-                    return 'status-completed';
-                default:
-                    return '';
+                case '待處理': return 'status-pending';
+                case '處理中': return 'status-in-progress';
+                case '已完成': return 'status-completed';
+                default: return '';
             }
         }
 
         // 格式化日期
         function formatDate(dateValue) {
             if (!dateValue) return '';
-            
             const date = new Date(dateValue);
-            return date.toLocaleDateString('zh-TW', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
-        // 更新報修狀態
-        async function updateRepairStatus(id, status) {
-            const gasUrl = localStorage.getItem('gasUrl');
-            
-            if (!gasUrl) {
-                showNotification('請先設定系統連接', 'error');
-                return;
-            }
-            
-            // 如果標記為完成，詢問處理備註
-            let notes = '';
-            if (status === '已完成') {
-                notes = prompt('請輸入處理備註 (可選):');
-            }
-            
-            try {
-                // 構建 URL 參數
-                const params = new URLSearchParams();
-                params.append('action', 'update');
-                params.append('id', id);
-                params.append('維修狀態', status);
-                params.append('處理人員', '管理員'); // 實際應用中可以從登入資訊獲取
-                if (notes) {
-                    params.append('處理備註', notes);
-                }
-                
-                const response = await fetch(`${gasUrl}?${params.toString()}`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    }
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showNotification(result.message, 'success');
-                    // 重新載入列表
-                    loadRepairList();
-                } else {
-                    showNotification(result.message, 'error');
-                }
-            } catch (error) {
-                showNotification('更新失敗: ' + error.message, 'error');
-            }
+            return date.toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
         }
 
         // 儲存設定
         function saveSettings() {
             const gasUrl = document.getElementById('gas-url').value.trim();
-            
-            if (!gasUrl) {
-                showNotification('請輸入 GAS Web App URL', 'error');
-                return;
-            }
-            
-            // 儲存到 LocalStorage
+            if (!gasUrl) { showNotification('請輸入 GAS Web App URL', 'error'); return; }
             localStorage.setItem('gasUrl', gasUrl);
-            
             showNotification('設定已儲存', 'success');
-            
-            // 重新載入報修列表
             loadRepairList();
         }
 
         // 產生分享連結
         async function generateShareLink() {
             const gasUrl = localStorage.getItem('gasUrl');
-            
-            if (!gasUrl) {
-                showNotification('請先設定系統連接', 'error');
-                return;
-            }
+            if (!gasUrl) { showNotification('請先設定系統連接', 'error'); return; }
             
             try {
-                // Base64 編碼 GAS URL
                 const encodedUrl = btoa(gasUrl);
-                
-                // 產生帶參數的 URL
                 const currentUrl = window.location.origin + window.location.pathname;
-                const shareUrl = `${currentUrl}?config=${encodedUrl}`;
+                const shareUrl = currentUrl + '?config=' + encodedUrl;
                 
-                // 產生短網址 (使用 cleanuri API)
                 const shortUrlResponse = await fetch('https://cleanuri.com/api/v1/shorten', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        url: shareUrl
-                    })
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ url: shareUrl })
                 });
-                
                 const shortUrlResult = await shortUrlResponse.json();
                 const shortUrl = shortUrlResult.result_url;
+                const qrCodeUrl = 'https://quickchart.io/qr?text=' + encodeURIComponent(shortUrl) + '&size=200';
                 
-                // 產生 QR Code
-                const qrCodeUrl = `https://quickchart.io/qr?text=${encodeURIComponent(shortUrl)}&size=200`;
-                
-                // 顯示結果
                 document.getElementById('share-link').value = shortUrl;
-                document.getElementById('qr-code').innerHTML = `<img src="${qrCodeUrl}" alt="QR Code">`;
+                document.getElementById('qr-code').innerHTML = '<img src="' + qrCodeUrl + '" alt="QR Code">';
                 document.getElementById('share-result').style.display = 'block';
-                
                 showNotification('分享連結已產生', 'success');
             } catch (error) {
                 showNotification('產生分享連結失敗: ' + error.message, 'error');
@@ -1497,7 +1143,6 @@ function createOptionsResponse() {
             textarea.select();
             document.execCommand('copy');
             document.body.removeChild(textarea);
-            
             showNotification(message || '已複製到剪貼簿', 'success');
         }
 
@@ -1505,12 +1150,9 @@ function createOptionsResponse() {
         function showNotification(message, type = 'info') {
             const notification = document.getElementById('notification');
             notification.textContent = message;
-            notification.className = `notification ${type}`;
+            notification.className = 'notification ' + type;
             notification.classList.add('show');
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
+            setTimeout(() => notification.classList.remove('show'), 5000);
         }
     </script>
 </body>
