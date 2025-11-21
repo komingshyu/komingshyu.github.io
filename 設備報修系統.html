@@ -470,12 +470,12 @@
                 <form id="repair-form">
                     <div class="form-group">
                         <label for="name">報修人姓名</label>
-                        <input type="text" id="name" name="name" required>
+                        <input type="text" id="name" name="報修人姓名" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="department">部門</label>
-                        <select id="department" name="department" required>
+                        <select id="department" name="部門" required>
                             <option value="">請選擇部門</option>
                             <option value="教務處">教務處</option>
                             <option value="學務處">學務處</option>
@@ -489,22 +489,22 @@
                     
                     <div class="form-group">
                         <label for="location">設備位置</label>
-                        <input type="text" id="location" name="location" required>
+                        <input type="text" id="location" name="設備位置" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="device">設備名稱</label>
-                        <input type="text" id="device" name="device" required>
+                        <input type="text" id="device" name="設備名稱" required>
                     </div>
                     
                     <div class="form-group">
                         <label for="problem">問題描述</label>
-                        <textarea id="problem" name="problem" required></textarea>
+                        <textarea id="problem" name="問題描述" required></textarea>
                     </div>
                     
                     <div class="form-group">
                         <label for="urgency">緊急程度</label>
-                        <select id="urgency" name="urgency" required>
+                        <select id="urgency" name="緊急程度" required>
                             <option value="">請選擇緊急程度</option>
                             <option value="普通">普通</option>
                             <option value="緊急">緊急</option>
@@ -619,7 +619,7 @@
     <script>
         // GAS 程式碼 (將在說明模態框中顯示)
         const gasCode = `// 設備報修系統 - Google Apps Script 後端
-// 版本: 1.0
+// 版本: 1.1 (修正 CORS 問題)
 
 // 全域變數
 const SPREADSHEET_NAME = "設備報修系統";
@@ -748,47 +748,16 @@ function setConditionalFormatting(sheet) {
 
 // doGet 函數 - 處理 GET 請求
 function doGet(e) {
-  // 初始化試算表
-  const initResult = initialize();
-  if (!initResult.success) {
-    return createJsonResponse({ success: false, message: initResult.message });
-  }
-  
-  const spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = spreadsheet.getSheetByName(SHEET_NAME);
-  
-  // 獲取請求參數
-  const action = e.parameter.action || "list";
-  const search = e.parameter.search || "";
-  
-  try {
-    if (action === "list") {
-      // 獲取報修列表
-      const data = getRepairList(sheet, search);
-      return createJsonResponse({ success: true, data: data });
-    } else if (action === "get") {
-      // 獲取特定報修單
-      const id = parseInt(e.parameter.id);
-      if (isNaN(id)) {
-        return createJsonResponse({ success: false, message: "無效的報修單 ID" });
-      }
-      
-      const data = getRepairById(sheet, id);
-      if (data) {
-        return createJsonResponse({ success: true, data: data });
-      } else {
-        return createJsonResponse({ success: false, message: "找不到指定的報修單" });
-      }
-    } else {
-      return createJsonResponse({ success: false, message: "不支援的操作" });
-    }
-  } catch (error) {
-    return createJsonResponse({ success: false, message: "處理請求時發生錯誤: " + error.toString() });
-  }
+  return handleRequest(e, 'GET');
 }
 
 // doPost 函數 - 處理 POST 請求
 function doPost(e) {
+  return handleRequest(e, 'POST');
+}
+
+// 統一處理請求的函數
+function handleRequest(e, method) {
   // 初始化試算表
   const initResult = initialize();
   if (!initResult.success) {
@@ -799,20 +768,60 @@ function doPost(e) {
   const sheet = spreadsheet.getSheetByName(SHEET_NAME);
   
   try {
-    // 解析請求內容
-    const requestData = JSON.parse(e.postData.contents);
-    const action = requestData.action || "submit";
+    // 處理預檢請求 (OPTIONS)
+    if (method === 'POST' && !e.postData) {
+      return createOptionsResponse();
+    }
     
-    if (action === "submit") {
-      // 提交新的報修單
-      const result = submitRepair(sheet, requestData);
-      return createJsonResponse(result);
-    } else if (action === "update") {
-      // 更新報修單狀態
-      const result = updateRepairStatus(sheet, requestData);
-      return createJsonResponse(result);
-    } else {
-      return createJsonResponse({ success: false, message: "不支援的操作" });
+    // 獲取請求參數
+    const action = e.parameter.action || "list";
+    const search = e.parameter.search || "";
+    
+    if (method === 'GET') {
+      if (action === "list") {
+        // 獲取報修列表
+        const data = getRepairList(sheet, search);
+        return createJsonResponse({ success: true, data: data });
+      } else if (action === "get") {
+        // 獲取特定報修單
+        const id = parseInt(e.parameter.id);
+        if (isNaN(id)) {
+          return createJsonResponse({ success: false, message: "無效的報修單 ID" });
+        }
+        
+        const data = getRepairById(sheet, id);
+        if (data) {
+          return createJsonResponse({ success: true, data: data });
+        } else {
+          return createJsonResponse({ success: false, message: "找不到指定的報修單" });
+        }
+      } else if (action === "submit") {
+        // 提交新的報修單
+        const result = submitRepair(sheet, e.parameter);
+        return createJsonResponse(result);
+      } else if (action === "update") {
+        // 更新報修單狀態
+        const result = updateRepairStatus(sheet, e.parameter);
+        return createJsonResponse(result);
+      } else {
+        return createJsonResponse({ success: false, message: "不支援的操作" });
+      }
+    } else if (method === 'POST') {
+      // 解析請求內容
+      const requestData = JSON.parse(e.postData.contents);
+      const action = requestData.action || "submit";
+      
+      if (action === "submit") {
+        // 提交新的報修單
+        const result = submitRepair(sheet, requestData);
+        return createJsonResponse(result);
+      } else if (action === "update") {
+        // 更新報修單狀態
+        const result = updateRepairStatus(sheet, requestData);
+        return createJsonResponse(result);
+      } else {
+        return createJsonResponse({ success: false, message: "不支援的操作" });
+      }
     }
   } catch (error) {
     return createJsonResponse({ success: false, message: "處理請求時發生錯誤: " + error.toString() });
@@ -976,7 +985,19 @@ function updateRepairStatus(sheet, requestData) {
 // 創建 JSON 回應
 function createJsonResponse(data) {
   return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader('Access-Control-Allow-Origin', '*')
+    .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
+}
+
+// 處理 OPTIONS 預檢請求
+function createOptionsResponse() {
+  return ContentService.createTextOutput('')
+    .setMimeType(ContentService.MimeType.TEXT)
+    .setHeader('Access-Control-Allow-Origin', '*')
+    .setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    .setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }`;
 
         // 初始化
@@ -1210,17 +1231,20 @@ function createJsonResponse(data) {
             submitBtn.innerHTML = '<span class="loading"></span> 提交中...';
             submitBtn.disabled = true;
             
-            // 發送請求
+            // 發送請求 - 使用 URL 參數方式而不是 JSON Body
             try {
-                const response = await fetch(gasUrl, {
-                    method: 'POST',
+                // 構建 URL 參數
+                const params = new URLSearchParams();
+                params.append('action', 'submit');
+                for (const [key, value] of Object.entries(data)) {
+                    params.append(key, value);
+                }
+                
+                const response = await fetch(`${gasUrl}?${params.toString()}`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'submit',
-                        ...data
-                    })
+                    }
                 });
                 
                 const result = await response.json();
@@ -1259,13 +1283,14 @@ function createJsonResponse(data) {
             document.getElementById('repair-list').innerHTML = '<p><span class="loading"></span> 載入中...</p>';
             
             try {
-                const url = new URL(gasUrl);
-                url.searchParams.append('action', 'list');
+                // 構建 URL 參數
+                const params = new URLSearchParams();
+                params.append('action', 'list');
                 if (searchTerm) {
-                    url.searchParams.append('search', searchTerm);
+                    params.append('search', searchTerm);
                 }
                 
-                const response = await fetch(url.toString());
+                const response = await fetch(`${gasUrl}?${params.toString()}`);
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1370,18 +1395,21 @@ function createJsonResponse(data) {
             }
             
             try {
-                const response = await fetch(gasUrl, {
-                    method: 'POST',
+                // 構建 URL 參數
+                const params = new URLSearchParams();
+                params.append('action', 'update');
+                params.append('id', id);
+                params.append('維修狀態', status);
+                params.append('處理人員', '管理員'); // 實際應用中可以從登入資訊獲取
+                if (notes) {
+                    params.append('處理備註', notes);
+                }
+                
+                const response = await fetch(`${gasUrl}?${params.toString()}`, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'update',
-                        id: id,
-                        '維修狀態': status,
-                        '處理人員': '管理員', // 實際應用中可以從登入資訊獲取
-                        '處理備註': notes
-                    })
+                    }
                 });
                 
                 const result = await response.json();
