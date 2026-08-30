@@ -1,0 +1,1670 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>智慧流程圖產生器 V2.0</title>
+<style>
+:root{
+  --pink:#ef9fc2; --pink-d:#d878a5; --pink-soft:#ffd9e8;
+  --mint:#bfe8c8; --mint-d:#7fbf92;
+  --lav:#cbd6ff; --lav-d:#8f9ee0;
+  --ink:#4c3a46; --ink-soft:#8d6b7d; --line:#eccede;
+  --card:rgba(255,253,254,.78);
+  --sans:"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--sans);color:var(--ink);overflow:hidden;
+  background:
+    radial-gradient(900px 620px at 10% -8%, rgba(244,187,214,.55), transparent 60%),
+    radial-gradient(820px 560px at 98% 6%, rgba(191,232,200,.50), transparent 62%),
+    radial-gradient(980px 720px at 55% 115%, rgba(203,214,255,.55), transparent 62%),
+    linear-gradient(180deg,#fdf6f9,#f6f3fb);
+}
+#app{display:flex;height:100vh}
+
+/* ===== 側邊工具欄 ===== */
+#sidebar{
+  width:392px;min-width:392px;display:flex;flex-direction:column;z-index:30;
+  background:var(--card);backdrop-filter:blur(18px) saturate(1.25);-webkit-backdrop-filter:blur(18px) saturate(1.25);
+  border-right:1px solid var(--line);
+  box-shadow:6px 0 30px rgba(190,120,160,.10);
+  animation:sideIn .5s ease both;
+}
+@keyframes sideIn{from{transform:translateX(-16px);opacity:0}}
+.brand{display:flex;align-items:center;gap:13px;padding:16px 18px 13px;border-bottom:1px solid var(--line)}
+.mascot{width:52px;height:52px;flex:none;animation:floaty 3.2s ease-in-out infinite;transition:transform .3s}
+.mascot:hover{transform:rotate(-8deg) scale(1.06)}
+@keyframes floaty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bt h1{margin:0;font-size:17.5px;letter-spacing:.5px}
+.bt .sub{display:flex;align-items:center;gap:8px;margin-top:4px}
+.ver{background:var(--pink);color:#fff;font-size:11px;font-weight:700;padding:1.5px 8px;border-radius:999px;letter-spacing:.5px}
+.tagline{font-size:11.5px;color:var(--ink-soft)}
+.controls{flex:1;overflow-y:auto;padding:10px 14px 26px}
+
+details{background:rgba(255,255,255,.62);border:1px solid var(--line);border-radius:14px;margin:9px 0;overflow:hidden;transition:box-shadow .2s}
+details:hover{box-shadow:0 4px 14px rgba(200,130,170,.10)}
+summary{list-style:none;cursor:pointer;padding:11px 13px;font-weight:700;font-size:13.5px;display:flex;align-items:center;gap:9px;user-select:none;color:#5c4351}
+summary::-webkit-details-marker{display:none}
+summary .ico{width:16px;height:16px;color:var(--pink-d);flex:none}
+summary .chev{margin-left:auto;width:13px;height:13px;color:#c79ab2;transition:transform .25s}
+details[open] summary .chev{transform:rotate(90deg)}
+details[open] .dbody{animation:drop .28s ease}
+@keyframes drop{from{opacity:0;transform:translateY(-5px)}}
+.dbody{padding:2px 14px 14px}
+
+.field{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:9px 0;font-size:13px}
+.field>label:first-child{color:var(--ink-soft);flex:none}
+select{font-family:inherit;font-size:13px;color:var(--ink);border:1.5px solid var(--line);border-radius:9px;padding:5px 8px;background:#fff;cursor:pointer;max-width:210px}
+select:focus{outline:none;border-color:var(--pink)}
+input[type=range]{accent-color:var(--pink-d);width:150px;cursor:pointer}
+input[type=checkbox]{accent-color:var(--pink-d);width:15px;height:15px;cursor:pointer}
+.val{font-size:12px;color:#b0708f;min-width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.btnrow{display:flex;gap:8px;margin:10px 0 4px;flex-wrap:wrap}
+.btn{
+  border:1px solid var(--line);background:#fff;border-radius:11px;padding:8px 12px;font-size:13px;cursor:pointer;color:var(--ink);
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;font-family:inherit;
+  transition:transform .16s,box-shadow .16s,background .16s,border-color .16s;
+}
+.btn svg{width:14px;height:14px;flex:none}
+.btn:hover{transform:translateY(-1.5px);box-shadow:0 7px 16px rgba(216,120,165,.20)}
+.btn:active{transform:translateY(.5px);box-shadow:none}
+.btn.primary{background:var(--pink);border-color:var(--pink-d);color:#fff;font-weight:700;flex:1}
+.btn.primary:hover{background:var(--pink-d)}
+.btn.danger{color:#c2544f;border-color:#ecc0bd}
+.btn.danger:hover{background:#fdf1f0}
+.btn:disabled{opacity:.42;pointer-events:none}
+.btn.wipe-armed{background:#c2544f;border-color:#a83f3b;color:#fff}
+
+#inText{
+  width:100%;min-height:232px;resize:vertical;border:1.5px solid var(--line);border-radius:12px;
+  padding:11px 13px;font:13px/1.85 var(--sans);background:#fffdfe;color:var(--ink);tab-size:4;
+}
+#inText:focus{outline:none;border-color:var(--pink);box-shadow:0 0 0 3.5px rgba(239,159,194,.18)}
+.ckrow{display:flex;align-items:center;gap:8px;font-size:13px;margin:10px 0 2px;cursor:pointer;color:#6d5261}
+.help{margin-top:12px;background:rgba(239,159,194,.09);border:1px dashed #eec2d8;border-radius:12px;padding:10px 13px;font-size:12px;line-height:2.05;color:#8a5f74}
+.help b{color:#c2588d}
+.help code{background:#fff;border:1px solid #f0d4e2;border-radius:6px;padding:0 5px;color:#b0568a;font-size:11.5px;white-space:nowrap}
+
+/* ===== 預覽區 ===== */
+#preview{flex:1;display:flex;flex-direction:column;position:relative;min-width:0}
+#viewport{
+  flex:1;position:relative;overflow:hidden;cursor:grab;touch-action:none;user-select:none;
+  background-color:#fcf6f9;
+  background-image:radial-gradient(#e9d5e2 1.1px,transparent 1.3px);
+  background-size:26px 26px;
+}
+#viewport.panning{cursor:grabbing}
+#viewport.grid-off{background-image:none}
+#stage{position:absolute;inset:0;width:100%;height:100%;display:block}
+#stage text{user-select:none}
+g.node{cursor:move}
+g.node:hover :is(rect,polygon,path.shp){stroke-width:2.8}
+g.node.sel :is(rect,polygon,path.shp){stroke-width:3;filter:drop-shadow(0 0 5px rgba(216,120,165,.6))}
+.edge{pointer-events:none}
+
+#stagebar{
+  position:absolute;top:14px;left:50%;transform:translateX(-50%);display:flex;gap:5px;z-index:6;
+  background:var(--card);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:999px;padding:5px 8px;
+  box-shadow:0 10px 30px rgba(180,110,150,.16);
+}
+.sbtn{width:33px;height:33px;border-radius:50%;border:none;background:transparent;cursor:pointer;color:#8d6b7d;display:flex;align-items:center;justify-content:center;transition:background .15s,transform .15s,color .15s}
+.sbtn svg{width:16px;height:16px}
+.sbtn:hover{background:rgba(239,159,194,.16);transform:translateY(-1px);color:var(--pink-d)}
+.sbtn.on{background:var(--pink);color:#fff}
+.sbtn:active{transform:none}
+
+#banner{
+  position:absolute;top:14px;left:14px;z-index:8;display:none;align-items:center;gap:10px;max-width:340px;
+  background:rgba(255,253,254,.92);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:14px;
+  padding:9px 12px;font-size:12.5px;box-shadow:0 12px 30px rgba(170,100,140,.16);
+}
+#banner.show{display:flex;animation:drop .3s ease}
+#banner .pulse{width:9px;height:9px;border-radius:50%;background:var(--mint-d);flex:none;animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(127,191,146,.5)}55%{box-shadow:0 0 0 6px rgba(127,191,146,0)}}
+#banner button{border:none;background:var(--mint);color:#3f6d4f;font-weight:700;font-size:12px;border-radius:9px;padding:5px 10px;cursor:pointer;font-family:inherit}
+#banner button:hover{filter:brightness(1.05)}
+#banner .x{background:transparent;color:#bb92a6;font-weight:400;padding:5px 6px}
+
+#emptyHint{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:#bb92a6;font-size:15px;letter-spacing:1px;pointer-events:none;z-index:2;
+}
+
+#statusbar{
+  height:34px;display:flex;align-items:center;gap:16px;padding:0 16px;font-size:12.5px;color:var(--ink-soft);
+  background:rgba(255,255,255,.66);border-top:1px solid var(--line);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+}
+#statusbar .spacer{flex:1}
+#stWarn{display:flex;align-items:center;gap:5px;color:#bd8b3a;cursor:help}
+#stWarn svg{width:14px;height:14px}
+
+#toasts{position:absolute;right:18px;bottom:50px;display:flex;flex-direction:column;gap:8px;z-index:40;pointer-events:none}
+.toast{
+  background:rgba(255,252,253,.93);border:1px solid var(--line);border-left:4px solid var(--mint-d);
+  backdrop-filter:blur(10px);padding:10px 15px;border-radius:12px;font-size:13px;max-width:320px;
+  box-shadow:0 12px 32px rgba(170,100,140,.20);opacity:0;transform:translateX(18px);transition:.32s;
+}
+.toast.in{opacity:1;transform:none}
+.toast.warn{border-left-color:#eec27a}
+
+#editor{
+  position:absolute;width:252px;z-index:20;font-size:13px;padding:13px 14px;
+  background:rgba(255,253,254,.93);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--line);border-radius:16px;box-shadow:0 18px 46px rgba(160,90,130,.24);
+  animation:drop .22s ease;
+}
+#editor .ed-head{display:flex;align-items:center;gap:7px;font-weight:700;margin-bottom:8px;color:#5c4351}
+#editor .dot{width:8px;height:8px;border-radius:50%;background:var(--pink);flex:none}
+#editor .x{margin-left:auto;border:none;background:transparent;cursor:pointer;color:#bb92a6;display:flex;padding:2px;border-radius:6px}
+#editor .x:hover{background:rgba(239,159,194,.15)}
+#editor textarea{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:7px 9px;font:12.5px/1.6 var(--sans);color:var(--ink);background:#fff;resize:none}
+#editor textarea:focus{outline:none;border-color:var(--pink)}
+#editor .row{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:8px 0;font-size:12.5px}
+#editor .row label{color:var(--ink-soft);flex:none}
+#editor .row .grp{display:flex;align-items:center;gap:6px}
+#editor input[type=color]{width:32px;height:26px;border:1px solid var(--line);border-radius:8px;padding:1px;background:#fff;cursor:pointer}
+#editor input[type=range]{width:118px}
+#editor select{font-size:12.5px;padding:3px 6px;max-width:110px}
+#editor .ed-foot{display:flex;gap:8px;margin-top:11px}
+#editor .ed-foot .btn{padding:7px 10px;font-size:12.5px}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#eec9dd;border-radius:8px;border:2.5px solid rgba(255,255,255,.55)}
+::-webkit-scrollbar-thumb:hover{background:#e5aecb}
+
+#menuBtn{display:none;position:fixed;left:12px;top:12px;z-index:50;width:44px;height:44px;border-radius:13px;border:1px solid var(--pink-d);background:var(--pink);color:#fff;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(216,120,165,.4)}
+#menuBtn svg{width:18px;height:18px}
+@media (max-width:1150px){
+  #sidebar{width:330px;min-width:330px}
+}
+@media (max-width:560px){
+  #menuBtn{display:flex}
+  #sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-103%);transition:transform .3s ease;box-shadow:14px 0 44px rgba(150,80,120,.22)}
+  #sidebar.open{transform:none}
+  #stagebar{top:60px}
+}
+/* 關鍵修正：hidden 屬性不被 display:flex 蓋掉 */
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<button id="menuBtn" title="開啟工具欄"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+
+<div id="app">
+  <aside id="sidebar">
+    <header class="brand">
+      <svg class="mascot" viewBox="0 0 64 64" aria-hidden="true">
+        <ellipse cx="32" cy="58" rx="15" ry="3.4" fill="#000" opacity=".08"/>
+        <path d="M32 15 C32 10 39 9 39 5" fill="none" stroke="#d878a5" stroke-width="2.4" stroke-linecap="round"/>
+        <path d="M35 4.5 a4 4 0 1 1 -3 6.5" fill="none" stroke="#d878a5" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M33.5 11.2 l-1.6 1.2 .3 -2" fill="#d878a5"/>
+        <rect x="12" y="15" width="40" height="39" rx="13" fill="#ef9fc2"/>
+        <rect x="16" y="19" width="14" height="9" rx="4.5" fill="#fff" opacity=".35"/>
+        <circle cx="24.5" cy="34" r="3" fill="#5b3a4a"/>
+        <circle cx="39.5" cy="34" r="3" fill="#5b3a4a"/>
+        <circle cx="25.6" cy="33" r="1" fill="#fff"/>
+        <circle cx="40.6" cy="33" r="1" fill="#fff"/>
+        <path d="M27 41 q5 4.6 10 0" fill="none" stroke="#5b3a4a" stroke-width="2.3" stroke-linecap="round"/>
+        <circle cx="18.5" cy="39" r="2.7" fill="#f8c4d8"/>
+        <circle cx="45.5" cy="39" r="2.7" fill="#f8c4d8"/>
+        <path d="M18 22 l2.6 2.6 M20.6 22 L18 24.6" stroke="#e27aa8" stroke-width="1.7" stroke-linecap="round"/>
+        <path d="M46 47 l2.6 2.6 M48.6 47 L46 49.6" stroke="#e27aa8" stroke-width="1.7" stroke-linecap="round"/>
+      </svg>
+      <div class="bt">
+        <h1>智慧流程圖產生器</h1>
+        <div class="sub"><span class="ver">V2.0</span><span class="tagline">縮排即流程 · 一鍵成圖</span></div>
+      </div>
+    </header>
+
+    <div class="controls">
+      <details open>
+        <summary><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1L20 7l-3-3L5 16l-1 4z"/></svg>流程輸入
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div class="dbody">
+          <textarea id="inText" spellcheck="false" placeholder="在此輸入流程步驟，每行一步驟，行首縮排代表隸屬上一步…"></textarea>
+          <div class="field"><label>教學範例</label>
+            <select id="selExample">
+              <option value="seq">循序結構 · 超商買飲料</option>
+              <option value="pass">選擇結構 · 及格判斷</option>
+              <option value="parity">選擇結構 · 奇偶判斷</option>
+              <option value="sum">重複結構 · 1+2+…+100</option>
+              <option value="count">重複結構 · 倒數計時</option>
+              <option value="grade">巢狀選擇 · 成績等第</option>
+              <option value="leap">巢狀選擇 · 閏年判斷</option>
+              <option value="shop" selected>綜合應用 · 網路購物</option>
+            </select>
+          </div>
+          <div class="btnrow">
+            <button class="btn primary" id="btnParse"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>產生流程圖</button>
+            <button class="btn" id="btnExample"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l1.9 5.3L19 10l-5.1 1.7L12 17l-1.9-5.3L5 10l5.1-1.7z"/></svg>載入範例</button>
+            <button class="btn" id="btnClear"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg>清空</button>
+          </div>
+          <label class="ckrow"><input type="checkbox" id="chkAuto" checked>自動解析（輸入後即時更新圖形）</label>
+          <div class="help">
+            <b>語法速記</b><br>
+            ・行首縮排（Tab 或空格）＝隸屬上一步驟<br>
+            ・<code>如果 條件？</code> 判斷；下一層寫 <code>是：…</code> 與 <code>否：…</code><br>
+            ・在「如果」行按 <code>Enter</code> 自動展開是／否骨架；<code>Tab</code> 縮排、<code>Shift+Tab</code> 凸排<br>
+            ・一行搞定：<code>如果 條件 就 A 否則 B</code><br>
+            ・行尾是「？」的文字自動變成判斷節點<br>
+            ・<code>回到：步驟名</code> 自動繪製循環迴路<br>
+            ・<code>同時：任務</code> 平行分支；<code>文件：名稱</code> 文件符號<br>
+            ・<code>開始</code>／<code>結束</code> 可省略，會自動補上
+          </div>
+        </div>
+      </details>
+
+      <details open>
+        <summary><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18h1.2a2.1 2.1 0 0 0 0-4.2H12a1.2 1.2 0 0 1 0-2.4h5a4 4 0 0 0 4-4A8.4 8.4 0 0 0 12 3z"/><circle cx="8" cy="9" r="1" fill="currentColor"/><circle cx="12" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="14" r="1" fill="currentColor"/></svg>外觀與縮放
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div class="dbody">
+          <div class="field"><label>配色主題</label>
+            <select id="selTheme">
+              <option value="garden">圖表產生器</option>
+              <option value="pinkmint">粉紅薄荷</option>
+              <option value="peach">蜜桃薰衣草</option>
+              <option value="ocean">海洋蘇打</option>
+              <option value="forest">森林抹茶</option>
+            </select>
+          </div>
+          <div class="field"><label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="chkDense" checked>智慧密度</label>
+            <span style="display:flex;align-items:center;gap:6px"><input type="range" id="rngSpacing" min="40" max="90" step="2" disabled><span class="val" id="outSpacing"></span></span>
+          </div>
+          <div class="field"><label>節點圓角</label>
+            <span style="display:flex;align-items:center;gap:6px"><input type="range" id="rngCorner" min="0" max="24" step="1"><span class="val" id="outCorner"></span></span>
+          </div>
+        </div>
+      </details>
+
+      <details>
+        <summary><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 5h14M12 5v14M9 19h6"/></svg>文字設定
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div class="dbody">
+          <div class="field"><label>字型</label>
+            <select id="selFont">
+              <option value="sans">無襯線</option>
+              <option value="serif">襯線</option>
+              <option value="round">圓體</option>
+              <option value="kai">楷體</option>
+            </select>
+          </div>
+          <div class="field"><label>字級</label>
+            <span style="display:flex;align-items:center;gap:6px"><input type="range" id="rngFont" min="12" max="20"><span class="val" id="outFont"></span></span>
+          </div>
+          <div class="field"><label>行高</label>
+            <span style="display:flex;align-items:center;gap:6px"><input type="range" id="rngLineH" min="1.2" max="1.8" step="0.05"><span class="val" id="outLineH"></span></span>
+          </div>
+          <label class="ckrow"><input type="checkbox" id="chkBold">全域粗體</label>
+        </div>
+      </details>
+
+      <details>
+        <summary><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18c8 2 5-12 16-11"/><path d="M17 4l3 3-3 3"/></svg>線條路由
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div class="dbody">
+          <div class="field"><label>轉角樣式</label>
+            <select id="selRoute"><option value="round">圓角轉彎</option><option value="orth">直角轉彎</option></select>
+          </div>
+          <div class="field"><label>線寬</label>
+            <span style="display:flex;align-items:center;gap:6px"><input type="range" id="rngLineW" min="1.5" max="4" step="0.25"><span class="val" id="outLineW"></span></span>
+          </div>
+          <label class="ckrow"><input type="checkbox" id="chkArrow" checked>顯示箭頭</label>
+          <label class="ckrow"><input type="checkbox" id="chkAvoid" checked>智慧避障（連線自動繞過節點）</label>
+          <div class="field"><label>迴路走廊</label>
+            <select id="selLoopSide"><option value="left">左側走廊</option><option value="right">右側走廊</option></select>
+          </div>
+        </div>
+      </details>
+
+      <details open>
+        <summary><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg>輸出設定
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div class="dbody">
+          <div class="field"><label>匯出倍率</label>
+            <select id="selScale"><option value="1">標準（1x）</option><option value="2">高解析（2x）</option><option value="3">超清（3x）</option></select>
+          </div>
+          <div class="btnrow">
+            <button class="btn" id="btnPNG" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.6"/><path d="M3 16l5-5 4 4 3-3 6 6"/></svg>PNG</button>
+            <button class="btn" id="btnPDF" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M9 13h6M9 17h6"/></svg>PDF</button>
+            <button class="btn" id="btnDOCX" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l4 4v14H6zM14 3v5h5M12 11v6M9.5 11l2.5 6 2.5-6"/></svg>Word</button>
+          </div>
+          <div class="help" style="margin-top:8px">PDF 會將整張流程圖等比縮放至單頁 A4（自動直／橫式置中）。Word 匯出為原生 .docx（OpenXML + 內嵌高解析圖片）。</div>
+        </div>
+      </details>
+
+      <details>
+        <summary><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/></svg>編輯工具
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </summary>
+        <div class="dbody">
+          <div class="btnrow">
+            <button class="btn" id="btnUndo" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5M4 9h10a6 6 0 1 1 0 12h-2"/></svg>復原</button>
+            <button class="btn" id="btnRedo" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5M20 9H10a6 6 0 1 0 0 12h2"/></svg>重做</button>
+          </div>
+          <div class="btnrow">
+            <button class="btn" id="btnRelayout" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="4" rx="1.5"/><rect x="13" y="10" width="7" height="10" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/></svg>自動排版</button>
+            <button class="btn" id="btnUnlock" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 11V7a5 5 0 0 0-9.5-2M5 11h14v9H5z"/></svg>全部解鎖</button>
+          </div>
+          <div class="btnrow"><button class="btn danger" id="btnWipe" style="flex:1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg><span id="wipeLabel">清空全部內容</span></button></div>
+          <div class="help" style="margin-top:8px">雙擊節點開啟編輯面板；拖曳移動位置；單擊選取後可按 Delete 刪除；Ctrl+Z / Ctrl+Y 復原重做。</div>
+        </div>
+      </details>
+    </div>
+  </aside>
+
+  <main id="preview">
+    <div id="viewport">
+      <svg id="stage"><g id="world"></g></svg>
+    </div>
+    <div id="emptyHint" hidden>在左側輸入流程步驟，或按「載入範例」開始</div>
+    <div id="stagebar">
+      <button class="sbtn" id="zoomIn" title="放大"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.2-4.2M8 11h6M11 8v6"/></svg></button>
+      <button class="sbtn" id="zoomOut" title="縮小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.2-4.2M8 11h6"/></svg></button>
+      <button class="sbtn" id="zoomFit" title="適合畫面"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+      <button class="sbtn" id="zoom100" title="重置為 100%"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M9 15V9h6M9 12h4"/></svg></button>
+      <button class="sbtn on" id="btnGrid" title="切換格線"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16v16H4zM4 10h16M4 16h16M10 4v16M16 4v16"/></svg></button>
+    </div>
+    <div id="banner">
+      <span class="pulse"></span>
+      <span id="bannerMsg">已為您恢復上次編輯內容</span>
+      <button id="bannerX" class="x">知道了</button>
+    </div>
+    <div id="statusbar">
+      <span id="stNodes"></span>
+      <span id="stEdges"></span>
+      <span id="stWarn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.5L22 20H2z"/><path d="M12 10v4.5M12 17.6h.01"/></svg><span></span></span>
+      <span class="spacer"></span>
+      <span id="stZoom"></span>
+    </div>
+    <div id="toasts"></div>
+
+    <div id="editor" hidden>
+      <div class="ed-head"><span class="dot"></span>節點編輯器
+        <button class="x" id="edClose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </div>
+      <textarea id="edText" rows="2"></textarea>
+      <div class="row"><label>節點類型</label>
+        <select id="edType">
+          <option value="process">步驟</option><option value="decision">判斷</option>
+          <option value="start">開始</option><option value="end">結束</option>
+          <option value="document">文件</option><option value="parallel">平行</option>
+          <option value="loop">循環</option>
+        </select>
+      </div>
+      <div class="row"><span class="grp"><label>填色</label><input type="color" id="edFill"></span>
+        <span class="grp"><label>框線</label><input type="color" id="edStroke"></span>
+        <select id="edDash"><option value="solid">實線</option><option value="dash">虛線</option></select>
+      </div>
+      <div class="row"><label>字級</label><input type="range" id="edFS" min="12" max="22"></div>
+      <div class="row"><label>節點寬</label><input type="range" id="edW" min="120" max="340" step="5"></div>
+      <div class="row"><label class="grp" style="cursor:pointer"><input type="checkbox" id="edBold">粗體</label>
+        <label class="grp" style="cursor:pointer"><input type="checkbox" id="edLock">鎖定位置</label></div>
+      <div class="ed-foot">
+        <button class="btn danger" id="edDel">刪除節點</button>
+        <button class="btn primary" id="edDone">完成</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(()=>{
+'use strict';
+
+/* ═══════════ 工具函式 ═══════════ */
+const $=s=>document.querySelector(s);
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+let _uid=0;
+const uid=()=>'n'+(++_uid)+'_'+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms);};}
+function download(blob,name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+}
+function fname(ext){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  return `流程圖_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.${ext}`;
+}
+function toast(msg,kind){
+  const t=document.createElement('div');
+  t.className='toast'+(kind?' '+kind:'');t.textContent=msg;
+  $('#toasts').appendChild(t);
+  requestAnimationFrame(()=>t.classList.add('in'));
+  setTimeout(()=>{t.classList.remove('in');setTimeout(()=>t.remove(),360);},2700);
+}
+const hex=v=>/^#[0-9a-fA-F]{6}$/.test(String(v))?v:'#cccccc';
+
+/* ═══════════ 常數：字型 / 主題 / 教學範例 ═══════════ */
+const FONT_FAMS={
+  sans:"'PingFang TC','Microsoft JhengHei','Noto Sans TC',sans-serif",
+  serif:"'Songti TC','Noto Serif TC',serif",
+  round:"'Yuanti TC','YuanTi','幼圓','PingFang TC',sans-serif",
+  kai:"'DFKai-SB','Kaiti TC','標楷體',serif",
+};
+const THEMES={
+  garden:{line:'#c28ba7',loopLine:'#9d8fd6',paper:'#fffdfb',types:{
+    start:{fill:'#ffd9e8',stroke:'#e78ab5'},process:{fill:'#d9f2e0',stroke:'#7fbf92'},
+    decision:{fill:'#dfe5ff',stroke:'#8f9ee0'},document:{fill:'#fff3d6',stroke:'#dcb56e'},
+    parallel:{fill:'#ffe0d1',stroke:'#e09a72'},loop:{fill:'#f0e6ff',stroke:'#a98fd8'},
+    end:{fill:'#ffd6d9',stroke:'#e08a92'}}},
+  pinkmint:{line:'#d492ae',loopLine:'#a98fd0',paper:'#fffcfd',types:{
+    start:{fill:'#ffcfe0',stroke:'#e27aa8'},process:{fill:'#d3f3e2',stroke:'#6ec294'},
+    decision:{fill:'#ffe0ee',stroke:'#e087b8'},document:{fill:'#e0f7ff',stroke:'#7fc4dd'},
+    parallel:{fill:'#ffd6c9',stroke:'#e5906f'},loop:{fill:'#efe3ff',stroke:'#b394e0'},
+    end:{fill:'#ffd0dc',stroke:'#dd7f9b'}}},
+  peach:{line:'#cf9a86',loopLine:'#a98fd0',paper:'#fffdfb',types:{
+    start:{fill:'#ffe4d6',stroke:'#e8a284'},process:{fill:'#e6ddff',stroke:'#a893d8'},
+    decision:{fill:'#ffe9f0',stroke:'#df9ab4'},document:{fill:'#fff1cf',stroke:'#d8b271'},
+    parallel:{fill:'#dceaff',stroke:'#8fb1de'},loop:{fill:'#f3e6ff',stroke:'#b795dd'},
+    end:{fill:'#ffd8e2',stroke:'#dd93ab'}}},
+  ocean:{line:'#7aacb8',loopLine:'#8f9ed8',paper:'#fcfeff',types:{
+    start:{fill:'#d0f0f7',stroke:'#5fb8cc'},process:{fill:'#d8f5e4',stroke:'#6cc096'},
+    decision:{fill:'#d6e4ff',stroke:'#7d9fe0'},document:{fill:'#fff3cd',stroke:'#d3b169'},
+    parallel:{fill:'#ffe3d4',stroke:'#dd9a74'},loop:{fill:'#e8e2ff',stroke:'#9d8fd8'},
+    end:{fill:'#d9f0f0',stroke:'#72bcbc'}}},
+  forest:{line:'#9aa87e',loopLine:'#a89f78',paper:'#fdfcf7',types:{
+    start:{fill:'#e4f2d5',stroke:'#93b86a'},process:{fill:'#f9f0d1',stroke:'#c2a95e'},
+    decision:{fill:'#dcefe0',stroke:'#7aab8b'},document:{fill:'#f3e6d5',stroke:'#bb9a70'},
+    parallel:{fill:'#ffe6d8',stroke:'#d99c78'},loop:{fill:'#e8e6da',stroke:'#a3a184'},
+    end:{fill:'#f4ded4',stroke:'#c68e6f'}}},
+};
+const EXAMPLES=[
+{id:'seq',name:'循序結構 · 超商買飲料',text:
+`開始
+走進超商
+挑選飲料
+到櫃檯結帳
+拿取發票
+走出超商
+結束`},
+{id:'pass',name:'選擇結構 · 及格判斷',text:
+`開始
+輸入成績
+如果 分數 ≥ 60？
+    是：顯示「及格，真好！」
+    否：顯示「不及格」
+        安排補考
+結束`},
+{id:'parity',name:'選擇結構 · 奇偶判斷',text:
+`開始
+輸入一個整數
+如果 除以 2 的餘數為 0？
+    是：顯示「偶數」
+    否：顯示「奇數」
+結束`},
+{id:'sum',name:'重複結構 · 1+2+…+100',text:
+`開始
+設定 總和＝0、i＝1
+如果 i ≤ 100？
+    是：總和＝總和＋i
+        i＝i＋1
+        回到：i ≤ 100
+    否：輸出 總和
+結束`},
+{id:'count',name:'重複結構 · 倒數計時',text:
+`開始
+設定 倒數秒數＝10
+如果 倒數 > 0？
+    是：顯示 倒數
+        倒數＝倒數－1
+        回到：倒數 > 0
+    否：顯示「時間到！」
+結束`},
+{id:'grade',name:'巢狀選擇 · 成績等第',text:
+`開始
+輸入分數
+如果 分數 ≥ 90？
+    是：顯示「優等」
+    否：如果 分數 ≥ 80？
+            是：顯示「甲等」
+            否：如果 分數 ≥ 70？
+                    是：顯示「乙等」
+                    否：顯示「繼續加油」
+結束`},
+{id:'leap',name:'巢狀選擇 · 閏年判斷',text:
+`開始
+輸入西元年份
+如果 可被 4 整除？
+    是：如果 可被 100 整除？
+            是：如果 可被 400 整除？
+                    是：顯示「閏年」
+                    否：顯示「平年」
+            否：顯示「閏年」
+    否：顯示「平年」
+結束`},
+{id:'shop',name:'綜合應用 · 網路購物',text:
+`開始
+瀏覽商品
+加入購物車
+如果 使用優惠券？
+    是：前往領券中心
+        領取優惠券
+        回到：加入購物車
+    否：直接結帳
+如果 帳戶餘額足夠？
+    是：立即扣款
+    否：前往儲值頁
+        如果 儲值成功？
+            是：回到：立即扣款
+            否：取消訂單
+同時：產生訂單
+    發送確認信
+    建立出貨單
+文件：訂單明細表
+寄送發票
+結束`},
+];
+
+/* ═══════════ 全域狀態 ═══════════ */
+const cfg={
+  theme:'garden',autoParse:true,
+  spacingAuto:true,spacingVal:56,cornerRadius:12,
+  font:'sans',fontSize:15,lineH:1.42,bold:false,
+  route:'round',lineW:2,arrow:true,avoid:true,loopSide:'left',
+  exportScale:2,
+};
+let steps=[];
+let warnings=[];
+let pos=new Map();
+const boxes=new Map();
+const GAP={v:56,h:40};
+let zoom=1,panX=0,panY=0;
+let edges=[];
+let selectedId=null;
+let editorStep=null,editorChanged=false;
+const history=[];let hIndex=-1;
+let gridOn=true;
+const KEY='sfg_v2_autosave';
+
+const vp=$('#viewport'),world=$('#world'),pv=$('#preview'),ta=$('#inText');
+const editor=$('#editor'),stWarn=$('#stWarn'),sidebar=$('#sidebar');
+const mcv=document.createElement('canvas'),mctx=mcv.getContext('2d');
+let rafPend=false;
+function requestRender(){if(rafPend)return;rafPend=true;requestAnimationFrame(()=>{rafPend=false;render();});}
+
+/* ═══════════ 樹走訪輔助 ═══════════ */
+function eachStep(list,fn){
+  for(const s of list){
+    fn(s);
+    if(s.children&&s.children.length)eachStep(s.children,fn);
+    if(s.noChildren&&s.noChildren.length)eachStep(s.noChildren,fn);
+  }
+}
+const eachRoot=fn=>eachStep(steps,fn);
+const hasNodes=()=>steps.length>0;
+function countNodes(){let n=0;eachRoot(()=>n++);return n;}
+function findStepById(id){let f=null;eachRoot(s=>{if(s.id===id)f=s;});return f;}
+function findList(list,id){
+  for(let i=0;i<list.length;i++){
+    const s=list[i];
+    if(s.id===id)return{list,idx:i};
+    if(s.children&&s.children.length){const r=findList(s.children,id);if(r)return r;}
+    if(s.noChildren&&s.noChildren.length){const r=findList(s.noChildren,id);if(r)return r;}
+  }
+  return null;
+}
+const dispText=s=>s.type==='loop'?'↺ '+s.text:s.text;
+const theme=()=>THEMES[cfg.theme]||THEMES.garden;
+
+/* ═══════════ 文字測量（隱藏 canvas）═══════════ */
+function wrapText(text,maxW,font){
+  mctx.font=font;
+  const out=[];
+  for(const seg of String(text).split('\n')){
+    if(!seg){out.push('');continue;}
+    const toks=seg.match(/[A-Za-z0-9_@%&#./~-]+|\s+|./g)||[seg];
+    let line='';
+    for(const t of toks){
+      const cand=line+t;
+      if(line&&mctx.measureText(cand).width>maxW){
+        out.push(line);line=t.replace(/^\s+/,'');
+        while(mctx.measureText(line).width>maxW&&line.length>1){
+          let cut=line.length-1;
+          while(cut>1&&mctx.measureText(line.slice(0,cut)).width>maxW)cut--;
+          out.push(line.slice(0,cut));line=line.slice(cut);
+        }
+      }else line=cand;
+    }
+    out.push(line);
+  }
+  return out;
+}
+function styleOf(s){
+  const t=(theme().types||{})[s.type]||{fill:'#eee',stroke:'#bbb'};
+  const o=s.style||{};
+  return{fill:hex(o.fill||t.fill),stroke:hex(o.stroke||t.stroke),text:'#4a3946',
+         dash:!!o.dash,bold:!!o.bold,fontSize:o.fontSize};
+}
+function nodeBox(s){
+  let b=boxes.get(s.id);if(b)return b;
+  const st=styleOf(s);
+  const fs=st.fontSize||cfg.fontSize;
+  const fam=FONT_FAMS[cfg.font]||FONT_FAMS.sans;
+  const bold=st.bold||cfg.bold;
+  const font=`${bold?'700':'400'} ${fs}px ${fam}`;
+  const maxW=s.maxW||(s.type==='decision'?160:190);
+  const lines=wrapText(dispText(s),maxW,font);
+  mctx.font=font;
+  const lw=Math.max(...lines.map(l=>mctx.measureText(l).width),24);
+  const lh=fs*cfg.lineH,th=lines.length*lh;
+  let w,h;
+  switch(s.type){
+    case'start':case'end':w=lw+58;h=th+24;break;
+    case'decision':w=lw*1.45+46;h=th*1.42+34;break;
+    case'document':w=lw+46;h=th+32;break;
+    case'parallel':w=lw+54;h=th+20;break;
+    case'loop':w=lw+40;h=th+22;break;
+    default:w=lw+36;h=th+24;
+  }
+  w=Math.max(w,s.type==='decision'?150:96);
+  h=Math.max(h,s.type==='decision'?88:48);
+  b={w,h,lines,lh,fs,fam,th,bold};
+  boxes.set(s.id,b);return b;
+}
+
+/* ═══════════ 智慧解析器 ═══════════ */
+const condStr=x=>{x=x.trim().replace(/[?？、,.，。]+$/,'');return x+'？';};
+const cleanBranch=x=>x.trim().replace(/^[，,。.：:、]+/,'').replace(/[。.]+$/,'');
+const mkStep=(type,text,extra)=>Object.assign({id:uid(),type,text,children:[],noChildren:null,locked:false},extra||{});
+
+/* 是：／否： 內容若是「回到／文件／同時／如果」開頭，自動升級為對應節點 */
+function tryTyped(inner,raw){
+  let m;
+  if((m=inner.match(/^回(?:到|返|去)[：:](.+)/)))return mkStep('loop',m[1].trim(),{target:m[1].trim(),raw});
+  if((m=inner.match(/^文件[：:](.+)/)))return mkStep('document',m[1].trim(),{raw});
+  if((m=inner.match(/^同時[：:](.*)/)))return mkStep('parallel',(m[1]||'').trim()||'平行執行',{raw});
+  if(/^如果/.test(inner))return mkStep('decision',condStr(inner.replace(/^如果/,'')),{raw});
+  return null;
+}
+function classify(t,ln,warn,pType){
+  let m;
+  if(/^開始/.test(t)){const rest=t.replace(/^開始[：:]?/,'').trim();return mkStep('start',rest||'開始');}
+  if(/^結束/.test(t)){const rest=t.replace(/^結束[：:]?/,'').trim();return mkStep('end',rest||'結束');}
+  if((m=t.match(/^文件[：:](.+)/)))return mkStep('document',m[1].trim());
+  if((m=t.match(/^同時[：:](.*)/)))return mkStep('parallel',m[1].trim()||'平行執行');
+  if((m=t.match(/^回(?:到|返|去)[：:](.+)/)))return mkStep('loop',m[1].trim(),{target:m[1].trim()});
+  if((m=t.match(/^如果(.+?)就(?:要|會)?(.+?)[，,]?(?:否則|不然)(?:就|會)?(.+)$/))){
+    const s=mkStep('decision',condStr(m[1]));
+    s.children=[mkStep('process',cleanBranch(m[2]))];
+    s.noChildren=[mkStep('process',cleanBranch(m[3]))];
+    return s;
+  }
+  if((m=t.match(/^如果(.+?)就(?:要|會)?(.+)$/))){
+    const s=mkStep('decision',condStr(m[1]));
+    s.children=[mkStep('process',cleanBranch(m[2]))];
+    s.noChildren=[];
+    return s;
+  }
+  if(/^如果/.test(t))return mkStep('decision',condStr(t.replace(/^如果/,'')));
+  if(/^是[：:]/.test(t)){
+    if(pType!=='decision')warn.push(`第 ${ln} 行：『是：』沒有對應的『如果』判斷，已當作一般步驟`);
+    const inner=t.replace(/^是[：:]/,'').trim();
+    const sub=inner?tryTyped(inner,t):null;
+    if(sub)return sub;
+    return mkStep('process',inner||'（是）',{raw:t});
+  }
+  if(/^否(?:則)?[：:]/.test(t)){
+    if(pType!=='decision')warn.push(`第 ${ln} 行：『否：』沒有對應的『如果』判斷，已當作一般步驟`);
+    const inner=t.replace(/^否(?:則)?[：:]/,'').trim();
+    const sub=inner?tryTyped(inner,t):null;
+    if(sub)return sub;
+    return mkStep('process',inner||'（否）',{raw:t});
+  }
+  if(/[?？]$/.test(t))return mkStep('decision',t);
+  return mkStep('process',t);
+}
+function stripRaw(k,re){
+  if(!k.raw)return k;
+  if(k.type==='process'){k.text=k.raw.replace(re,'').trim()||k.text;}
+  delete k.raw;
+  return k;
+}
+function postSplit(list){
+  for(const s of list){
+    if(s.type==='decision'&&s.children&&s.children.length){
+      const kids=s.children;
+      if(kids.some(k=>k.raw)){
+        const cut=kids.findIndex(k=>k.raw&&/^否(?:則)?[：:]/.test(k.raw));
+        if(cut>=0){
+          s.noChildren=kids.slice(cut).map(k=>stripRaw(k,/^否(?:則)?[：:]/));
+          s.children=kids.slice(0,cut).map(k=>stripRaw(k,/^是[：:]/));
+        }else{
+          s.children=kids.map(k=>stripRaw(k,/^是[：:]/));
+        }
+      }
+    }
+    if(s.children&&s.children.length)postSplit(s.children);
+    if(s.noChildren&&s.noChildren.length)postSplit(s.noChildren);
+  }
+}
+function parseInput(raw){
+  const warn=[];
+  const root=mkStep('root','');
+  const stack=[{ind:-1,node:root}];
+  raw.split('\n').forEach((line,i)=>{
+    if(!line.trim())return;
+    const ind=line.match(/^[ \t]*/)[0].replace(/\t/g,'    ').length;
+    while(stack.length>1&&ind<=stack[stack.length-1].ind)stack.pop();
+    const parent=stack[stack.length-1].node;
+    const s=classify(line.trim(),i+1,warn,parent.type);
+    parent.children.push(s);
+    stack.push({ind,node:s});
+  });
+  postSplit(root.children);
+  return{list:root.children,warn};
+}
+function findLoopTarget(s,all){
+  const q=(s.target||'').trim();if(!q)return null;
+  return all.find(o=>o.id!==s.id&&o.type!=='loop'&&o.text===q)
+       ||all.find(o=>o.id!==s.id&&o.type!=='loop'&&(o.text.includes(q)||q.includes(o.text)))
+       ||null;
+}
+
+/* ═══════════ 排版引擎 ═══════════ */
+function autoSpacing(){
+  if(!cfg.spacingAuto)return cfg.spacingVal;
+  const n=countNodes();
+  return n<=10?62:n<=18?54:n<=32?46:40;
+}
+function measureChain(list){
+  let hl=0,hr=0,h=0;
+  for(let i=0;i<list.length;i++){
+    const s=list[i],b=nodeBox(s),tail=i<list.length-1;
+    if(s.type==='decision'){
+      const ym=(s.children&&s.children.length)?measureChain(s.children):null;
+      const nm=(s.noChildren&&s.noChildren.length)?measureChain(s.noChildren):null;
+      const axis=Math.max(b.w/2,ym?ym.hl:0);
+      const extra=nm?0:70;
+      hl=Math.max(hl,axis);
+      hr=Math.max(hr,axis+GAP.h+(nm?nm.hl+nm.hr:0)+extra,b.w/2);
+      const yesBot=b.h+(ym?GAP.v+ym.h:0);
+      const noBot=nm?b.h/2+nm.h/2:b.h;
+      h+=Math.max(yesBot,noBot)+(tail?GAP.v:0);
+    }else if(s.type==='parallel'&&s.children&&s.children.length){
+      const ms=s.children.map(c=>measureChain([c]));
+      const span=ms.reduce((a,m)=>a+m.hl+m.hr,0)+GAP.h*(ms.length-1);
+      const half=Math.max(span/2,b.w/2);
+      hl=Math.max(hl,half);hr=Math.max(hr,half);
+      h+=b.h+GAP.v+Math.max(...ms.map(m=>m.h))+(tail?GAP.v:0);
+    }else{
+      hl=Math.max(hl,b.w/2);hr=Math.max(hr,b.w/2);
+      if(s.children&&s.children.length){
+        const sm=measureChain(s.children);
+        hl=Math.max(hl,sm.hl);hr=Math.max(hr,sm.hr);
+        h+=b.h+GAP.v+sm.h+(tail?GAP.v:0);
+      }else h+=b.h+(tail?GAP.v:0);
+    }
+  }
+  return{hl,hr,h};
+}
+function placeChain(list,cx,y){
+  for(let i=0;i<list.length;i++){
+    const s=list[i],b=nodeBox(s);
+    pos.set(s.id,{x:cx,y});
+    const bot=y+b.h;
+    if(s.type==='decision'){
+      const ym=(s.children&&s.children.length)?measureChain(s.children):null;
+      const nm=(s.noChildren&&s.noChildren.length)?measureChain(s.noChildren):null;
+      const axis=Math.max(b.w/2,ym?ym.hl:0);
+      let yesBot=bot;
+      if(ym){placeChain(s.children,cx,bot+GAP.v);yesBot=bot+GAP.v+ym.h;}
+      let noBot=bot;
+      if(nm){
+        const noTop=y+b.h/2-nm.h/2;
+        placeChain(s.noChildren,cx+axis+GAP.h+nm.hl,noTop);
+        noBot=noTop+nm.h;
+      }
+      y=Math.max(yesBot,noBot)+GAP.v;
+    }else if(s.type==='parallel'&&s.children&&s.children.length){
+      const ms=s.children.map(c=>measureChain([c]));
+      const span=ms.reduce((a,m)=>a+m.hl+m.hr,0)+GAP.h*(ms.length-1);
+      const kTop=bot+GAP.v;
+      let kx=cx-span/2,kBot=kTop;
+      ms.forEach((m,j)=>{
+        placeChain([s.children[j]],kx+m.hl,kTop);
+        kBot=Math.max(kBot,kTop+m.h);
+        kx+=m.hl+m.hr+GAP.h;
+      });
+      y=kBot+GAP.v;
+    }else{
+      if(s.children&&s.children.length){
+        const sm=measureChain(s.children);
+        placeChain(s.children,cx,bot+GAP.v);
+        y=bot+GAP.v+sm.h+GAP.v;
+      }else y=bot+GAP.v;
+    }
+  }
+}
+function resolveCollisions(){
+  const arr=[];eachRoot(s=>arr.push(s));
+  for(let k=0;k<14;k++){
+    let moved=false;
+    for(let i=0;i<arr.length;i++)for(let j=i+1;j<arr.length;j++){
+      const sa=arr[i],sb=arr[j],a=pos.get(sa.id),b=pos.get(sb.id);
+      const ba=nodeBox(sa),bb=nodeBox(sb);
+      const ox=Math.min(a.x+ba.w/2,b.x+bb.w/2)-Math.max(a.x-ba.w/2,b.x-bb.w/2);
+      const oy=Math.min(a.y+ba.h,b.y+bb.h)-Math.max(a.y,b.y);
+      if(ox>0&&oy>0){
+        if(sa.locked&&sb.locked)continue;
+        moved=true;
+        if(ox<=oy){
+          const push=ox/2+.5,dir=a.x<=b.x?1:-1;
+          if(sa.locked)b.x+=dir*ox+1;
+          else if(sb.locked)a.x-=dir*ox+1;
+          else{a.x-=dir*push;b.x+=dir*push;}
+        }else{
+          const push=oy/2+.5,dir=a.y<=b.y?1:-1;
+          if(sa.locked)b.y+=dir*oy+1;
+          else if(sb.locked)a.y-=dir*oy+1;
+          else{a.y-=dir*push;b.y+=dir*push;}
+        }
+      }
+    }
+    if(!moved)break;
+  }
+}
+function normalize(){
+  let ml=1e9,mt=1e9;
+  eachRoot(s=>{const p=pos.get(s.id),b=nodeBox(s);ml=Math.min(ml,p.x-b.w/2);mt=Math.min(mt,p.y);});
+  const dx=Math.max(0,60-ml),dy=Math.max(0,60-mt);
+  if(dx||dy)eachRoot(s=>{const p=pos.get(s.id);p.x+=dx;p.y+=dy;});
+}
+function relayoutCore(){
+  if(!hasNodes())return;
+  GAP.v=autoSpacing();GAP.h=clamp(Math.round(GAP.v*0.72),26,54);
+  const m=measureChain(steps);
+  placeChain(steps,60+m.hl,60);
+  resolveCollisions();normalize();
+}
+function relayout(){
+  if(!hasNodes())return;
+  relayoutCore();render();autosaveDeb();
+}
+
+/* ═══════════ 路由演算法（一律用 id 查 pos）═══════════ */
+function allRects(excl){
+  const out=[];
+  eachRoot(s=>{
+    if(excl&&excl.includes(s.id))return;
+    const p=pos.get(s.id),b=nodeBox(s);
+    out.push({l:p.x-b.w/2,r:p.x+b.w/2,t:p.y,b:p.y+b.h,id:s.id});
+  });
+  return out;
+}
+function cleanPts(pts){
+  const out=[pts[0]];
+  for(let i=1;i<pts.length;i++){
+    const q=out[out.length-1],p=pts[i];
+    if(Math.abs(p[0]-q[0])>.4||Math.abs(p[1]-q[1])>.4)out.push(p);
+  }
+  return out;
+}
+function avoidObstacles(pts,excl,depth){
+  if(depth>3)return pts;
+  const rects=allRects(excl);
+  for(let i=0;i<pts.length-1;i++){
+    const[x1,y1]=pts[i],[x2,y2]=pts[i+1];
+    if(Math.abs(x1-x2)<.5){
+      const lo=Math.min(y1,y2)+6,hi=Math.max(y1,y2)-6;
+      if(hi<=lo)continue;
+      const hits=rects.filter(r=>x1>r.l+8&&x1<r.r-8&&hi>r.t&&lo<r.b);
+      if(hits.length){
+        const nx=Math.max(x1,Math.max(...hits.map(r=>r.r))+18);
+        return avoidObstacles([...pts.slice(0,i+1),[nx,y1],[nx,y2],...pts.slice(i+1)],excl,depth+1);
+      }
+    }else if(Math.abs(y1-y2)<.5){
+      const lo=Math.min(x1,x2)+6,hi=Math.max(x1,x2)-6;
+      if(hi<=lo)continue;
+      const hits=rects.filter(r=>y1>r.t+8&&y1<r.b-8&&hi>r.l&&lo<r.r);
+      if(hits.length){
+        const ny=Math.min(...hits.map(r=>r.t))-16;
+        if(ny<Math.min(y1,y2)-6)
+          return avoidObstacles([...pts.slice(0,i+1),[x1,ny],[x2,ny],...pts.slice(i+1)],excl,depth+1);
+      }
+    }
+  }
+  return pts;
+}
+function pushEdge(pts,opt={}){
+  let p=cleanPts(pts);
+  if(cfg.avoid)p=avoidObstacles(p,opt.exclude||[],0);
+  edges.push({pts:p,label:opt.label,labelAt:opt.labelAt,plain:opt.plain,dashed:opt.dashed});
+}
+function linkForward(e,to,mergeY){
+  const tp=pos.get(to.id),tb=nodeBox(to);
+  const tx=tp.x,ty=tp.y;
+  if(e.bypass){
+    const d=e.bypass,dp=pos.get(d.id),db=nodeBox(d);
+    const rx=dp.x+db.w/2,cy=dp.y+db.h/2,bx=rx+24;
+    const my=Math.max(mergeY,cy+12);
+    pushEdge([[rx,cy],[bx,cy],[bx,my],[tx,my],[tx,ty]],
+      {label:'否',labelAt:[bx+16,cy+12],exclude:[d.id,to.id]});
+    return;
+  }
+  const sp=pos.get(e.node.id),sb=nodeBox(e.node);
+  const sx=sp.x,sy=sp.y+sb.h;
+  let pts;
+  if(Math.abs(sx-tx)<.6)pts=[[sx,sy],[tx,ty]];
+  else{
+    const my=Math.max(mergeY,sy+10);
+    pts=[[sx,sy],[sx,my],[tx,my],[tx,ty]];
+  }
+  pushEdge(pts,{label:e.label,labelAt:e.label?[sx+16,sy+13]:null,exclude:[e.node.id,to.id]});
+}
+function linkRight(d,f){
+  const dp=pos.get(d.id),db=nodeBox(d),fp=pos.get(f.id);
+  const rx=dp.x+db.w/2,cy=dp.y+db.h/2;
+  pushEdge([[rx,cy],[fp.x,cy],[fp.x,fp.y]],
+    {label:'否',labelAt:[(rx+fp.x)/2,cy-12],exclude:[d.id,f.id]});
+}
+function flowChain(list){
+  let ends=[];
+  for(let i=0;i<list.length;i++){
+    const s=list[i];
+    if(ends.length){
+      const p=pos.get(s.id);
+      const mergeY=p.y-GAP.v*.55;
+      ends.forEach(e=>{
+        if(e.node&&e.node.type==='loop')return; /* 迴圈節點走走廊，不向前合流 */
+        linkForward(e,s,mergeY);
+      });
+    }
+    if(s.type==='decision'){
+      let ye;
+      if(s.children&&s.children.length){
+        linkForward({node:s,label:'是'},s.children[0],pos.get(s.children[0].id).y-GAP.v*.55);
+        ye=flowChain(s.children);
+      }else ye=[{node:s,label:'是'}];
+      let ne;
+      if(s.noChildren&&s.noChildren.length){
+        linkRight(s,s.noChildren[0]);
+        ne=flowChain(s.noChildren);
+      }else ne=[{bypass:s}];
+      ends=[...ye,...ne];
+    }else if(s.type==='parallel'&&s.children&&s.children.length){
+      const kids=s.children,p=pos.get(s.id),b=nodeBox(s);
+      const distY=p.y+b.h+GAP.v*.5;
+      const kxs=kids.map(k=>pos.get(k.id).x);
+      edges.push({pts:[[p.x,p.y+b.h],[p.x,distY]],plain:true});
+      const L=Math.min(...kxs),R=Math.max(...kxs);
+      if(R-L>1)edges.push({pts:[[L,distY],[R,distY]],plain:true});
+      kids.forEach(k=>{
+        const kp=pos.get(k.id);
+        edges.push({pts:[[kp.x,distY],[kp.x,kp.y]]});
+      });
+      ends=kids.flatMap(k=>flowChain([k]));
+    }else{
+      if(s.children&&s.children.length){
+        linkForward({node:s},s.children[0],pos.get(s.children[0].id).y-GAP.v*.55);
+        ends=flowChain(s.children);
+      }else ends=[{node:s}];
+    }
+  }
+  return ends;
+}
+function laneY(x1,x2,ideal,rects){
+  for(let d=0;d<=180;d+=10){
+    const cands=d?[ideal+d,ideal-d]:[ideal];
+    for(const y of cands){
+      const lo=Math.min(x1,x2),hi=Math.max(x1,x2);
+      if(!rects.some(r=>y>r.t+6&&y<r.b-6&&hi>r.l+6&&lo<r.r-6))return y;
+    }
+  }
+  return ideal;
+}
+function drawLoops(){
+  const all=[];eachRoot(s=>all.push(s));
+  let idx=0;
+  for(const s of all){
+    if(s.type!=='loop')continue;
+    const t=findLoopTarget(s,all);
+    if(!t)continue;
+    const p=pos.get(s.id),b=nodeBox(s),tp=pos.get(t.id),tb=nodeBox(t);
+    const left=cfg.loopSide!=='right';
+    let edgeX;
+    if(left){
+      let mn=1e9;
+      all.forEach(o=>{if(o.id===s.id)return;const q=pos.get(o.id),qb=nodeBox(o);mn=Math.min(mn,q.x-qb.w/2);});
+      edgeX=mn-44-idx*34;
+    }else{
+      let mx=-1e9;
+      all.forEach(o=>{if(o.id===s.id)return;const q=pos.get(o.id),qb=nodeBox(o);mx=Math.max(mx,q.x+qb.w/2);});
+      edgeX=mx+44+idx*34;
+    }
+    const ex=left?tp.x-tb.w/2:tp.x+tb.w/2;
+    const yEntry=laneY(edgeX,ex,tp.y+tb.h/2,allRects([s.id,t.id]));
+    const sx=left?p.x-b.w/2:p.x+b.w/2;
+    pushEdge([[sx,p.y+b.h/2],[edgeX,p.y+b.h/2],[edgeX,yEntry],[ex,yEntry]],
+      {dashed:true,exclude:[s.id,t.id]});
+    idx++;
+  }
+}
+function buildEdges(){
+  edges=[];
+  if(!hasNodes())return edges;
+  flowChain(steps);
+  drawLoops();
+  return edges;
+}
+
+/* ═══════════ SVG 渲染 ═══════════ */
+function roundedPath(pts,r){
+  if(pts.length<3||r<=0)return 'M '+pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L ');
+  let d=`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)}`;
+  for(let i=1;i<pts.length-1;i++){
+    const[x0,y0]=pts[i-1],[x1,y1]=pts[i],[x2,y2]=pts[i+1];
+    const d1=Math.hypot(x1-x0,y1-y0)||1,d2=Math.hypot(x2-x1,y2-y1)||1;
+    const rr=Math.min(r,d1/2,d2/2);
+    const ax=x1-(x1-x0)/d1*rr,ay=y1-(y1-y0)/d1*rr;
+    const bx=x1+(x2-x1)/d2*rr,by=y1+(y2-y1)/d2*rr;
+    d+=` L ${ax.toFixed(1)} ${ay.toFixed(1)} Q ${x1.toFixed(1)} ${y1.toFixed(1)} ${bx.toFixed(1)} ${by.toFixed(1)}`;
+  }
+  const L=pts[pts.length-1];
+  d+=` L ${L[0].toFixed(1)} ${L[1].toFixed(1)}`;
+  return d;
+}
+function arrowHead(pts){
+  const n=pts.length;if(n<2)return'';
+  const[ax,ay]=pts[n-2],[bx,by]=pts[n-1];
+  const a=Math.atan2(by-ay,bx-ax),s=9;
+  return `M${bx.toFixed(1)} ${by.toFixed(1)} L${(bx-s*Math.cos(a-0.42)).toFixed(1)} ${(by-s*Math.sin(a-0.42)).toFixed(1)} L${(bx-s*Math.cos(a+0.42)).toFixed(1)} ${(by-s*Math.sin(a+0.42)).toFixed(1)} Z`;
+}
+function nodeSVG(s,t){
+  const p=pos.get(s.id),b=nodeBox(s),st=styleOf(s);
+  const x=(p.x-b.w/2).toFixed(1),y=p.y.toFixed(1),w=b.w.toFixed(1),h=b.h.toFixed(1);
+  const common=`fill="${st.fill}" stroke="${st.stroke}" stroke-width="2"`;
+  let shp='';
+  switch(s.type){
+    case'start':case'end':
+      shp=`<rect class="shp" x="0" y="0" width="${w}" height="${h}" rx="${Math.min(b.h/2,26).toFixed(1)}" ${common}/>`;break;
+    case'decision':{
+      const cx=(b.w/2).toFixed(1),cy=(b.h/2).toFixed(1);
+      shp=`<polygon class="shp" points="${cx},0 ${w},${cy} ${cx},${h} 0,${cy}" ${common}/>`;break;}
+    case'document':
+      shp=`<path class="shp" d="M0 0 L${w} 0 L${w} ${(b.h-8).toFixed(1)} C ${(b.w*0.72).toFixed(1)} ${(b.h+5).toFixed(1)} ${(b.w*0.28).toFixed(1)} ${(b.h-21).toFixed(1)} 0 ${(b.h-8).toFixed(1)} Z" ${common}/>`;break;
+    case'parallel':
+      shp=`<rect class="shp" x="0" y="0" width="${w}" height="${h}" rx="${cfg.cornerRadius}" ${common}/><line x1="6" y1="5" x2="${w}" y2="5" stroke="${st.stroke}" stroke-width="1.6"/><line x1="6" y1="${(b.h-5).toFixed(1)}" x2="${w}" y2="${(b.h-5).toFixed(1)}" stroke="${st.stroke}" stroke-width="1.6"/>`;break;
+    case'loop':
+      shp=`<rect class="shp" x="0" y="0" width="${w}" height="${h}" rx="12" ${common} stroke-dasharray="6 5"/>`;break;
+    default:{
+      const r=Math.min(cfg.cornerRadius,b.h/2).toFixed(1);
+      shp=`<rect class="shp" x="0" y="0" width="${w}" height="${h}" rx="${r}" ${common}/>`;}
+  }
+  let txt=`<text x="${(b.w/2).toFixed(1)}" y="${((b.h-b.th)/2+b.fs*0.82).toFixed(1)}" text-anchor="middle" font-family="${b.fam}" font-size="${b.fs}" ${b.bold?'font-weight="700"':''} fill="${st.text}">`;
+  b.lines.forEach((ln,i)=>{txt+=`<tspan x="${(b.w/2).toFixed(1)}" dy="${i?b.lh.toFixed(1):0}">${esc(ln)}</tspan>`;});
+  txt+='</text>';
+  const lock=s.locked?`<g transform="translate(${(b.w-17).toFixed(1)} 6)"><path d="M2.5 5 V3.4 a2.9 2.9 0 0 1 5.8 0 V5" fill="none" stroke="#a4798f" stroke-width="1.5"/><rect x="0.5" y="5" width="9" height="7" rx="2" fill="#a4798f"/></g>`:'';
+  return `<g class="node" data-id="${s.id}" transform="translate(${x} ${y})">${shp}${txt}${lock}</g>`;
+}
+function render(){
+  try{
+    buildEdges();
+    const t=theme();
+    let h='';
+    for(const e of edges){
+      const d=cfg.route==='round'?roundedPath(e.pts,13):'M '+e.pts.map(p=>p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' L ');
+      const col=e.dashed?t.loopLine:t.line;
+      h+=`<path class="edge" d="${d}" fill="none" stroke="${col}" stroke-width="${cfg.lineW}" ${e.dashed?'stroke-dasharray="7 6"':''} stroke-linecap="round"/>`;
+      if(cfg.arrow&&!e.plain)h+=`<path class="edge" d="${arrowHead(e.pts)}" fill="${col}"/>`;
+      if(e.label&&e.labelAt)
+        h+=`<text class="edge" x="${e.labelAt[0].toFixed(1)}" y="${e.labelAt[1].toFixed(1)}" font-size="12.5" font-weight="700" fill="${col}" text-anchor="middle" style="paint-order:stroke" stroke="${t.paper}" stroke-width="4">${esc(e.label)}</text>`;
+    }
+    eachRoot(s=>{h+=nodeSVG(s,t);});
+    world.innerHTML=h;
+    world.querySelectorAll('g.node').forEach(g=>{
+      if(g.dataset.id===selectedId)g.classList.add('sel');
+    });
+    applyTransform();
+    $('#emptyHint').hidden=hasNodes();
+  }catch(err){
+    console.error(err);
+    toast('繪圖發生錯誤：'+err.message,'warn');
+  }
+}
+function applyTransform(){
+  world.setAttribute('transform',`translate(${panX.toFixed(2)} ${panY.toFixed(2)}) scale(${zoom.toFixed(4)})`);
+}
+function diagramBounds(pad){
+  let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;
+  eachRoot(s=>{const p=pos.get(s.id),b=nodeBox(s);
+    x0=Math.min(x0,p.x-b.w/2);x1=Math.max(x1,p.x+b.w/2);
+    y0=Math.min(y0,p.y);y1=Math.max(y1,p.y+b.h);});
+  for(const e of edges)for(const q of e.pts){x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);y0=Math.min(y0,q[1]);y1=Math.max(y1,q[1]);}
+  if(x0>x1)return{x:0,y:0,w:800,h:600};
+  return{x:x0-pad,y:y0-pad,w:x1-x0+pad*2,h:y1-y0+pad*2};
+}
+
+/* ═══════════ 視圖操作（縮放 / 平移 / 拖拽）═══════════ */
+const updateZoomLabel=()=>{$('#stZoom').textContent=Math.round(zoom*100)+'%';};
+function fitView(){
+  if(!hasNodes()){zoom=1;panX=0;panY=0;applyTransform();updateZoomLabel();return;}
+  const b=diagramBounds(60),r=vp.getBoundingClientRect();
+  zoom=clamp(Math.min(r.width/b.w,r.height/b.h),0.15,1.6);
+  panX=(r.width-b.w*zoom)/2-b.x*zoom;
+  panY=(r.height-b.h*zoom)/2-b.y*zoom;
+  applyTransform();updateZoomLabel();
+}
+function zoomAt(mx,my,k){
+  const nz=clamp(zoom*k,0.15,4);
+  panX=mx-(mx-panX)*(nz/zoom);
+  panY=my-(my-panY)*(nz/zoom);
+  zoom=nz;applyTransform();updateZoomLabel();
+}
+vp.addEventListener('wheel',e=>{
+  e.preventDefault();
+  const r=vp.getBoundingClientRect();
+  zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.12:1/1.12);
+},{passive:false});
+
+let drag=null,pan=null;
+world.addEventListener('pointerdown',e=>{
+  if(e.button!==0)return;
+  const g=e.target.closest('g.node');if(!g)return;
+  e.stopPropagation();
+  const id=g.dataset.id,s=findStepById(id);
+  if(!s)return;
+  if(selectedId!==id){selectedId=id;render();}
+  if(s.locked)return;
+  const p=pos.get(id);
+  drag={id,x0:e.clientX,y0:e.clientY,ox:p.x,oy:p.y,moved:false};
+});
+vp.addEventListener('pointerdown',e=>{
+  if(e.button!==0||drag)return;
+  if(editorStep)closeEditor(false);
+  if(selectedId){selectedId=null;render();}
+  pan={x0:e.clientX,y0:e.clientY,px:panX,py:panY};
+  vp.classList.add('panning');
+  if(window.innerWidth<=560)sidebar.classList.remove('open');
+});
+window.addEventListener('pointermove',e=>{
+  if(drag){
+    const dx=(e.clientX-drag.x0)/zoom,dy=(e.clientY-drag.y0)/zoom;
+    if(!drag.moved&&Math.abs(dx)+Math.abs(dy)>2)drag.moved=true;
+    if(drag.moved){const p=pos.get(drag.id);p.x=drag.ox+dx;p.y=drag.oy+dy;requestRender();}
+  }else if(pan){
+    panX=pan.px+e.clientX-pan.x0;panY=pan.py+e.clientY-pan.y0;
+    applyTransform();
+  }
+});
+window.addEventListener('pointerup',()=>{
+  if(drag){if(drag.moved){pushHistory();autosaveDeb();}drag=null;}
+  if(pan){pan=null;vp.classList.remove('panning');}
+});
+world.addEventListener('dblclick',e=>{
+  const g=e.target.closest('g.node');if(!g)return;
+  const s=findStepById(g.dataset.id);
+  if(s)openEditor(s);
+});
+
+/* ═══════════ 歷史紀錄 ═══════════ */
+function histBtns(){
+  $('#btnUndo').disabled=hIndex<=0;
+  $('#btnRedo').disabled=hIndex>=history.length-1;
+}
+function pushHistory(){
+  history.splice(hIndex+1);
+  history.push(JSON.stringify({s:steps,p:Object.fromEntries(pos)}));
+  if(history.length>60)history.shift();
+  hIndex=history.length-1;histBtns();
+}
+function restore(i){
+  if(i<0||i>=history.length)return;
+  hIndex=i;
+  const o=JSON.parse(history[i]);
+  steps=o.s;pos=new Map(Object.entries(o.p));
+  boxes.clear();selectedId=null;closeEditor(true);
+  render();updateStatus();autosaveDeb();histBtns();
+}
+
+/* ═══════════ 解析主流程 ═══════════ */
+function autoAddCaps(){
+  if(!steps.length)return;
+  if(steps[0].type!=='start')steps.unshift(mkStep('start','開始'));
+  if(steps[steps.length-1].type!=='end')steps.push(mkStep('end','結束'));
+}
+function updateStatus(){
+  $('#stNodes').textContent=`節點 ${countNodes()}`;
+  $('#stEdges').textContent=`連線 ${edges.length}`;
+  if(warnings.length){
+    stWarn.hidden=false;
+    stWarn.querySelector('span').textContent=`提示 ${warnings.length}`;
+    stWarn.title=warnings.join('\n');
+  }else{stWarn.hidden=true;stWarn.title='';}
+}
+function doParse(fit=true,hist=true){
+  const r=parseInput(ta.value);
+  steps=r.list;warnings=[...r.warn];
+  boxes.clear();pos.clear();selectedId=null;closeEditor(true);
+  autoAddCaps();relayoutCore();
+  const all=[];eachRoot(s=>all.push(s));
+  all.forEach(s=>{
+    if(s.type==='loop'&&!findLoopTarget(s,all))
+      warnings.push(`循環『回到：${s.target||s.text}』找不到對應的步驟名稱`);
+  });
+  render();if(fit)fitView();updateStatus();
+  if(hist)pushHistory();
+  autosaveDeb();
+}
+const autoParseDeb=debounce(()=>{const wasEmpty=!hasNodes();doParse(!wasEmpty,false);},450);
+
+/* ═══════════ 智慧輸入（Tab 縮排 / Enter 展開骨架）═══════════ */
+function indentSelection(shift){
+  const val=ta.value;
+  const s=ta.selectionStart,en=Math.max(ta.selectionEnd,s);
+  const ls=val.lastIndexOf('\n',s-1)+1;
+  let le=val.indexOf('\n',en);if(le<0)le=val.length;
+  const lines=val.slice(ls,le).split('\n');
+  let firstDelta=0,totalDelta=0;
+  const out=lines.map((ln,i)=>{
+    const nln=shift?ln.replace(/^[ \t]{1,2}/,''):'    '+ln;
+    const d=nln.length-ln.length;
+    if(i===0)firstDelta=d;
+    totalDelta+=d;
+    return nln;
+  });
+  ta.setRangeText(out.join('\n'),ls,le,'end');
+  const joined=out.join('\n');
+  const ns=clamp(s+firstDelta,ls,ls+joined.length);
+  ta.selectionStart=ns;
+  ta.selectionEnd=clamp(en+totalDelta,ns,ls+joined.length);
+  if(cfg.autoParse)autoParseDeb();autosaveDeb();
+}
+ta.addEventListener('keydown',e=>{
+  if(e.isComposing||e.keyCode===229)return; /* IME 組字中不干預 */
+  if(e.key==='Tab'&&!e.ctrlKey&&!e.metaKey){
+    e.preventDefault();
+    indentSelection(e.shiftKey);
+    return;
+  }
+  if(e.key==='Enter'&&!e.shiftKey&&!e.ctrlKey&&!e.metaKey){
+    e.preventDefault();
+    const s=ta.selectionStart,val=ta.value;
+    const ls=val.lastIndexOf('\n',s-1);
+    const line=val.slice(ls+1,s);
+    const ind=(line.match(/^[ \t]*/)||[''])[0];
+    const tr=line.trim();
+    let ins,cur=null;
+    if(/^如果/.test(tr)){
+      /* 智慧骨架：自動展開 是：／否： */
+      const ci=ind+'    ';
+      ins='\n'+ci+'是：\n'+ci+'否：';
+      cur=s+1+ci.length+2;
+    }else if(/^同時[：:]/.test(tr)){
+      ins='\n'+ind+'    ';
+    }else{
+      const mSym=tr.match(/^(是|否(?:則)?)[：:]/);
+      ins='\n'+ind+(mSym?'':'');
+    }
+    ta.setRangeText(ins,s,ta.selectionEnd,'end');
+    if(cur!==null)ta.selectionStart=ta.selectionEnd=cur;
+    if(cfg.autoParse)autoParseDeb();autosaveDeb();
+  }
+});
+
+/* ═══════════ 行內節點編輯器 ═══════════ */
+function openEditor(s){
+  editorStep=s;editorChanged=false;
+  const p=pos.get(s.id),b=nodeBox(s),st=styleOf(s);
+  $('#edText').value=s.text;
+  $('#edType').value=s.type;
+  $('#edFill').value=hex(st.fill);
+  $('#edStroke').value=hex(st.stroke);
+  $('#edDash').value=st.dash?'dash':'solid';
+  $('#edFS').value=st.fontSize||cfg.fontSize;
+  $('#edW').value=s.maxW||(s.type==='decision'?160:190);
+  $('#edBold').checked=st.bold;
+  $('#edLock').checked=s.locked;
+  const r=pv.getBoundingClientRect();
+  const sx=(p.x-b.w/2)*zoom+panX,sy=p.y*zoom+panY;
+  const ew=252,eh=editor.offsetHeight||330;
+  let L=sx+b.w*zoom+14,T=sy;
+  if(L+ew>r.width-10)L=sx-ew-14;
+  L=clamp(L,10,Math.max(10,r.width-ew-10));
+  T=clamp(T,10,Math.max(10,r.height-eh-40));
+  editor.style.left=L+'px';editor.style.top=T+'px';
+  editor.hidden=false;
+  setTimeout(()=>$('#edText').focus(),30);
+}
+function closeEditor(silent){
+  if(editor.hidden)return;
+  editor.hidden=true;editorStep=null;
+  if(editorChanged&&!silent){pushHistory();autosaveDeb();}
+  editorChanged=false;
+}
+function touch(){editorChanged=true;requestRender();}
+ $('#edClose').onclick=()=>closeEditor(false);
+ $('#edDone').onclick=()=>closeEditor(false);
+ $('#edText').addEventListener('input',e=>{if(editorStep){editorStep.text=e.target.value;boxes.delete(editorStep.id);touch();}});
+ $('#edType').addEventListener('change',e=>{if(editorStep){editorStep.type=e.target.value;boxes.delete(editorStep.id);touch();updateStatus();}});
+ $('#edFill').addEventListener('input',e=>{if(editorStep){editorStep.style=Object.assign({},editorStep.style,{fill:e.target.value});touch();}});
+ $('#edStroke').addEventListener('input',e=>{if(editorStep){editorStep.style=Object.assign({},editorStep.style,{stroke:e.target.value});touch();}});
+ $('#edDash').addEventListener('change',e=>{if(editorStep){editorStep.style=Object.assign({},editorStep.style,{dash:e.target.value==='dash'});touch();}});
+ $('#edFS').addEventListener('input',e=>{if(editorStep){editorStep.style=Object.assign({},editorStep.style,{fontSize:+e.target.value});boxes.delete(editorStep.id);touch();}});
+ $('#edW').addEventListener('input',e=>{if(editorStep){editorStep.maxW=+e.target.value;boxes.delete(editorStep.id);touch();}});
+ $('#edBold').addEventListener('change',e=>{if(editorStep){editorStep.style=Object.assign({},editorStep.style,{bold:e.target.checked});boxes.delete(editorStep.id);touch();}});
+ $('#edLock').addEventListener('change',e=>{if(editorStep){editorStep.locked=e.target.checked;touch();}});
+ $('#edDel').onclick=()=>{
+  if(!editorStep)return;
+  removeStep(editorStep.id);
+  selectedId=null;
+  closeEditor(true);
+  render();updateStatus();pushHistory();autosaveDeb();
+  toast('已刪除節點');
+};
+function removeStep(id){
+  const f=findList(steps,id);if(!f)return;
+  const s=f.list[f.idx];
+  eachStep([s],o=>{pos.delete(o.id);boxes.delete(o.id);});
+  f.list.splice(f.idx,1);
+}
+
+/* ═══════════ 匯出：SVG → Canvas ═══════════ */
+function svgToCanvas(scale){
+  if(!hasNodes())return Promise.reject(new Error('empty'));
+  const b=diagramBounds(46);
+  const w=Math.max(60,Math.round(b.w)),h=Math.max(60,Math.round(b.h));
+  const clone=$('#stage').cloneNode(true);
+  clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  clone.setAttribute('width',w);clone.setAttribute('height',h);
+  clone.setAttribute('viewBox',`${b.x} ${b.y} ${b.w} ${b.h}`);
+  clone.querySelector('#world').setAttribute('transform','');
+  const str=new XMLSerializer().serializeToString(clone);
+  return new Promise((res,rej)=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.createElement('canvas');
+      c.width=Math.min(9000,Math.round(w*scale));
+      c.height=Math.min(12000,Math.round(h*scale));
+      const ctx=c.getContext('2d');
+      ctx.fillStyle=theme().paper;ctx.fillRect(0,0,c.width,c.height);
+      ctx.drawImage(img,0,0,c.width,c.height);
+      res({canvas:c,b,s:c.width/b.w});
+    };
+    img.onerror=rej;
+    img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(str);
+  });
+}
+function dataURLBytes(url){
+  const bin=atob(url.split(',')[1]);
+  const u8=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u8[i]=bin.charCodeAt(i);
+  return u8;
+}
+ $('#btnPNG').onclick=async()=>{
+  if(!hasNodes())return toast('請先產生流程圖','warn');
+  toast('正在產生 PNG…');
+  try{
+    const{canvas}=await svgToCanvas(cfg.exportScale);
+    canvas.toBlob(bl=>{download(bl,fname('png'));toast('PNG 已下載');},'image/png');
+  }catch(e){toast('PNG 產生失敗','warn');}
+};
+
+/* ═══════════ 匯出：PDF（單頁 A4，自動直／橫式）═══════════ */
+function makePDF(pages){
+  const enc=new TextEncoder();
+  const chunks=[];let off=0;const offsets=[];
+  const push=o=>{const b=typeof o==='string'?enc.encode(o):o;chunks.push(b);off+=b.length;};
+  push('%PDF-1.4\n');
+  push(new Uint8Array([0x25,0xE2,0xE3,0xCF,0xD3,0x0A]));
+  const n=pages.length;
+  offsets[1]=off;push('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
+  offsets[2]=off;push(`2 0 obj\n<< /Type /Pages /Kids [${pages.map((_,k)=>(3+k*3)+' 0 R').join(' ')}] /Count ${n} >>\nendobj\n`);
+  pages.forEach((p,k)=>{
+    const po=3+k*3,io=po+1,co=po+2;
+    offsets[po]=off;
+    push(`${po} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${p.pw} ${p.ph}] /Resources << /XObject << /Im${k} ${io} 0 R >> >> /Contents ${co} 0 R >>\nendobj\n`);
+    offsets[io]=off;
+    push(`${io} 0 obj\n<< /Type /XObject /Subtype /Image /Width ${p.wpx} /Height ${p.hpx} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${p.jpeg.length} >>\nstream\n`);
+    push(p.jpeg);
+    push('\nendstream\nendobj\n');
+    offsets[co]=off;
+    const cs=`q ${p.pw} 0 0 ${p.ph} 0 0 cm /Im${k} Do Q`;
+    push(`${co} 0 obj\n<< /Length ${cs.length} >>\nstream\n${cs}\nendstream\nendobj\n`);
+  });
+  const xref=off;
+  const total=3+n*3;
+  let x=`xref\n0 ${total}\n0000000000 65535 f \n`;
+  for(let i=1;i<total;i++)x+=String(offsets[i]).padStart(10,'0')+' 00000 n \n';
+  x+=`trailer\n<< /Size ${total} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`;
+  push(x);
+  return new Blob(chunks,{type:'application/pdf'});
+}
+ $('#btnPDF').onclick=async()=>{
+  if(!hasNodes())return toast('請先產生流程圖','warn');
+  toast('正在產生 PDF（A4 單頁）…');
+  try{
+    const{canvas:big}=await svgToCanvas(cfg.exportScale);
+    const M=40,headH=70,footH=32;
+    const P={w:595,h:842},L={w:842,h:595};
+    const fitTo=p=>Math.min((p.w-M*2)/big.width,(p.h-headH-footH)/big.height);
+    const page=fitTo(L)>fitTo(P)?L:P; /* 自動選擇直式或橫式 */
+    const S=2;
+    const PW=Math.round(page.w*S),PH=Math.round(page.h*S);
+    const pc=document.createElement('canvas');pc.width=PW;pc.height=PH;
+    const ctx=pc.getContext('2d');
+    ctx.fillStyle='#ffffff';ctx.fillRect(0,0,PW,PH);
+    const fam="'PingFang TC','Microsoft JhengHei',sans-serif";
+    ctx.fillStyle='#5c4351';ctx.font=`700 ${18*S}px `+fam;ctx.textAlign='left';
+    ctx.fillText('智慧流程圖',M*S,46*S);
+    ctx.fillStyle='#b98ba4';ctx.font=`${12*S}px `+fam;ctx.textAlign='right';
+    ctx.fillText(`V2.0 · ${new Date().toLocaleDateString('zh-TW')}`,(page.w-M)*S,46*S);
+    ctx.strokeStyle='#eec9dd';ctx.lineWidth=1.4*S;
+    ctx.beginPath();ctx.moveTo(M*S,56*S);ctx.lineTo((page.w-M)*S,56*S);ctx.stroke();
+    const availW=PW-M*2*S,availH=(page.h-headH-footH)*S;
+    const kk=Math.min(availW/big.width,availH/big.height);
+    const w=big.width*kk,h=big.height*kk;
+    ctx.drawImage(big,(PW-w)/2,headH*S+(availH-h)/2,w,h);
+    ctx.fillStyle='#c9a3b8';ctx.font=`${11*S}px `+fam;ctx.textAlign='center';
+    ctx.fillText(`由智慧流程圖產生器 V2.0 匯出 · A4 ${page===L?'橫式':'直式'}`,PW/2,(page.h-14)*S);
+    const pages=[{jpeg:dataURLBytes(pc.toDataURL('image/jpeg',0.92)),pw:page.w,ph:page.h,wpx:PW,hpx:PH}];
+    download(makePDF(pages),fname('pdf'));
+    toast('PDF 已下載（A4 單頁）');
+  }catch(e){console.error(e);toast('PDF 產生失敗','warn');}
+};
+
+/* ═══════════ 匯出：Word Docx（ZIP + OpenXML）═══════════ */
+const CRCT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c;}return t;})();
+function crc32(u8){let c=~0;for(let i=0;i<u8.length;i++)c=CRCT[(c^u8[i])&255]^(c>>>8);return ~c>>>0;}
+function makeZip(files,stamp){
+  const enc=new TextEncoder();
+  const parts=[],central=[];let off=0;
+  const u16=v=>[v&255,(v>>>8)&255],u32=v=>[v&255,(v>>>8)&255,(v>>>16)&255,(v>>>24)&255];
+  for(const f of files){
+    const nb=enc.encode(f.name),crc=crc32(f.data),sz=f.data.length;
+    const lh=new Uint8Array([0x50,0x4b,3,4,...u16(20),...u16(0),...u16(0),...u16(stamp.time),...u16(stamp.date),...u32(crc),...u32(sz),...u32(sz),...u16(nb.length),...u16(0)]);
+    parts.push(lh,nb,f.data);
+    central.push({nb,crc,sz,off});
+    off+=lh.length+nb.length+sz;
+  }
+  const cdStart=off;
+  for(const c of central){
+    const ch=new Uint8Array([0x50,0x4b,1,2,...u16(20),...u16(20),...u16(0),...u16(0),...u16(stamp.time),...u16(stamp.date),...u32(c.crc),...u32(c.sz),...u32(c.sz),...u16(c.nb.length),...u16(0),...u16(0),...u16(0),...u16(0),...u32(0),...u32(c.off)]);
+    /* ★ 關鍵修正：中央目錄標頭後必須緊接檔名字串（先前漏寫導致 docx 損毀） */
+    parts.push(ch,c.nb);
+    off+=ch.length+c.nb.length;
+  }
+  parts.push(new Uint8Array([0x50,0x4b,5,6,...u16(0),...u16(0),...u16(central.length),...u16(central.length),...u32(off-cdStart),...u32(cdStart),...u16(0)]));
+  return new Blob(parts,{type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+}
+ $('#btnDOCX').onclick=async()=>{
+  if(!hasNodes())return toast('請先產生流程圖','warn');
+  toast('正在產生 Word 文件…');
+  try{
+    const{canvas,b}=await svgToCanvas(cfg.exportScale);
+    const png=dataURLBytes(canvas.toDataURL('image/png'));
+    const aspect=b.h/b.w;
+    let wE=Math.round(16.5*360000),hE=Math.round(wE*aspect);
+    const maxH=Math.round(23*360000);
+    if(hE>maxH){hE=maxH;wE=Math.round(hE/aspect);}
+    const docXml=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"><w:body><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:b/><w:sz w:val="36"/><w:color w:val="5C4351"/></w:rPr><w:t>智慧流程圖</w:t></w:r></w:p><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:noProof/></w:rPr><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${wE}" cy="${hE}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="1" name="流程圖"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="1" name="flowchart.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rId1"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${wE}" cy="${hE}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p><w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:sz w:val="18"/><w:color w:val="B98BA4"/></w:rPr><w:t>由智慧流程圖產生器 V2.0 匯出</w:t></w:r></w:p><w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>`;
+    const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+    const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+    const drels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image1.png"/></Relationships>`;
+    const core=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>智慧流程圖</dc:title><dc:creator>智慧流程圖產生器 V2.0</dc:creator><cp:lastModifiedBy>智慧流程圖產生器</cp:lastModifiedBy></cp:coreProperties>`;
+    const app=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>Smart Flowchart Generator V2.0</Application></Properties>`;
+    const d=new Date();
+    const stamp={time:(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1),
+                 date:(((d.getFullYear()-1980)&0x7f)<<9)|((d.getMonth()+1)<<5)|d.getDate()};
+    const enc2=new TextEncoder();
+    download(makeZip([
+      {name:'[Content_Types].xml',data:enc2.encode(ct)},
+      {name:'_rels/.rels',data:enc2.encode(rels)},
+      {name:'word/document.xml',data:enc2.encode(docXml)},
+      {name:'word/_rels/document.xml.rels',data:enc2.encode(drels)},
+      {name:'word/media/image1.png',data:png},
+      {name:'docProps/core.xml',data:enc2.encode(core)},
+      {name:'docProps/app.xml',data:enc2.encode(app)},
+    ],stamp));
+    toast('Word (.docx) 已下載');
+  }catch(e){console.error(e);toast('Word 產生失敗','warn');}
+};
+
+/* ═══════════ 自動儲存 ═══════════ */
+function saveNow(){
+  try{
+    localStorage.setItem(KEY,JSON.stringify({
+      t:Date.now(),text:ta.value,cfg,
+      graph:hasNodes()?{s:steps,p:Object.fromEntries(pos)}:null,
+    }));
+  }catch(e){}
+}
+const autosaveDeb=debounce(saveNow,600);
+function showBanner(msg){
+  $('#bannerMsg').textContent=msg;
+  const bn=$('#banner');
+  bn.classList.add('show');
+  clearTimeout(showBanner._t);
+  showBanner._t=setTimeout(()=>bn.classList.remove('show'),8000);
+}
+ $('#bannerX').onclick=()=>$('#banner').classList.remove('show');
+
+/* ═══════════ UI 綁定 ═══════════ */
+function syncUI(){
+  $('#selTheme').value=cfg.theme;
+  $('#chkAuto').checked=cfg.autoParse;
+  $('#chkDense').checked=cfg.spacingAuto;
+  $('#rngSpacing').disabled=cfg.spacingAuto;
+  $('#rngSpacing').value=cfg.spacingVal;$('#outSpacing').textContent=cfg.spacingVal;
+  $('#rngCorner').value=cfg.cornerRadius;$('#outCorner').textContent=cfg.cornerRadius;
+  $('#selFont').value=cfg.font;
+  $('#rngFont').value=cfg.fontSize;$('#outFont').textContent=cfg.fontSize;
+  $('#rngLineH').value=cfg.lineH;$('#outLineH').textContent=(+cfg.lineH).toFixed(2);
+  $('#chkBold').checked=cfg.bold;
+  $('#selRoute').value=cfg.route;
+  $('#rngLineW').value=cfg.lineW;$('#outLineW').textContent=cfg.lineW;
+  $('#chkArrow').checked=cfg.arrow;
+  $('#chkAvoid').checked=cfg.avoid;
+  $('#selLoopSide').value=cfg.loopSide;
+  $('#selScale').value=String(cfg.exportScale);
+}
+function bindUI(){
+  $('#btnParse').onclick=()=>{doParse(true,true);toast('已產生流程圖');};
+  $('#btnExample').onclick=()=>{
+    const ex=EXAMPLES.find(x=>x.id===$('#selExample').value)||EXAMPLES[0];
+    ta.value=ex.text;doParse(true,true);toast('已載入範例：'+ex.name);
+  };
+  $('#btnClear').onclick=()=>{ta.value='';steps=[];pos.clear();boxes.clear();warnings=[];selectedId=null;closeEditor(true);render();updateStatus();pushHistory();autosaveDeb();ta.focus();};
+  $('#chkAuto').addEventListener('change',e=>cfg.autoParse=e.target.checked);
+  ta.addEventListener('input',()=>{if(cfg.autoParse)autoParseDeb();autosaveDeb();});
+  $('#selTheme').addEventListener('change',e=>{cfg.theme=e.target.value;render();autosaveDeb();});
+  $('#chkDense').addEventListener('change',e=>{cfg.spacingAuto=e.target.checked;$('#rngSpacing').disabled=cfg.spacingAuto;relayout();});
+  $('#rngSpacing').addEventListener('input',e=>{cfg.spacingVal=+e.target.value;$('#outSpacing').textContent=cfg.spacingVal;relayout();});
+  $('#rngCorner').addEventListener('input',e=>{cfg.cornerRadius=+e.target.value;$('#outCorner').textContent=cfg.cornerRadius;render();autosaveDeb();});
+  $('#selFont').addEventListener('change',e=>{cfg.font=e.target.value;boxes.clear();relayout();});
+  $('#rngFont').addEventListener('input',e=>{cfg.fontSize=+e.target.value;$('#outFont').textContent=cfg.fontSize;boxes.clear();relayout();});
+  $('#rngLineH').addEventListener('input',e=>{cfg.lineH=+e.target.value;$('#outLineH').textContent=(+cfg.lineH).toFixed(2);boxes.clear();relayout();});
+  $('#chkBold').addEventListener('change',e=>{cfg.bold=e.target.checked;boxes.clear();relayout();});
+  $('#selRoute').addEventListener('change',e=>{cfg.route=e.target.value;render();});
+  $('#rngLineW').addEventListener('input',e=>{cfg.lineW=+e.target.value;$('#outLineW').textContent=cfg.lineW;render();autosaveDeb();});
+  $('#chkArrow').addEventListener('change',e=>{cfg.arrow=e.target.checked;render();});
+  $('#chkAvoid').addEventListener('change',e=>{cfg.avoid=e.target.checked;render();});
+  $('#selLoopSide').addEventListener('change',e=>{cfg.loopSide=e.target.value;render();});
+  $('#selScale').addEventListener('change',e=>cfg.exportScale=+e.target.value);
+  $('#btnUndo').onclick=()=>restore(hIndex-1);
+  $('#btnRedo').onclick=()=>restore(hIndex+1);
+  $('#btnRelayout').onclick=()=>{relayout();fitView();toast('已重新自動排版');};
+  $('#btnUnlock').onclick=()=>{eachRoot(s=>s.locked=false);render();pushHistory();toast('已解鎖全部節點');};
+  const btnWipe=$('#btnWipe');let wipeT=null;
+  const disarm=()=>{btnWipe.classList.remove('wipe-armed');$('#wipeLabel').textContent='清空全部內容';clearTimeout(wipeT);};
+  btnWipe.onclick=()=>{
+    if(!btnWipe.classList.contains('wipe-armed')){
+      btnWipe.classList.add('wipe-armed');
+      $('#wipeLabel').textContent='再按一次確認清空';
+      wipeT=setTimeout(disarm,3200);return;
+    }
+    disarm();
+    ta.value='';steps=[];pos.clear();boxes.clear();warnings=[];selectedId=null;closeEditor(true);
+    try{localStorage.removeItem(KEY);}catch(e){}
+    render();updateStatus();pushHistory();
+    toast('已清空全部內容');
+  };
+  const rct=()=>vp.getBoundingClientRect();
+  $('#zoomIn').onclick=()=>{const r=rct();zoomAt(r.width/2,r.height/2,1.2);};
+  $('#zoomOut').onclick=()=>{const r=rct();zoomAt(r.width/2,r.height/2,1/1.2);};
+  $('#zoomFit').onclick=fitView;
+  $('#zoom100').onclick=()=>{const r=rct();zoomAt(r.width/2,r.height/2,1/zoom);};
+  $('#btnGrid').onclick=e=>{
+    gridOn=!gridOn;
+    e.currentTarget.classList.toggle('on',gridOn);
+    vp.classList.toggle('grid-off',!gridOn);
+  };
+  $('#menuBtn').onclick=()=>sidebar.classList.toggle('open');
+  window.addEventListener('keydown',e=>{
+    const tag=(e.target.tagName||'').toLowerCase();
+    const typing=tag==='textarea'||tag==='input'||tag==='select';
+    if((e.ctrlKey||e.metaKey)&&!typing){
+      if(e.key==='z'||e.key==='Z'){e.preventDefault();restore(hIndex-1);return;}
+      if(e.key==='y'||e.key==='Y'){e.preventDefault();restore(hIndex+1);return;}
+    }
+    if(typing)return;
+    if((e.key==='Delete'||e.key==='Backspace')&&selectedId){
+      removeStep(selectedId);selectedId=null;
+      render();updateStatus();pushHistory();autosaveDeb();
+      toast('已刪除節點');
+    }
+    if(e.key==='Escape')closeEditor(false);
+  });
+}
+
+/* ═══════════ 初始化 ═══════════ */
+function init(){
+  bindUI();
+  let sv=null;
+  try{sv=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}
+  if(sv&&sv.cfg)Object.assign(cfg,sv.cfg);
+  syncUI();
+  ta.value=(sv&&sv.text)?sv.text:(EXAMPLES.find(e=>e.id==='shop')||EXAMPLES[0]).text;
+  if(sv&&sv.graph&&sv.graph.s&&sv.graph.s.length){
+    steps=sv.graph.s;
+    pos=new Map(Object.entries(sv.graph.p||{}));
+    warnings=[];
+    let posOK=true;
+    eachRoot(s=>{if(!pos.get(s.id))posOK=false;});
+    if(!posOK){pos.clear();relayoutCore();}
+    render();fitView();updateStatus();pushHistory();
+    showBanner('已為您恢復上次編輯內容');
+  }else{
+    doParse(true,false);
+    pushHistory();
+  }
+  updateZoomLabel();
+  if(window.innerWidth<=560)sidebar.classList.remove('open');
+}
+init();
+})();
+</script>
+</body>
+</html>
