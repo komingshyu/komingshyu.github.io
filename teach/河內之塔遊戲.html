@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>河內之塔 · 梵天寺的金盤試煉</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@1,500&family=Noto+Sans+TC:wght@300;400;500&family=Noto+Serif+TC:wght@500;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#141109; --bg2:#1b1712;
+    --ink:#e8ddc0; --muted:#8f8468; --dim:#5a5240;
+    --gold:#c8a24a; --gold-hi:#e6c876; --line:rgba(214,178,110,.4);
+  }
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:'Noto Sans TC',sans-serif; font-weight:300;
+    overflow-x:hidden;
+  }
+  body::before{ /* 石壁細紋 */
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/><feColorMatrix type='saturate' values='0'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='.5'/></svg>");
+    opacity:.05;
+  }
+  body::after{ /* 一盞微弱的寺燈 */
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:radial-gradient(ellipse 55% 42% at 50% 18%, rgba(206,164,92,.06), transparent 70%);
+  }
+
+  .app{
+    position:relative; z-index:1;
+    max-width:1080px; margin:0 auto; min-height:100vh;
+    display:grid; grid-template-columns:132px 1fr; gap:6px;
+    align-content:center; padding:26px 18px 34px;
+  }
+
+  /* ── 左側豎排題字 ─────────────────────── */
+  .masthead{ display:flex; align-items:center; gap:20px; padding-left:6px; }
+  .title-vert{
+    writing-mode:vertical-rl; margin:0;
+    font-family:'Noto Serif TC',serif; font-weight:900;
+    font-size:clamp(32px,4.4vh,44px); letter-spacing:14px; color:var(--ink);
+  }
+  .rule-vert{ width:1px; height:230px; background:linear-gradient(180deg,transparent,rgba(214,178,110,.6),transparent); }
+  .side-vert{
+    writing-mode:vertical-rl; display:flex; gap:14px; align-items:center;
+    font-size:11px; letter-spacing:7px; color:var(--muted);
+    font-family:'Noto Serif TC',serif;
+  }
+  .side-vert em{
+    font-family:'Cormorant Garamond',serif; font-style:italic;
+    color:rgba(200,162,74,.55); letter-spacing:5px;
+  }
+
+  /* ── 場景 ─────────────────────── */
+  .stage-area{ min-width:0; }
+  .scene-wrap{ position:relative; width:100%; }
+  .scene{
+    position:absolute; left:50%; top:0; width:960px; height:600px;
+    margin-left:-480px; transform-origin:50% 0; touch-action:none;
+  }
+  .backlight{ position:absolute; inset:0; z-index:0;
+    background:radial-gradient(ellipse 58% 46% at 50% 32%, rgba(224,180,100,.10), transparent 70%);
+    animation:backOn 1.6s ease-out both; }
+  @keyframes backOn{ from{opacity:0} to{opacity:1} }
+  .vignette{ position:absolute; inset:0; z-index:6; pointer-events:none;
+    background:radial-gradient(ellipse 78% 72% at 50% 44%, transparent 55%, rgba(8,7,4,.5) 100%); }
+  .ground-shadow{ position:absolute; z-index:1; left:50%; top:516px;
+    width:920px; height:74px; margin-left:-460px; border-radius:50%;
+    background:radial-gradient(ellipse, rgba(0,0,0,.55), rgba(0,0,0,0) 70%); }
+
+  /* 石台 */
+  .pedestal{ position:absolute; z-index:2; left:50%; top:422px; width:840px; height:130px; margin-left:-420px; }
+  .ped-side{ position:absolute; left:0; top:0; width:840px; height:130px; border-radius:48px;
+    background:linear-gradient(180deg,#2e2820,#211c15 55%,#15110b);
+    box-shadow:0 22px 34px rgba(0,0,0,.5); }
+  .ped-text{ position:absolute; left:0; right:0; top:99px; text-align:center;
+    font-family:'Cormorant Garamond',serif; font-style:italic; font-size:11px;
+    letter-spacing:6px; color:rgba(200,162,74,.3); user-select:none; }
+  .ped-top{ position:absolute; left:0; top:0; width:840px; height:96px; border-radius:48px;
+    background:linear-gradient(180deg,#463e30,#362f24 68%,#2c2619);
+    box-shadow:inset 0 2px 2px rgba(255,255,255,.06), inset 0 -4px 7px rgba(0,0,0,.35); }
+
+  /* 石柱 */
+  .peg{ position:absolute; z-index:3; width:22px; height:268px; top:202px; left:calc(var(--x) - 11px); }
+  .rod{ position:absolute; bottom:0; width:22px; height:258px; border-radius:11px 11px 5px 5px;
+    background:linear-gradient(90deg,#3f392c,#6a5f48 20%,#8a7d5f 42%,#5f5540 72%,#332d22);
+    box-shadow:0 0 0 1px rgba(0,0,0,.35); }
+  .ball{ position:absolute; top:-8px; left:50%; transform:translateX(-50%);
+    width:18px; height:18px; border-radius:50%;
+    box-shadow:0 2px 4px rgba(0,0,0,.5); }
+  .peg.plain .ball{ background:radial-gradient(circle at 34% 30%, #9a8d6a, #5f5340 60%, #3a3326); }
+  .peg.goal .ball{ background:radial-gradient(circle at 34% 30%, #e0c27a, #8a6a2f 58%, #57431e); }
+  .socket{ position:absolute; bottom:-7px; left:50%; transform:translateX(-50%);
+    width:46px; height:15px; border-radius:50%;
+    border:2px solid rgba(0,0,0,.28);
+    box-shadow:inset 0 2px 3px rgba(0,0,0,.35), 0 1px 0 rgba(255,255,255,.04); }
+  .peg.goal .socket{ border-color:rgba(220,185,110,.5); }
+  .peg.ok .ball{ box-shadow:0 0 0 4px rgba(232,200,120,.32), 0 0 16px rgba(232,200,120,.35); }
+  .peg.ok .rod{ filter:brightness(1.18); }
+  .peg.deny .socket{ border-color:rgba(181,86,61,.85); box-shadow:0 0 12px rgba(181,86,61,.3); }
+  .peg.glow .ball{ animation:ballGlow 1s ease-in-out 3; }
+  @keyframes ballGlow{ 50%{ box-shadow:0 0 0 5px rgba(232,200,120,.4), 0 0 24px rgba(232,200,120,.5); } }
+
+  .goal-tag{ position:absolute; z-index:3; left:730px; top:486px; transform:translateX(-50%);
+    display:flex; align-items:center; gap:9px; user-select:none;
+    color:rgba(232,200,120,.85); font-family:'Noto Serif TC',serif; font-size:12px; letter-spacing:3px; }
+  .goal-tag::before,.goal-tag::after{ content:''; width:26px; height:1px;
+    background:linear-gradient(90deg,transparent,rgba(230,200,120,.6)); }
+  .goal-tag::after{ transform:scaleX(-1); }
+
+  /* 金盤 —— 溫和俯視的 2.5D 圓柱 */
+  .dk{ position:absolute; left:0; top:0; z-index:4; pointer-events:none;
+    width:var(--w); height:calc(var(--t) + var(--e)); will-change:transform; }
+  .dk.grab{ pointer-events:auto; cursor:grab; }
+  .dk.air{ z-index:9; cursor:grabbing; }
+  .dk.moving{ z-index:8; }
+  .dk.sel{ z-index:5; }
+  .dk-in{ position:absolute; inset:0; transform-origin:50% 100%; }
+  .dk-side{ position:absolute; inset:0; border-radius:50%;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,0) 55%, rgba(0,0,0,.4)),
+      linear-gradient(90deg, var(--side), var(--mid) 24%, var(--mid) 76%, var(--side));
+    box-shadow:0 4px 6px rgba(0,0,0,.38);
+  }
+  .dk-top{ position:absolute; left:0; top:0; width:var(--w); height:var(--e); border-radius:50%;
+    background:radial-gradient(ellipse at 38% 30%, var(--hi), var(--top) 46%, var(--mid) 97%);
+    box-shadow:inset 0 -2px 3px rgba(0,0,0,.25), inset 0 1px 1px rgba(255,255,255,.14);
+    transition:filter .15s;
+  }
+  .dk.grab:hover .dk-top{ filter:brightness(1.1); }
+  .dk-hole{ position:absolute; left:50%; top:50%; width:26px; height:10px;
+    transform:translate(-50%,-50%); border-radius:50%;
+    background:#191510;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.06); }
+  /* 柱穿盤孔 —— 每盤頂面的柱身穿層，頂端由 JS 以 clip-path 追蹤柱尖 */
+  .dk-rod{ position:absolute; left:50%; top:-1px; width:22px; margin-left:-11px;
+    height:calc(var(--e)/2 + 4px); border-radius:5px 5px 4px 4px;
+    background:linear-gradient(90deg,#3f392c,#6a5f48 20%,#8a7d5f 42%,#5f5540 72%,#332d22);
+    box-shadow:inset 0 -10px 8px -5px rgba(0,0,0,.72);
+    opacity:0; pointer-events:none; }
+  .dk.air .dk-in{ filter:drop-shadow(0 16px 10px rgba(0,0,0,.42)) brightness(1.05); }
+  .dk.sel .dk-top{ box-shadow:0 0 0 2px rgba(232,200,120,.6), inset 0 -2px 3px rgba(0,0,0,.25); }
+  .dk.no .dk-in{ filter:brightness(1.05) drop-shadow(0 0 9px rgba(181,86,61,.6)); }
+  .dk.no .dk-top{ box-shadow:0 0 0 2px rgba(196,90,60,.75), inset 0 -2px 3px rgba(0,0,0,.25); }
+  .dk.pulse .dk-in{ animation:dkPulse 1.1s ease-in-out 2; }
+  @keyframes dkPulse{ 50%{ transform:translateY(-5px); filter:brightness(1.3) drop-shadow(0 4px 10px rgba(232,200,120,.3)); } }
+
+  .dk[data-s="0"]{ --hi:#e2bd6d; --top:#a8853f; --mid:#8a6a2f; --side:#5f4a20; }
+  .dk[data-s="1"]{ --hi:#e09a72; --top:#b0603f; --mid:#8f4a30; --side:#5e3020; }
+  .dk[data-s="2"]{ --hi:#a7c79a; --top:#5d7a5a; --mid:#48634a; --side:#2c3d2e; }
+  .dk[data-s="3"]{ --hi:#9fb0cd; --top:#5a6b85; --mid:#47566c; --side:#2b3547; }
+  .dk[data-s="4"]{ --hi:#eccf85; --top:#c09a4a; --mid:#a07c38; --side:#6b5423; }
+  .dk[data-s="5"]{ --hi:#f2e9c8; --top:#d8cba4; --mid:#bfb28c; --side:#837a5b; }
+
+  /* 浮塵 */
+  .dust{ position:absolute; inset:0; z-index:5; pointer-events:none; }
+  .m{ position:absolute; border-radius:50%; background:#ffe9be; opacity:0;
+    animation:drift var(--du) ease-in-out var(--de) infinite; }
+  @keyframes drift{
+    0%,100%{ opacity:0; transform:translate(0,0); }
+    30%{ opacity:var(--o); }
+    55%{ opacity:calc(var(--o)*.35); transform:translate(var(--dx),var(--dy)); }
+    80%{ opacity:calc(var(--o)*.75); }
+  }
+
+  /* toast */
+  .toast{ position:absolute; z-index:9; top:24px; left:50%;
+    transform:translate(-50%,-8px); opacity:0; transition:.28s; pointer-events:none;
+    background:rgba(32,27,18,.93); border:1px solid var(--line); color:var(--ink);
+    padding:8px 20px; font-size:13.5px; letter-spacing:2.5px; border-radius:2px;
+    font-family:'Noto Serif TC',serif; white-space:nowrap; }
+  .toast.show{ opacity:1; transform:translate(-50%,0); }
+
+  /* 示範浮層 */
+  .tour-bar{ position:absolute; z-index:10; left:50%; bottom:12px;
+    transform:translate(-50%,12px); width:min(640px,94%);
+    background:rgba(26,22,15,.95); border:1px solid rgba(214,178,110,.5);
+    padding:14px 18px 16px; opacity:0; pointer-events:none; transition:.3s; }
+  .tour-bar.on{ opacity:1; transform:translate(-50%,0); pointer-events:auto; }
+  .tour-head{ display:flex; justify-content:space-between; font-size:11px;
+    letter-spacing:3px; color:var(--muted); margin-bottom:8px; }
+  .tour-head b{ color:var(--gold); font-weight:600; }
+  #tourText{ font-family:'Noto Serif TC',serif; font-size:15px; letter-spacing:1.5px;
+    line-height:1.7; margin-bottom:12px; color:var(--ink); }
+  .tour-actions{ display:flex; justify-content:flex-end; gap:10px; }
+
+  /* ── HUD 與控制 ─────────────────────── */
+  .hud{ display:flex; justify-content:center; align-items:baseline; flex-wrap:wrap; gap:8px;
+    color:var(--muted); font-size:13px; letter-spacing:2px; padding:12px 0 0;
+    font-family:'Noto Serif TC',serif; }
+  .hud b{ color:var(--gold-hi); font-size:17px; margin-left:5px; font-weight:600; }
+  .hud i{ font-style:normal; color:#463e2d; margin:0 4px; }
+  .chip{ margin-left:14px; background:none; border:1px solid rgba(214,178,110,.6);
+    color:var(--gold-hi); font-size:12px; letter-spacing:2px; padding:4px 13px;
+    cursor:pointer; border-radius:2px; font-family:'Noto Serif TC',serif; }
+  .chip:hover{ background:rgba(214,178,110,.12); }
+  .chip.hidden{ display:none; }
+
+  .controls{ display:flex; flex-wrap:wrap; gap:14px; align-items:center;
+    justify-content:space-between; padding:12px 4px 0; }
+  .seals{ display:flex; gap:8px; }
+  .seal{ width:42px; height:42px; background:#1d1911; border:1px solid #3f382a;
+    color:var(--muted); font-family:'Noto Serif TC',serif; font-size:17px;
+    cursor:pointer; border-radius:2px; transition:.18s; display:grid; place-items:center; }
+  .seal:hover{ color:#cfc2a0; border-color:#5a4f38; }
+  .seal.on{ color:var(--gold-hi); border-color:rgba(214,178,110,.8);
+    background:rgba(214,178,110,.08); box-shadow:inset 0 0 0 1px rgba(214,178,110,.2); }
+  .seal.off{ opacity:.35; pointer-events:none; }
+
+  .btns{ display:flex; flex-wrap:wrap; gap:9px; justify-content:flex-end; }
+  .btn{ background:#221d14; border:1px solid #4a4130; color:#cfc2a0;
+    font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:3px;
+    padding:9px 15px; cursor:pointer; display:inline-flex; gap:8px; align-items:center;
+    transition:.18s; border-radius:2px; }
+  .btn svg{ width:15px; height:15px; flex:none; }
+  .btn:hover{ border-color:rgba(214,178,110,.7); color:var(--gold-hi); background:#2a2418; }
+  .btn:active{ transform:translateY(1px); }
+  .btn.primary{ border-color:rgba(214,178,110,.75); color:var(--gold-hi); }
+  .btn.primary:hover{ background:rgba(214,178,110,.12); }
+  .btn.small{ padding:6px 13px; font-size:13px; letter-spacing:2px; }
+  .btn.off{ opacity:.35; pointer-events:none; }
+  .btn.hint{ animation:hintP 1.1s ease-in-out 3; }
+  @keyframes hintP{ 50%{ border-color:rgba(232,200,120,1); box-shadow:0 0 14px rgba(232,200,120,.3); } }
+  .hidden{ display:none !important; }
+
+  /* ── 卷軸（規則抽屜）─────────────────── */
+  .scrim{ position:fixed; inset:0; background:rgba(8,7,4,.55); opacity:0;
+    pointer-events:none; transition:.3s; z-index:55; }
+  .scrim.on{ opacity:1; pointer-events:auto; }
+  .drawer{ position:fixed; top:0; right:0; height:100%; width:min(402px,92vw);
+    background:#1b1712; border-left:1px solid rgba(214,178,110,.35);
+    transform:translateX(103%); transition:.4s cubic-bezier(.2,.8,.2,1);
+    z-index:60; overflow-y:auto; padding:32px 30px 36px; }
+  .drawer.on{ transform:none; }
+  .drawer h2{ font-family:'Noto Serif TC',serif; font-weight:700; font-size:24px;
+    letter-spacing:8px; color:var(--ink); }
+  .drawer-sub{ font-family:'Cormorant Garamond',serif; font-style:italic; font-size:12px;
+    letter-spacing:4px; color:rgba(200,162,74,.6); margin-top:6px; }
+  .hairline{ width:130px; height:1px; margin:16px 0 20px;
+    background:linear-gradient(90deg,transparent,rgba(214,178,110,.7),transparent); }
+  .drawer section{ margin-bottom:20px; }
+  .drawer h3{ font-family:'Noto Serif TC',serif; font-size:15px; font-weight:600;
+    letter-spacing:4px; color:var(--gold-hi); margin-bottom:8px; }
+  .drawer p{ font-size:13.5px; line-height:1.9; color:#c4b896; letter-spacing:.5px; }
+  .laws{ list-style:none; }
+  .laws li{ display:flex; gap:12px; align-items:flex-start;
+    font-size:13.5px; line-height:1.9; color:#c4b896; margin-bottom:6px; }
+  .laws b{ flex:none; width:24px; height:24px; margin-top:3px; display:grid; place-items:center;
+    border:1px solid rgba(214,178,110,.55); color:var(--gold-hi);
+    font-family:'Noto Serif TC',serif; font-weight:600; font-size:13px; }
+  .mins{ font-family:'Noto Serif TC',serif; letter-spacing:1px; color:var(--ink) !important; }
+  .formula{ color:var(--muted) !important; font-size:12.5px !important; }
+  .drawer-close{ position:absolute; top:18px; right:18px; width:32px; height:32px;
+    background:none; border:1px solid #3f382a; color:var(--muted); cursor:pointer;
+    border-radius:2px; display:grid; place-items:center; }
+  .drawer-close:hover{ color:var(--gold-hi); border-color:rgba(214,178,110,.6); }
+
+  /* ── 完成石碑 ─────────────────────── */
+  .win{ position:fixed; inset:0; z-index:70; display:grid; place-items:center;
+    background:rgba(9,8,5,.72); backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:.4s; }
+  .win.on{ opacity:1; pointer-events:auto; }
+  .win-card{ width:min(432px,90vw); background:#1d1912; border:1px solid rgba(214,178,110,.5);
+    padding:36px 30px 32px; text-align:center;
+    transform:translateY(12px); transition:.45s .08s; }
+  .win.on .win-card{ transform:none; }
+  .dia{ width:16px; height:16px; margin:0 auto 14px; color:var(--gold); display:block; }
+  .win-card h2{ font-family:'Noto Serif TC',serif; font-weight:700; font-size:26px;
+    letter-spacing:12px; color:var(--ink); text-indent:12px; }
+  .win-stats{ font-family:'Noto Serif TC',serif; font-size:14px; letter-spacing:2px;
+    color:var(--muted); padding:6px 0 2px; }
+  .win-stats b{ color:var(--gold-hi); font-size:19px; font-weight:600; margin:0 3px; }
+  .win-stats i{ font-style:normal; color:#463e2d; margin:0 7px; }
+  .verdict{ font-family:'Noto Serif TC',serif; font-size:14.5px; line-height:1.9;
+    letter-spacing:1.5px; color:#c4b896; margin:14px 0 22px; }
+  .win-btns{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+
+  @media (max-width:780px){
+    .app{ grid-template-columns:1fr; padding:18px 12px 28px; }
+    .masthead{ flex-direction:column; gap:8px; padding:0; margin-bottom:10px; }
+    .title-vert{ writing-mode:horizontal-tb; font-size:30px; letter-spacing:12px; text-indent:12px; }
+    .rule-vert{ display:none; }
+    .side-vert{ writing-mode:horizontal-tb; flex-direction:column; gap:2px; letter-spacing:4px; }
+    .controls{ justify-content:center; }
+    .btns{ justify-content:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="masthead">
+    <h1 class="title-vert">河內之塔</h1>
+    <div class="rule-vert"></div>
+    <div class="side-vert">
+      <span>梵天寺・金盤試煉</span>
+      <em>THE TOWER OF HANOI</em>
+    </div>
+  </aside>
+
+  <main class="stage-area">
+    <div class="scene-wrap" id="sceneWrap">
+      <div class="scene" id="scene">
+        <div class="backlight"></div>
+        <div class="ground-shadow"></div>
+        <div class="pedestal">
+          <div class="ped-side"><span class="ped-text">VARANASI &nbsp;·&nbsp; MDCCCLXXXIII</span></div>
+          <div class="ped-top"></div>
+        </div>
+        <div class="goal-tag">終</div>
+        <div class="disks" id="disks"></div>
+        <div class="dust" id="dust"></div>
+        <div class="vignette"></div>
+        <div class="toast" id="toast"></div>
+        <div class="tour-bar" id="tourBar">
+          <div class="tour-head"><b>操作示範</b><span id="tourStep"></span></div>
+          <p id="tourText"></p>
+          <div class="tour-actions">
+            <button class="btn small" id="tourSkip">跳過</button>
+            <button class="btn small primary" id="tourNext">下一步</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hud">
+      <span>手數<b id="stMoves">0</b></span><i>·</i>
+      <span>最少<b id="stMin">7</b></span><i>·</i>
+      <span>時間<b id="stTime">00:00</b></span>
+      <button class="chip hidden" id="btnSkip">跳至結局</button>
+    </div>
+
+    <div class="controls">
+      <div class="seals" id="seals">
+        <button class="seal" data-n="3">三</button>
+        <button class="seal" data-n="4">四</button>
+        <button class="seal" data-n="5">五</button>
+        <button class="seal on" data-n="6">六</button>
+      </div>
+      <div class="btns">
+        <button class="btn" id="btnReset" title="重新開始">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M13.2 8a5.2 5.2 0 1 1-1.7-3.9"/><path d="M13.4 1.6v3h-3"/></svg>重新開始
+        </button>
+        <button class="btn" id="btnUndo" title="撤回上一步">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 3 2 6.5 5.5 10"/><path d="M2 6.5h7.2a3.8 3.8 0 0 1 0 7.6H6.5"/></svg>撤回
+        </button>
+        <button class="btn" id="btnDemo" title="動畫操作示範">
+          <svg viewBox="0 0 16 16"><path d="M4.5 3v10l8.2-5z" fill="currentColor"/></svg>操作示範
+        </button>
+        <button class="btn primary" id="btnSolve" title="由電腦接手完成">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M8 1.8 14.2 8 8 14.2 1.8 8Z"/><circle cx="8" cy="8" r="1.3" fill="currentColor" stroke="none"/></svg>僧侶代解
+        </button>
+        <button class="btn" id="btnRules" title="使用說明">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><rect x="3.2" y="2.2" width="9.6" height="11.6" rx="1.4"/><path d="M5.6 5.6h4.8M5.6 8.2h4.8M5.6 10.8h3"/></svg>試煉之法
+        </button>
+        <button class="btn" id="btnSound" title="音效開關">
+          <span id="sndOn"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M2.6 6.2v3.6h2.5L8.6 13V3L5.1 6.2z" fill="currentColor" stroke="none"/><path d="M10.8 5.6a3.4 3.4 0 0 1 0 4.8"/></svg></span>
+          <span id="sndOff" class="hidden"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"><path d="M2.6 6.2v3.6h2.5L8.6 13V3L5.1 6.2z" fill="currentColor" stroke="none"/><path d="M11 6l4 4M15 6l-4 4"/></svg></span>
+        </button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- 使用說明抽屜 -->
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <button class="drawer-close" id="btnCloseDrawer">
+    <svg viewBox="0 0 14 14" width="12" height="12"><path d="M2 2l10 10M12 2 2 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+  </button>
+  <h2>試煉之法</h2>
+  <p class="drawer-sub">TOWER OF HANOI · 使用說明</p>
+  <div class="hairline"></div>
+  <section>
+    <h3>緣起</h3>
+    <p>相傳一八八三年，法國數學家盧卡斯以此謎題問世：梵天寺裡，僧侶日夜搬移六十四個金盤；金盤移盡之日，即是世界終末之時。</p>
+  </section>
+  <section>
+    <h3>三條法則</h3>
+    <ol class="laws">
+      <li><b>一</b>每次移動一枚金盤，且只能取石柱最頂端者。</li>
+      <li><b>二</b>金盤可移往任何一根石柱。</li>
+      <li><b>三</b>任何時刻，大盤不得疊於小盤之上。</li>
+    </ol>
+  </section>
+  <section>
+    <h3>目標</h3>
+    <p>將全部金盤自左柱，移至右側刻有「終」字的金色石柱，疊妥即為完成。</p>
+  </section>
+  <section>
+    <h3>操作</h3>
+    <p>直接<u>拖曳</u>頂盤至目標石柱放開；或先<u>點一下</u>頂盤、再點目標石柱。移錯了，可按「撤回」還原上一步。</p>
+  </section>
+  <section>
+    <h3>最少手數</h3>
+    <p class="mins">三盤 7 手 · 四盤 15 手 · 五盤 31 手 · 六盤 63 手</p>
+    <p class="formula">最少手數 = 2<sup>n</sup> − 1</p>
+  </section>
+  <section>
+    <h3>卡關之時</h3>
+    <p>按「僧侶代解」，僧侶將自當前局面，以最短路徑、動畫演示餘下的每一步，亦可隨時「跳至結局」。</p>
+  </section>
+  <button class="btn primary" id="btnGotIt" style="width:100%;justify-content:center">明白了</button>
+</aside>
+
+<!-- 完成石碑 -->
+<div class="win" id="win">
+  <div class="win-card">
+    <svg class="dia" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M8 1.2 14.8 8 8 14.8 1.2 8Z"/></svg>
+    <h2 id="winTitle">試煉完成</h2>
+    <div class="hairline"></div>
+    <div class="win-stats" id="winStats"></div>
+    <p class="verdict" id="winVerdict"></p>
+    <div class="win-btns">
+      <button class="btn primary" id="winAgain">再來一局</button>
+      <button class="btn" id="winUp">晉級試煉</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* ── 場景幾何常數 ───────────────────── */
+const SC = { pegX:[230, 480, 730], ground:470, lift:150 };
+const ROD_TIP = 194, ROD_BASE = 462;        // 柱尖（頂球上緣）與柱底
+const W = d => 190 - (n - d) * 22;          // 盤寬
+const T = d => 30  - (n - d) * 2;           // 盤厚
+const E = d => Math.round(W(d) * 0.36);     // 頂面橢圓高
+
+const $  = id => document.getElementById(id);
+const scene = $('scene'), sceneWrap = $('sceneWrap'), disksBox = $('disks');
+const toastEl = $('toast'), tourBar = $('tourBar');
+const stMoves = $('stMoves'), stMin = $('stMin'), stTimeEl = $('stTime');
+const btnReset = $('btnReset'), btnUndo = $('btnUndo'), btnDemo = $('btnDemo'),
+      btnSolve = $('btnSolve'), btnRules = $('btnRules'), btnSound = $('btnSound'),
+      btnSkip = $('btnSkip'), win = $('win');
+const sealEls = [...document.querySelectorAll('.seal')];
+
+const delay = ms => new Promise(r => setTimeout(r, ms));
+const cnum  = i => '〇一二三四五六七八'[i] ?? i;
+const fmt   = ms => { const s = Math.floor(ms/1000);
+  return String(Math.floor(s/60)).padStart(2,'0') + ':' + String(s%60).padStart(2,'0'); };
+
+/* ── 音效（WebAudio 合成，可開關）───── */
+const Snd = {
+  ctx:null, on:true,
+  ensure(){ try{
+    if(!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if(this.ctx.state === 'suspended') this.ctx.resume();
+  }catch(e){} },
+  env(freq, {type='triangle', dur=.1, vol=.4, slide=0} = {}){
+    if(!this.on || !this.ctx) return;
+    try{
+      const t = this.ctx.currentTime;
+      const o = this.ctx.createOscillator(), g = this.ctx.createGain();
+      o.type = type; o.frequency.setValueAtTime(freq, t);
+      if(slide) o.frequency.exponentialRampToValueAtTime(Math.max(30, freq + slide), t + dur);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + .004);
+      g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+      o.connect(g).connect(this.ctx.destination);
+      o.start(t); o.stop(t + dur + .03);
+    }catch(e){}
+  },
+  pick(){ this.env(340, {dur:.06, vol:.14, slide:-90}); },
+  place(v=.5){ this.env(155, {dur:.12, vol:v, slide:-60});
+               this.env(90,  {type:'sine', dur:.18, vol:v*.45}); },
+  reject(){ this.env(96, {type:'sawtooth', dur:.22, vol:.2, slide:-40}); },
+  note(d){ this.env([523,587,659,784,880,988][Math.min(d-1,5)], {type:'sine', dur:.5, vol:.2}); },
+  winChord(){ [523,659,784].forEach((f,i)=>setTimeout(()=>this.env(f,{type:'sine',dur:.6,vol:.2}), i*160)); }
+};
+document.addEventListener('pointerdown', () => Snd.ensure(), {capture:true});
+
+/* ── 遊戲狀態 ─────────────────────── */
+let n = 3;
+let pegs = [[],[],[]];           // 每柱由底至頂的盤號（號大=盤大）
+let moves = 0, hist = [];
+let elapsed = 0, t0 = 0, timerOn = false;
+let busy = false, auto = false, autoSkip = false, tour = false;
+let sel = null, drag = null, clickCand = null;
+let diskEls = {}, pegEls = [];
+
+const canPlace = (d,p) => pegs[p].length === 0 || pegs[p][pegs[p].length-1] > d;
+const stackY   = (p,lvl) => { let y = SC.ground; for(let k=0;k<lvl;k++) y -= T(pegs[p][k]); return y; };
+const tf  = (d,x,y) => `translate(${x - W(d)/2}px, ${y - (T(d)+E(d))}px)`;
+const tfm = (d,x,y) => ({ transform: tf(d,x,y) });
+
+function tw(el, kf, dur, ease){
+  el.style.transform = kf[kf.length-1].transform;
+  const a = el.animate(kf, {duration:dur, easing:ease});
+  return a.finished.catch(()=>{});
+}
+function squash(el, sc=.88){
+  el.querySelector('.dk-in').animate(
+    [{transform:'scaleY(1)'},{transform:`scaleY(${sc})`},{transform:'scaleY(1)'}],
+    {duration:230, easing:'ease-out'});
+}
+function shake(el){
+  return el.querySelector('.dk-in').animate(
+    [{transform:'translateX(0)'},{transform:'translateX(-10px)'},{transform:'translateX(9px)'},
+     {transform:'translateX(-6px)'},{transform:'translateX(0)'}],
+    {duration:340, easing:'ease-out'}).finished.catch(()=>{});
+}
+
+/* ── 場景搭建 ─────────────────────── */
+function buildPegs(){
+  for(let p=0;p<3;p++){
+    const el = document.createElement('div');
+    el.className = 'peg ' + (p===2 ? 'goal' : 'plain');
+    el.style.setProperty('--x', SC.pegX[p] + 'px');
+    el.innerHTML = '<div class="socket"></div><div class="rod"></div><div class="ball"></div>';
+    scene.insertBefore(el, disksBox);
+    pegEls.push(el);
+  }
+}
+function buildDust(){
+  const box = $('dust');
+  for(let i=0;i<12;i++){
+    const m = document.createElement('i');
+    m.className = 'm';
+    const s = 1.6 + Math.random()*1.6;
+    m.style.cssText = `left:${12+Math.random()*74}%;top:${8+Math.random()*58}%;width:${s}px;height:${s}px;`
+      + `--du:${(11+Math.random()*12).toFixed(1)}s;--de:${(Math.random()*8).toFixed(1)}s;`
+      + `--o:${(.14+Math.random()*.24).toFixed(2)};`
+      + `--dx:${((Math.random()-.5)*70).toFixed(0)}px;--dy:${(-20-Math.random()*45).toFixed(0)}px;`;
+    box.appendChild(m);
+  }
+}
+function buildDisks(){
+  disksBox.innerHTML = '';
+  diskEls = {};
+  /* 由大盤到小盤建立：小盤（疊於上層）在 DOM 較後 → 繪製於前景 */
+  for(let d=n; d>=1; d--){
+    const el = document.createElement('div');
+    el.className = 'dk';
+    el.dataset.d = d; el.dataset.s = n - d;
+    el.style.setProperty('--w', W(d)+'px');
+    el.style.setProperty('--t', T(d)+'px');
+    el.style.setProperty('--e', E(d)+'px');
+    el.innerHTML = '<div class="dk-in"><div class="dk-side"></div><div class="dk-top">'
+                 + '<i class="dk-hole"></i><i class="dk-rod"></i></div></div>';
+    el._rod  = el.querySelector('.dk-rod');   // 柱身穿層
+    el._rodH = E(d)/2 + 4;                    // 穿層全高（與 CSS 同步）
+    el._pk   = '';
+    disksBox.appendChild(el);
+    diskEls[d] = el;
+  }
+}
+function layoutAll(){
+  pegs.forEach((st,p)=> st.forEach((d,k)=>{
+    const el = diskEls[d];
+    el._x = SC.pegX[p]; el._y = stackY(p,k);
+    el.style.transform = tf(d, el._x, el._y);
+  }));
+}
+
+/* ── 柱穿盤孔：即時疊層追蹤 ───────────
+   每影格讀取金盤即時渲染位置（含 WAAPI 動畫與拖曳）；
+   與某柱水平對齊且垂直重疊時顯示穿層，並以 clip-path
+   讓穿層頂端精確貼齊柱尖——柱子便會「穿入／抽出」盤孔。 */
+function updatePierce(){
+  const s = scene.getBoundingClientRect();
+  if(s.width < 10) return;
+  const k = s.width / 960;
+  for(const key in diskEls){
+    const el = diskEls[key], rodEl = el._rod;
+    if(!rodEl) continue;
+    const r = el.getBoundingClientRect();
+    if(r.width < 2){
+      if(el._pk !== '0'){ el._pk = '0'; rodEl.style.opacity = '0'; }
+      continue;
+    }
+    const elTop = (r.top - s.top) / k;
+    const elBot = elTop + r.height / k;
+    const cx    = (r.left - s.left + r.width * .5) / k;
+    let on = false;
+    if(elBot > ROD_TIP && elTop < ROD_BASE){
+      for(let p = 0; p < 3; p++)
+        if(Math.abs(cx - SC.pegX[p]) <= 9){ on = true; break; }
+    }
+    if(!on){
+      if(el._pk !== '0'){ el._pk = '0'; rodEl.style.opacity = '0'; }
+      continue;
+    }
+    const t  = Math.max(0, ROD_TIP - elTop);   // 柱尖在盤面座標的位置
+    const pk = '1:' + t.toFixed(1);
+    if(el._pk !== pk){
+      el._pk = pk;
+      rodEl.style.opacity = '1';
+      rodEl.style.clipPath = `inset(${t.toFixed(1)}px 0 0 0 round 5px 5px 4px 4px)`;
+    }
+  }
+}
+
+/* ── 縮放適配 + 微視差 ─────────────── */
+const par = {x:0, y:0, tx:0, ty:0};
+let curScale = 1;
+function computeScale(){
+  curScale = Math.min(1, sceneWrap.clientWidth / 960);
+  sceneWrap.style.height = (600 * curScale) + 'px';
+}
+window.addEventListener('resize', computeScale);
+sceneWrap.addEventListener('pointermove', e => {
+  if(drag || !window.matchMedia('(pointer:fine)').matches) return;
+  const r = sceneWrap.getBoundingClientRect();
+  par.tx = ((e.clientX - r.left)/r.width  - .5) * 10;
+  par.ty = ((e.clientY - r.top) /r.height - .5) * 6;
+});
+(function loop(){
+  updatePierce();   // 先讀後寫，避免強制同步版面
+  par.x += (par.tx - par.x)*.06; par.y += (par.ty - par.y)*.06;
+  scene.style.transform = `translate(${par.x}px,${par.y}px) scale(${curScale})`;
+  requestAnimationFrame(loop);
+})();
+
+function scenePt(e){
+  const r = scene.getBoundingClientRect();
+  const s = r.width / 960;
+  return { x:(e.clientX - r.left)/s, y:(e.clientY - r.top)/s };
+}
+function nearestPeg(x){
+  let best=-1, bd=1e9;
+  SC.pegX.forEach((px,i)=>{ const dd=Math.abs(px-x); if(dd<bd){bd=dd;best=i;} });
+  return bd < 110 ? best : -1;
+}
+
+/* ── UI 狀態 ─────────────────────── */
+let toastT = null;
+function toast(msg, ms=2200){
+  toastEl.textContent = msg;
+  toastEl.classList.add('show');
+  clearTimeout(toastT);
+  toastT = setTimeout(()=>toastEl.classList.remove('show'), ms);
+}
+function updMoves(){ stMoves.textContent = moves; }
+function updMin(){ stMin.textContent = 2**n - 1; }
+function ensureTimer(){ if(!timerOn && !tour){ timerOn = true; t0 = Date.now() - elapsed; } }
+function stopTimer(){ if(timerOn){ elapsed = Date.now() - t0; timerOn = false; } }
+setInterval(()=>{ if(timerOn) stTimeEl.textContent = fmt(Date.now() - t0); }, 250);
+
+function refreshGrab(){
+  document.querySelectorAll('.dk.grab').forEach(el=>el.classList.remove('grab'));
+  if(!(busy || auto || tour)){
+    pegs.forEach(st=>{ if(st.length) diskEls[st[st.length-1]].classList.add('grab'); });
+  }
+  const hard = auto || tour;
+  btnUndo.classList.toggle('off', hard || hist.length === 0);
+  btnReset.classList.toggle('off', hard);
+  btnDemo.classList.toggle('off', hard);
+  btnSolve.classList.toggle('off', hard);
+  sealEls.forEach(s=>s.classList.toggle('off', hard));
+}
+function updatePegHint(x){
+  let ok = -1;
+  if(drag){
+    const p = nearestPeg(x);
+    if(p >= 0 && p !== drag.from && canPlace(drag.d, p)) ok = p;
+  }
+  pegEls.forEach((el,i)=>el.classList.toggle('ok', i === ok));
+}
+function clearPegHints(){ pegEls.forEach(el=>el.classList.remove('ok')); }
+
+/* ── 選取（點擊模式）───────────────── */
+async function toggleSelect(d){
+  if(sel && sel.d === d){ clearSel(); return; }
+  clearSel();
+  sel = { d, from: pegs.findIndex(st=>st.includes(d)) };
+  const el = diskEls[d];
+  el.classList.add('sel');
+  Snd.pick();
+  el._y -= 30;
+  await tw(el, [tfm(d, el._x, el._y+30), tfm(d, el._x, el._y)], 170, 'cubic-bezier(.2,.8,.3,1)');
+}
+function clearSel(){
+  if(!sel) return;
+  const d = sel.d; sel = null;
+  const el = diskEls[d];
+  el.classList.remove('sel');
+  el._y += 30;
+  tw(el, [tfm(d, el._x, el._y-30), tfm(d, el._x, el._y)], 160, 'cubic-bezier(.5,0,.8,.5)');
+}
+
+/* ── 核心動畫（飛行期間掛 .moving，恆於最上層）── */
+async function flyTo(el, x1, y1){
+  const d = +el.dataset.d;
+  const x0 = el._x, y0 = el._y;
+  const top = Math.min(SC.lift, y0 - 20);
+  el.classList.add('moving');
+  Snd.pick();
+  if(y0 > top + 4)
+    await tw(el, [tfm(d,x0,y0), tfm(d,x0,top)], 235, 'cubic-bezier(.3,.7,.4,1)');
+  if(Math.abs(x1 - x0) > 2)
+    await tw(el, [tfm(d,x0,top), tfm(d,x1,top)], Math.max(200, Math.abs(x1-x0)*.65), 'cubic-bezier(.45,0,.55,1)');
+  await tw(el, [tfm(d,x1,top), tfm(d,x1,y1)], 225, 'cubic-bezier(.5,0,.9,.6)');
+  el.classList.remove('moving');
+  squash(el); Snd.place();
+  el._x = x1; el._y = y1;
+}
+async function doMove(d, from, to){          // 資料 + 完整三段飛行
+  busy = true; refreshGrab();
+  pegs[from].pop(); pegs[to].push(d); hist.push({d,from,to});
+  moves++; updMoves(); ensureTimer();
+  await flyTo(diskEls[d], SC.pegX[to], stackY(to, pegs[to].length-1));
+  busy = false; refreshGrab();
+  checkWin();
+}
+async function commitDrag(d, from, to){      // 拖曳落定：直接水平+落下
+  busy = true; refreshGrab();
+  pegs[from].pop(); pegs[to].push(d); hist.push({d,from,to});
+  moves++; updMoves(); ensureTimer();
+  const el = diskEls[d];
+  const x1 = SC.pegX[to], y1 = stackY(to, pegs[to].length-1);
+  const x0 = el._x, y0 = el._y;
+  el.classList.add('moving');
+  if(Math.abs(x1-x0) > 2)
+    await tw(el, [tfm(d,x0,y0), tfm(d,x1,y0)], Math.max(120, Math.abs(x1-x0)*.6), 'cubic-bezier(.3,.7,.3,1)');
+  await tw(el, [tfm(d,x1,y0), tfm(d,x1,y1)], 260, 'cubic-bezier(.45,0,.85,.55)');
+  el.classList.remove('moving');
+  squash(el); Snd.place();
+  el._x = x1; el._y = y1;
+  busy = false; refreshGrab();
+  checkWin();
+}
+async function returnDisk(d, from, {reject=false} = {}){
+  busy = true; refreshGrab();
+  const el = diskEls[d];
+  const x1 = SC.pegX[from], y1 = stackY(from, pegs[from].indexOf(d));
+  const x0 = el._x, y0 = el._y;
+  el.classList.add('moving');
+  if(reject){
+    el.classList.add('no'); Snd.reject();
+    await shake(el); await delay(280);
+    el.classList.remove('no');
+  }
+  if(Math.abs(x1-x0) > 2)
+    await tw(el, [tfm(d,x0,y0), tfm(d,x1,y0)], Math.max(150, Math.abs(x1-x0)*.65), 'cubic-bezier(.3,.7,.3,1)');
+  await tw(el, [tfm(d,x1,y0), tfm(d,x1,y1)], 240, 'cubic-bezier(.45,0,.8,.6)');
+  el.classList.remove('moving');
+  squash(el); Snd.place(.25);
+  el._x = x1; el._y = y1;
+  busy = false; refreshGrab();
+}
+async function rejectMove(d, from, to){      // 教學用：示範「被拒絕」
+  busy = true;
+  const el = diskEls[d];
+  const x0 = el._x, y0 = el._y, top = SC.lift;
+  el.classList.add('moving');
+  Snd.pick();
+  await tw(el, [tfm(d,x0,y0), tfm(d,x0,top)], 240, 'cubic-bezier(.3,.7,.4,1)');
+  await tw(el, [tfm(d,x0,top), tfm(d,SC.pegX[to],top)], 300, 'cubic-bezier(.45,0,.55,1)');
+  el.classList.add('no'); Snd.reject();
+  await shake(el); await delay(420);
+  el.classList.remove('no');
+  await tw(el, [tfm(d,SC.pegX[to],top), tfm(d,SC.pegX[from],top)], 300, 'cubic-bezier(.45,0,.55,1)');
+  await tw(el, [tfm(d,SC.pegX[from],top), tfm(d,x0,y0)], 230, 'cubic-bezier(.5,0,.9,.6)');
+  el.classList.remove('moving');
+  squash(el);
+  busy = false;
+}
+
+/* ── 指標互動（拖曳 + 點選）────────── */
+scene.addEventListener('pointerdown', e => {
+  if(busy || auto || tour || drag) return;
+  const dk = e.target.closest('.dk.grab');
+  if(dk){
+    const d = +dk.dataset.d;
+    const pt = scenePt(e);
+    drag = { d, el:dk, from: pegs.findIndex(st=>st.includes(d)),
+             sx:pt.x, sy:pt.y, ox:pt.x - dk._x, oy:pt.y - dk._y, moved:false, lifted:false };
+    try{ dk.setPointerCapture(e.pointerId); }catch(err){}
+    e.preventDefault();
+  }else{
+    clickCand = { x:e.clientX, y:e.clientY };
+  }
+});
+scene.addEventListener('pointermove', e => {
+  if(!drag) return;
+  const pt = scenePt(e);
+  if(!drag.moved && Math.hypot(pt.x - drag.sx, pt.y - drag.sy) > 7) drag.moved = true;
+  if(!drag.moved) return;
+  if(!drag.lifted){ drag.lifted = true; drag.el.classList.add('air'); Snd.pick(); }
+  const x = Math.min(920, Math.max(40,  pt.x - drag.ox));
+  const y = Math.min(445, Math.max(115, pt.y - drag.oy));
+  drag.el.style.transform = tf(drag.d, x, y);
+  drag.el._x = x; drag.el._y = y;
+  updatePegHint(x);
+});
+function endDrag(e, cancelled){
+  if(!drag) return;
+  const dr = drag; drag = null;
+  clearPegHints();
+  dr.el.classList.remove('air');
+  if(cancelled || !dr.moved){
+    if(!cancelled && !dr.moved){ toggleSelect(dr.d); return; }
+    returnDisk(dr.d, dr.from, {});
+    return;
+  }
+  const p = nearestPeg(dr.el._x);
+  if(p >= 0 && p !== dr.from && canPlace(dr.d, p))      commitDrag(dr.d, dr.from, p);
+  else if(p >= 0 && p !== dr.from){ toast('大盤不可疊於小盤之上'); returnDisk(dr.d, dr.from, {reject:true}); }
+  else                                                   returnDisk(dr.d, dr.from, {});
+}
+scene.addEventListener('pointerup', e => {
+  endDrag(e, false);
+  if(clickCand){
+    const moved = Math.hypot(e.clientX - clickCand.x, e.clientY - clickCand.y) > 10;
+    clickCand = null;
+    if(moved || busy || auto || tour || !sel) return;
+    const pt = scenePt(e);
+    const p = nearestPeg(pt.x);
+    if(p < 0 || p === sel.from){ clearSel(); }
+    else if(canPlace(sel.d, p)){
+      const {d, from} = sel; sel = null;
+      diskEls[d].classList.remove('sel');
+      doMove(d, from, p);
+    }else{
+      toast('大盤不可疊於小盤之上'); Snd.reject();
+      shake(diskEls[sel.d]);
+      pegEls[p].classList.add('deny');
+      setTimeout(()=>pegEls[p].classList.remove('deny'), 600);
+    }
+  }
+});
+scene.addEventListener('pointercancel', e => { endDrag(e, true); clickCand = null; });
+
+/* ── 任意局面的最短路徑求解 ─────────── */
+function hanoi(k, a, b, c){
+  if(k === 0) return [];
+  return [...hanoi(k-1, a, c, b), {d:k, from:a, to:b}, ...hanoi(k-1, c, b, a)];
+}
+function solveFrom(st, k, target){
+  if(k === 0) return [];
+  const from = st.findIndex(p => p.includes(k));
+  if(from === target) return solveFrom(st, k-1, target);
+  const aux = 3 - from - target;
+  return [...solveFrom(st, k-1, aux), {d:k, from, to:target}, ...hanoi(k-1, aux, target, from)];
+}
+
+/* ── 僧侶代解（電腦接手動畫）────────── */
+async function runAuto(){
+  if(busy || auto || tour || pegs[2].length === n) return;
+  auto = true; busy = true; refreshGrab(); clearSel();
+  btnSkip.classList.remove('hidden');
+  toast('僧侶接手儀式……');
+  ensureTimer();
+  const list = solveFrom(pegs, n, 2);
+  let i = 0;
+  for(; i < list.length && !autoSkip; i++){
+    const m = list[i];
+    pegs[m.from].pop(); pegs[m.to].push(m.d); hist.push(m);
+    moves++; updMoves();
+    await flyTo(diskEls[m.d], SC.pegX[m.to], stackY(m.to, pegs[m.to].length-1));
+    await delay(60);
+  }
+  if(autoSkip && i < list.length){
+    const remain = list.length - i;
+    for(; i < list.length; i++){
+      const m = list[i];
+      pegs[m.from].pop(); pegs[m.to].push(m.d); hist.push(m);
+    }
+    moves += remain; updMoves(); layoutAll();
+  }
+  autoSkip = false; auto = false; busy = false;
+  btnSkip.classList.add('hidden'); refreshGrab();
+  onWin(true);
+}
+btnSkip.addEventListener('click', () => { autoSkip = true; });
+btnSolve.addEventListener('click', runAuto);
+
+/* ── 勝利與石碑 ───────────────────── */
+function checkWin(){ if(!auto && !tour && pegs[2].length === n) onWin(false); }
+async function onWin(byAuto){
+  busy = true; refreshGrab(); clearSel(); stopTimer();
+  stTimeEl.textContent = fmt(elapsed);
+  for(let d=1; d<=n; d++){
+    const el = diskEls[d];
+    el.querySelector('.dk-in').animate(
+      [{transform:'scale(1)'},{transform:'scale(1.14) translateY(-3px)'},{transform:'scale(1)'}],
+      {duration:340, easing:'ease-out'});
+    Snd.note(d);
+    await delay(120);
+  }
+  await delay(700);
+  Snd.winChord();
+  showWin(byAuto);
+}
+function showWin(byAuto){
+  const min = 2**n - 1;
+  $('winTitle').textContent = byAuto ? '儀式完成' : '試煉完成';
+  $('winStats').innerHTML =
+    `手數<b>${moves}</b><i>·</i>最少<b>${min}</b><i>·</i>時間<b>${fmt(elapsed)}</b>`;
+  let v;
+  if(byAuto)          v = '僧侶以最短路徑，完成了餘下的儀式。';
+  else if(moves===min) v = '一步不多，一步不少——完美的儀式。';
+  else if(moves<=min*1.4) v = '僧侶微微頷首：近乎完美。';
+  else if(moves<=min*2.2) v = '路途曲折，終抵彼岸。';
+  else                 v = '傳說中的六十四金盤尚需 5,849 億年——慢，也是一種修行。';
+  $('winVerdict').textContent = v;
+  const up = $('winUp');
+  up.classList.toggle('hidden', n >= 6);
+  up.textContent = `晉級：${cnum(n+1)}盤`;
+  win.classList.add('on');
+}
+ $('winAgain').addEventListener('click', () => resetGame(n, {force:true}));
+ $('winUp').addEventListener('click', () => {
+  resetGame(n+1, {force:true});
+  toast(`新的試煉：${cnum(n+1)}個金盤`);
+});
+
+/* ── 重開 / 撤回 / 入場動畫 ────────── */
+async function entrance(){
+  const anims = [];
+  pegs[0].forEach((d,i)=>{
+    const el = diskEls[d];
+    const x = SC.pegX[0], y = stackY(0,i);
+    el._x = x; el._y = y;
+    el.style.transform = tf(d, x, y-560);
+    anims.push(el.animate([tfm(d,x,y-560), tfm(d,x,y)],
+      {duration:420, delay:i*115, easing:'cubic-bezier(.5,0,.8,.55)', fill:'forwards'}));
+    setTimeout(()=>Snd.place(.16), i*115 + 420);
+  });
+  await delay(n*115 + 480);
+  layoutAll();
+  anims.forEach(a=>a.cancel());
+}
+async function resetGame(newN, opts={}){
+  if((busy || auto || tour) && !opts.force) return;
+  win.classList.remove('on');
+  n = newN; clearSel();
+  pegs = [[],[],[]];
+  for(let d=n; d>=1; d--) pegs[0].push(d);
+  moves = 0; hist = []; elapsed = 0; timerOn = false; autoSkip = false; clickCand = null;
+  updMoves(); updMin(); stTimeEl.textContent = '00:00';
+  sealEls.forEach(s=>s.classList.toggle('on', +s.dataset.n === n));
+  buildDisks();
+  busy = true; refreshGrab();
+  await entrance();
+  busy = false; refreshGrab();
+}
+btnReset.addEventListener('click', () => {
+  resetGame(n).then(()=>toast('石柱歸位，重新開始'));
+});
+btnUndo.addEventListener('click', async () => {
+  if(busy || auto || tour || !hist.length) return;
+  const m = hist.pop();
+  busy = true; refreshGrab(); clearSel();
+  pegs[m.to].pop(); pegs[m.from].push(m.d);
+  moves = Math.max(0, moves-1); updMoves();
+  await flyTo(diskEls[m.d], SC.pegX[m.from], stackY(m.from, pegs[m.from].length-1));
+  busy = false; refreshGrab();
+});
+sealEls.forEach(s=>s.addEventListener('click', () => {
+  if(auto || tour || busy) return;
+  const k = +s.dataset.n;
+  if(k === n) return;
+  resetGame(k);
+  toast(`新的試煉：${cnum(k)}個金盤`);
+}));
+
+/* ── 操作示範（分步動畫引導）────────── */
+const tourStepEl = $('tourStep'), tourTextEl = $('tourText'),
+      tourNext = $('tourNext'), tourSkipB = $('tourSkip');
+let tourIdx = 0, tourKeep = 3;
+const acts = {
+  focusGoal(){
+    pegEls[2].classList.add('glow');
+    setTimeout(()=>pegEls[2].classList.remove('glow'), 3000);
+  },
+  pulseTop(){
+    const d = pegs[0][pegs[0].length-1];
+    const el = diskEls[d];
+    el.classList.add('pulse');
+    setTimeout(()=>el.classList.remove('pulse'), 2400);
+  },
+  hintSolve(){
+    btnSolve.classList.add('hint');
+    setTimeout(()=>btnSolve.classList.remove('hint'), 3200);
+  }
+};
+const tourSteps = [
+  {t:'此地為梵天寺。三根石柱立於石台之上，金盤由大至小，疊於左側石柱。'},
+  {t:'試煉的目標：將全部金盤移往右側的金色石柱——全部疊妥，即為完成。', act:acts.focusGoal},
+  {t:'每一次，只能移動石柱最頂端的盤——它之上，不能壓著任何盤。', act:acts.pulseTop},
+  {t:'就這樣：拿起、平移、放下。', act:()=>doMove(1,0,2)},
+  {t:'中柱可用來暫放金盤，騰出轉圜之地。', act:()=>doMove(2,0,1)},
+  {t:'但大盤永不可疊於小盤之上——石柱會拒絕它。', act:()=>rejectMove(3,0,2)},
+  {t:'若一時無解，可隨時請「僧侶代解」，他會以最短路徑完成餘下的儀式。', act:acts.hintSolve},
+  {t:'準備好了。願金盤歸位。'}
+];
+async function startTour(){
+  if(busy || auto || tour) return;
+  tour = true; tourKeep = n; clearSel();
+  tourBar.classList.add('on');
+  await resetGame(3, {force:true});
+  showTourStep(0);
+}
+async function showTourStep(i){
+  tourIdx = i;
+  const s = tourSteps[i];
+  tourStepEl.textContent = `${cnum(i+1)} / ${cnum(tourSteps.length)}`;
+  tourTextEl.textContent = s.t;
+  tourNext.classList.add('off'); tourSkipB.classList.add('off');
+  if(s.act) await s.act();
+  tourNext.classList.remove('off'); tourSkipB.classList.remove('off');
+  tourNext.textContent = (i === tourSteps.length-1) ? '開始試煉' : '下一步';
+}
+function endTour(){
+  tourBar.classList.remove('on');
+  tour = false;
+  resetGame(tourKeep, {force:true})
+    .then(()=>toast('試煉開始——將金盤移往右側金色石柱'));
+}
+tourNext.addEventListener('click', () => {
+  if(!tour) return;
+  if(tourIdx < tourSteps.length-1) showTourStep(tourIdx+1);
+  else endTour();
+});
+tourSkipB.addEventListener('click', () => { if(tour) endTour(); });
+btnDemo.addEventListener('click', startTour);
+
+/* ── 卷軸（說明）與音效開關 ────────── */
+const drawer = $('drawer'), scrim = $('scrim');
+function openDrawer(){ drawer.classList.add('on'); scrim.classList.add('on'); }
+function closeDrawer(){ drawer.classList.remove('on'); scrim.classList.remove('on'); }
+btnRules.addEventListener('click', openDrawer);
+ $('btnCloseDrawer').addEventListener('click', closeDrawer);
+ $('btnGotIt').addEventListener('click', closeDrawer);
+scrim.addEventListener('click', closeDrawer);
+
+btnSound.addEventListener('click', () => {
+  Snd.on = !Snd.on;
+  $('sndOn').classList.toggle('hidden', !Snd.on);
+  $('sndOff').classList.toggle('hidden', Snd.on);
+  if(Snd.on){ Snd.ensure(); Snd.pick(); }
+});
+
+/* ── 啟動 ─────────────────────── */
+buildPegs();
+buildDust();
+computeScale();
+resetGame(3).then(() => {
+  let seen = false;
+  try{ seen = !!sessionStorage.getItem('hanoiSeen');
+       sessionStorage.setItem('hanoiSeen','1'); }catch(e){}
+  if(!seen) setTimeout(()=>toast('初次造訪？可先閱「試煉之法」，或觀看操作示範', 3800), 2200);
+});
+
+})();
+</script>
+</body>
+</html>
