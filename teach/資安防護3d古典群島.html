@@ -1,0 +1,2499 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>資安防護3D古典群島：柴犬警長大冒險</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <!-- 引入 Google Fonts 思源宋體與思源黑體 -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0c192c;
+        }
+        .font-serif-tc {
+            font-family: 'Noto Serif TC', serif;
+        }
+        #canvas-container {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        /* 玻璃擬物風 Glassmorphism */
+        .glass-panel {
+            background: rgba(20, 28, 46, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(251, 191, 36, 0.35);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+        }
+        .glass-card-light {
+            background: rgba(255, 251, 235, 0.96);
+            backdrop-filter: blur(16px);
+            border: 2px solid #d97706;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+        }
+        /* 3D 空飄地標標籤 */
+        #labels-container {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 10;
+            overflow: hidden;
+        }
+        .floating-label {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            transition: opacity 0.2s ease, transform 0.1s linear;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+        .label-island {
+            background: linear-gradient(135deg, #991b1b 0%, #7f1d1d 100%);
+            color: #fef3c7;
+            border: 2px solid #fbbf24;
+            padding: 6px 16px;
+            border-radius: 9999px;
+            font-family: 'Noto Serif TC', serif;
+            font-weight: 900;
+            font-size: 1.05rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 12px rgba(251, 191, 36, 0.4);
+            letter-spacing: 0.05em;
+        }
+        .label-hall {
+            background: rgba(15, 23, 42, 0.88);
+            color: #fde68a;
+            border: 1.5px solid #f59e0b;
+            padding: 4px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+        .label-landmark {
+            background: rgba(255, 255, 255, 0.9);
+            color: #1e293b;
+            border: 1px solid #94a3b8;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.75rem;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+        }
+        /* 虛擬搖桿 */
+        #joystick-zone {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(251, 191, 36, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 30;
+            touch-action: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #joystick-knob {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #fbbf24, #b45309);
+            border: 2px solid #fffbeb;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+            position: absolute;
+            pointer-events: none;
+            transition: transform 0.05s ease-out;
+        }
+        /* 自定義捲軸 */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(254, 243, 199, 0.4);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #b45309;
+        }
+        /* 動畫 */
+        @keyframes pulseGlow {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 15px rgba(251, 191, 36, 0.6); }
+            50% { transform: scale(1.05); box-shadow: 0 0 28px rgba(251, 191, 36, 0.95); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+        /* 列印證書專用樣式 */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificate-modal, #certificate-modal * {
+                visibility: visible;
+            }
+            #certificate-modal {
+                position: fixed;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background: white !important;
+                padding: 0 !important;
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 3D 畫布容器 -->
+    <div id="canvas-container"></div>
+
+    <!-- 3D 空飄地標標籤容器 -->
+    <div id="labels-container"></div>
+
+    <!-- 頂部導覽列 Topbar -->
+    <header class="fixed top-0 left-0 right-0 z-20 p-2 sm:p-3 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        <!-- 左側：標題與目前所在島嶼 -->
+        <div class="glass-panel rounded-2xl px-3 py-2 sm:px-4 sm:py-2.5 flex items-center gap-3 pointer-events-auto">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-500 to-red-700 flex items-center justify-center text-xl sm:text-2xl shadow-inner border border-amber-300">
+                🐕
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-400/40">CH10 資安群島</span>
+                    <span id="current-island-badge" class="text-sm sm:text-base font-black text-white font-serif-tc tracking-wide">📍 個資法護法島</span>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-amber-100/90 mt-0.5">
+                    <span>🏆 進度：<strong id="progress-text" class="text-amber-400">0 / 4 島</strong></span>
+                    <span>⏱️ 學習：<strong id="timer-text" class="text-emerald-300 font-mono">00:00</strong></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右側：快速傳送、操作說明、證書按鈕 -->
+        <div class="flex items-center gap-1.5 sm:gap-2 pointer-events-auto flex-wrap">
+            <!-- 快速傳送選單 -->
+            <div class="glass-panel rounded-xl p-1 flex items-center gap-1">
+                <button onclick="teleportToIsland(0)" id="nav-btn-0" class="px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-amber-100 hover:bg-amber-500/30 transition flex items-center gap-1" title="傳送至個資法護法島">
+                    <span>📜</span><span class="hidden md:inline">個資護法</span><span id="star-badge-0" class="hidden text-amber-400">★</span>
+                </button>
+                <button onclick="teleportToIsland(1)" id="nav-btn-1" class="px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-amber-100 hover:bg-amber-500/30 transition flex items-center gap-1" title="傳送至惡意軟體鎮妖島">
+                    <span>🦠</span><span class="hidden md:inline">惡意鎮妖</span><span id="star-badge-1" class="hidden text-amber-400">★</span>
+                </button>
+                <button onclick="teleportToIsland(2)" id="nav-btn-2" class="px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-amber-100 hover:bg-amber-500/30 transition flex items-center gap-1" title="傳送至駭客攻防演武島">
+                    <span>🛡️</span><span class="hidden md:inline">駭客演武</span><span id="star-badge-2" class="hidden text-amber-400">★</span>
+                </button>
+                <button onclick="teleportToIsland(3)" id="nav-btn-3" class="px-2.5 py-1.5 rounded-lg text-xs sm:text-sm font-bold text-amber-100 hover:bg-amber-500/30 transition flex items-center gap-1" title="傳送至網路淨化明鏡島">
+                    <span>🔍</span><span class="hidden md:inline">網路明鏡</span><span id="star-badge-3" class="hidden text-amber-400">★</span>
+                </button>
+            </div>
+
+            <!-- 榮譽證書按鈕 (全破後發光解鎖，平時也可預覽進度) -->
+            <button onclick="openCertificateModal()" id="cert-btn" class="glass-panel rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-amber-300 hover:bg-amber-500/20 transition flex items-center gap-1.5">
+                <span>🏅</span><span class="hidden sm:inline">榮譽證書</span>
+            </button>
+
+            <!-- 隱藏式操作說明按鈕 -->
+            <button onclick="toggleHelpModal(true)" class="glass-panel rounded-xl px-3 py-2 text-xs sm:text-sm font-bold text-white bg-red-800/60 hover:bg-red-700/80 border-amber-400 transition flex items-center gap-1">
+                <span>❓</span><span class="hidden sm:inline">操作說明</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- 靠近建築物時的互動提示懸浮按鈕 -->
+    <div id="interact-prompt" class="fixed bottom-28 sm:bottom-12 left-1/2 -translate-x-1/2 z-20 hidden">
+        <button onclick="triggerCurrentInteraction()" class="animate-pulse-glow bg-gradient-to-r from-red-800 via-red-700 to-amber-700 text-amber-100 border-2 border-amber-300 px-6 py-3 rounded-full font-black text-base sm:text-lg shadow-2xl flex items-center gap-2.5 cursor-pointer">
+            <span class="text-2xl" id="interact-icon">🏛️</span>
+            <span id="interact-text">進入學習館 (按 E 或點擊)</span>
+        </button>
+    </div>
+
+    <!-- 右下角快捷控制按鈕 (跳躍 & 視角重置) -->
+    <div class="fixed bottom-6 right-6 z-20 flex flex-col gap-3">
+        <button onclick="resetCameraView()" class="glass-panel w-12 h-12 rounded-full flex items-center justify-center text-amber-200 hover:text-white hover:bg-amber-600/40 transition shadow-lg text-lg" title="重置攝影機視角">
+            🎥
+        </button>
+        <button id="jump-btn" class="glass-panel w-14 h-14 rounded-full flex items-center justify-center text-white bg-gradient-to-br from-amber-500/80 to-red-700/80 border-2 border-amber-300 font-black text-sm shadow-xl active:scale-90 transition" title="跳躍 (空白鍵)">
+            跳躍
+        </button>
+    </div>
+
+    <!-- 手機與平板虛擬搖桿 (左下角) -->
+    <div id="joystick-zone" title="拖曳移動柴犬警長">
+        <div id="joystick-knob"></div>
+    </div>
+
+    <!-- 系統訊息 Toast 提示框 (取代 alert) -->
+    <div id="toast-box" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
+        <div class="glass-panel px-5 py-2.5 rounded-full text-amber-200 font-bold text-sm sm:text-base border border-amber-400 shadow-2xl flex items-center gap-2">
+            <span id="toast-icon">✨</span>
+            <span id="toast-msg">提示訊息</span>
+        </div>
+    </div>
+
+    <!-- 隱藏式操作說明彈窗 (Help Modal) -->
+    <div id="help-modal" class="fixed inset-0 z-40 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="glass-card-light rounded-3xl max-w-lg w-full p-6 text-slate-800 relative">
+            <div class="flex items-center justify-between border-b-2 border-amber-300 pb-3 mb-4">
+                <h2 class="text-xl sm:text-2xl font-black text-red-900 font-serif-tc flex items-center gap-2">
+                    <span>📜</span> 柴犬資安警長・巡島指南
+                </h2>
+                <button onclick="toggleHelpModal(false)" class="w-9 h-9 rounded-full bg-red-100 text-red-800 font-black hover:bg-red-200 flex items-center justify-center">✕</button>
+            </div>
+            <div class="space-y-3 text-sm sm:text-base leading-relaxed">
+                <div class="bg-amber-100/80 p-3 rounded-xl border border-amber-300">
+                    <h3 class="font-bold text-amber-900 mb-1">🐕 角色移動與跳躍</h3>
+                    <p><strong>電腦版：</strong>使用 <kbd class="px-1.5 py-0.5 bg-white rounded border text-xs font-mono">W A S D</kbd> 或 <kbd class="px-1.5 py-0.5 bg-white rounded border text-xs font-mono">方向鍵</kbd> 移動，<kbd class="px-1.5 py-0.5 bg-white rounded border text-xs font-mono">Space</kbd> 跳躍。<br>
+                    <strong>手機/平板：</strong>拖曳左下角<strong>金色虛擬搖桿</strong>移動，點擊右下角<strong>跳躍</strong>按鈕。</p>
+                </div>
+                <div class="bg-amber-100/80 p-3 rounded-xl border border-amber-300">
+                    <h3 class="font-bold text-amber-900 mb-1">🎥 3D 自由視角與縮放</h3>
+                    <p>按住滑鼠左鍵（或單指滑動空白處）可<strong>旋轉視角</strong>；滾動滑鼠滾輪（或雙指縮放）可<strong>近距離特寫</strong>或<strong>高空鳥瞰全群島</strong>！</p>
+                </div>
+                <div class="bg-amber-100/80 p-3 rounded-xl border border-amber-300">
+                    <h3 class="font-bold text-amber-900 mb-1">🏛️ 學習館互動與通關條件</h3>
+                    <p>走過跨海白玉拱橋探索 4 座古典島嶼，靠近中央<strong>學習閣樓</strong>或<strong>點擊建築物</strong>，按 <kbd class="px-1.5 py-0.5 bg-white rounded border text-xs font-mono">E</kbd> 進入研習。每島測驗達 <strong>8/10 題</strong>即可點亮完成之星，集滿 4 星解鎖「資安大警長榮譽證書」！</p>
+                </div>
+            </div>
+            <button onclick="toggleHelpModal(false)" class="mt-5 w-full py-3 rounded-xl bg-gradient-to-r from-red-800 to-amber-700 text-amber-100 font-black text-base shadow-lg hover:brightness-110 transition">
+                了解！開始巡邏資安群島 🚀
+            </button>
+        </div>
+    </div>
+
+    <!-- 學習與測驗主面板 (Learning & Quiz Modal) -->
+    <div id="learning-modal" class="fixed inset-0 z-40 bg-black/75 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4">
+        <div class="glass-card-light rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col overflow-hidden text-slate-800">
+            <!-- Modal 頂部標題列 -->
+            <div class="bg-gradient-to-r from-red-900 via-red-800 to-amber-800 text-amber-50 px-5 py-4 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <span id="modal-island-emoji" class="text-3xl">📜</span>
+                    <div>
+                        <div class="text-xs text-amber-300 font-bold tracking-wider" id="modal-island-subtitle">單元學習閣樓</div>
+                        <h2 id="modal-hall-title" class="text-lg sm:text-2xl font-black font-serif-tc">個資法護法殿</h2>
+                    </div>
+                </div>
+                <button onclick="closeLearningModal()" class="w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 text-amber-200 font-black text-lg flex items-center justify-center transition">✕</button>
+            </div>
+
+            <!-- 四大頁籤切換列 -->
+            <div class="bg-amber-100/90 px-3 sm:px-5 pt-3 border-b-2 border-amber-300 flex gap-1.5 sm:gap-2 overflow-x-auto shrink-0">
+                <button onclick="switchTab('summary')" id="tab-btn-summary" class="tab-btn px-3 sm:px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm whitespace-nowrap transition">
+                    📖 重點整理
+                </button>
+                <button onclick="switchTab('compare')" id="tab-btn-compare" class="tab-btn px-3 sm:px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm whitespace-nowrap transition">
+                    ⚖️ 觀點比較
+                </button>
+                <button onclick="switchTab('mistakes')" id="tab-btn-mistakes" class="tab-btn px-3 sm:px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm whitespace-nowrap transition">
+                    ⚠️ 易錯概念
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-btn-quiz" class="tab-btn px-3 sm:px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm whitespace-nowrap transition flex items-center gap-1">
+                    <span>🎯 測驗挑戰</span>
+                    <span id="tab-quiz-badge" class="px-1.5 py-0.5 text-[10px] rounded-full bg-red-600 text-white">10題</span>
+                </button>
+            </div>
+
+            <!-- 內容捲動區 -->
+            <div id="modal-content-area" class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+                <!-- 動態注入內容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 榮譽證書彈窗 (Certificate Modal) -->
+    <div id="certificate-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden items-center justify-center p-3 sm:p-6 overflow-y-auto">
+        <div class="bg-[#fffdf7] border-[6px] border-double border-amber-600 rounded-2xl max-w-3xl w-full p-6 sm:p-10 text-slate-800 shadow-2xl relative my-auto">
+            <!-- 四角古典花紋裝飾 -->
+            <div class="absolute top-3 left-3 w-8 h-8 border-t-4 border-l-4 border-red-800"></div>
+            <div class="absolute top-3 right-3 w-8 h-8 border-t-4 border-r-4 border-red-800"></div>
+            <div class="absolute bottom-3 left-3 w-8 h-8 border-b-4 border-l-4 border-red-800"></div>
+            <div class="absolute bottom-3 right-3 w-8 h-8 border-b-4 border-r-4 border-red-800"></div>
+
+            <div class="text-center space-y-2">
+                <div class="text-4xl sm:text-5xl">🐕🏅📜</div>
+                <div class="text-xs sm:text-sm font-bold tracking-[0.25em] text-red-800 uppercase">CH10 個人資料防護與網路內容防護</div>
+                <h2 class="text-2xl sm:text-4xl font-black font-serif-tc text-amber-900 tracking-wider">數位資安巡察大警長・榮譽證書</h2>
+            </div>
+
+            <div class="my-6 text-center space-y-4">
+                <p class="text-base sm:text-lg text-slate-700">茲證明學員</p>
+                <div class="flex justify-center">
+                    <input type="text" id="cert-name-input" value="見習柴犬警長" placeholder="請在此輸入您的姓名" class="text-center text-2xl sm:text-3xl font-black font-serif-tc text-red-900 border-b-2 border-amber-600 bg-amber-50/60 px-4 py-1 focus:outline-none focus:bg-amber-100 rounded-t w-64 sm:w-80">
+                </div>
+                <p class="text-sm sm:text-base text-slate-700 max-w-xl mx-auto leading-relaxed">
+                    完成《數位科技概論：個人資料防護與網路內容防護》四大古典仙島巡禮，精通個資法規、惡意軟體防禦、駭客攻防與網路謠言辨識，特頒此狀，以資鼓勵！
+                </p>
+            </div>
+
+            <!-- 各島作答歷程成績單 -->
+            <div class="bg-amber-50/90 border border-amber-300 rounded-xl p-4 mb-6">
+                <div class="flex justify-between items-center mb-2 pb-2 border-b border-amber-200 text-xs sm:text-sm font-bold text-amber-900">
+                    <span>📊 群島試煉作答歷程</span>
+                    <span id="cert-total-time">累計學習時間：00:00</span>
+                </div>
+                <div id="cert-records-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm">
+                    <!-- 動態生成各島成績 -->
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-amber-200">
+                <div class="text-xs text-slate-500">
+                    頒發日期：<span id="cert-date"></span><br>
+                    認證單位：3D互動教學島嶼資安總署
+                </div>
+                <div class="flex gap-2 no-print">
+                    <button onclick="window.print()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-800 to-amber-700 text-white font-bold text-sm shadow hover:brightness-110 transition flex items-center gap-1.5">
+                        <span>🖨️</span> 列印 / 儲存 PDF
+                    </button>
+                    <button onclick="closeCertificateModal()" class="px-4 py-2.5 rounded-xl bg-slate-200 text-slate-800 font-bold text-sm hover:bg-slate-300 transition">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // 階段二：教材結構化 (CH10 個人資料防護與網路內容防護)
+        // ==========================================
+        const ISLAND_DATA = [
+            {
+                id: 0,
+                name: "個資法護法島",
+                emoji: "📜",
+                hall: "個資法護法殿",
+                themeColor: 0xd97706, // 琉璃金
+                pos: { x: -85, z: -75 },
+                landmarks: [
+                    { name: "個資法戒碑", offset: { x: -16, z: 14 } },
+                    { name: "隱私守護亭", offset: { x: 16, z: -12 } },
+                    { name: "南天碼頭", offset: { x: 0, z: 26 } }
+                ],
+                summary: {
+                    title: "10-1 個人資料防護基本概念與法規",
+                    points: [
+                        "<strong>個人資料定義（第2條）：</strong>凡姓名、生日、國民身分證統一編號、特徵、指紋、臉部辨識、婚姻、教育、職業、病歷及財務情況等，得以「直接或間接」識別該個人之資料皆屬之。",
+                        "<strong>告知與同意義務（第8~9條）：</strong>無論直接或間接蒐集他人個資，皆須明確盡到告知義務，並取得當事人同意，不可擅自轉傳或公開（例如撿到身分證直接拍照上傳網路尋找失主亦可能觸法）。",
+                        "<strong>公務與非公務機關皆受規範（第28~29條）：</strong>公務機關執行公權力同樣受《個人資料保護法》規範；若違法致使個資遭不法蒐集、處理或利用，須負損害賠償責任。",
+                        "<strong>資料處理形式不限：</strong>無論是數位電腦、智慧型手機處理的檔案，或是傳統紙本寫成的醫院病歷（病歷雖由醫師撰寫並存於醫院，仍屬病患個人資料），全受個資法保護。"
+                    ]
+                },
+                compare: {
+                    title: "個資法保護範圍 vs. 非個資識別項目",
+                    head: ["比較項目", "受《個資法》保護之個人資料", "非屬《個資法》保護之一般資訊"],
+                    rows: [
+                        ["生理與特徵", "指紋、臉部特徵、虹膜、DNA、病歷紀錄", "一般公開的身高體重統計平均值"],
+                        ["身分與家庭", "身分證字號、姓名、生日、婚姻狀況、家庭成員", "單純的姓氏（如陳先生）、星座或血型"],
+                        ["消費與物品", "信用卡號、財務狀況、結合身分的消費紀錄", "使用的手機型號、穿著的球鞋品牌（無連結特定人）"],
+                        ["適用對象", "公務機關（含學校、政府部門）與非公務機關（企業、個人）", "自然人為單純個人或家庭活動之目的（如通訊錄）"]
+                    ]
+                },
+                mistakes: [
+                    {
+                        w: "「公務機關擁有公權力，因此執行業務時不受個人資料保護法規範。」",
+                        r: "錯誤！公務機關與非公務機關皆須遵守《個資法》，違法侵害個資同樣須負損害賠償責任。"
+                    },
+                    {
+                        w: "「醫院裡的病歷是由醫生撰寫並保管在醫院，所以病歷屬於醫院而非我的個資。」",
+                        r: "錯誤！病歷紀錄個人的健康與醫療資訊，明確屬於當事人的個人資料受個資法保護。"
+                    },
+                    {
+                        w: "「在路上撿到別人的身分證，好心直接拍照上傳臉書社團協尋失主，完全合法。」",
+                        r: "錯誤！未經當事人同意直接公開其身分證字號、生日與照片等個資，可能誤觸《個資法》，應交由警察機關處理。"
+                    }
+                ],
+                quiz: [
+                    { q: "有關個人資料保護的敘述，下列哪一項完全正確？", o: ["病歷雖由醫生所寫且置放醫院，仍屬於個人資料範圍", "公務機關擁有公權力所以不用受個資法規範", "只有用電腦處理的數位個資才受個資法保護", "開啟手機用的指紋與臉部資訊不屬於個資"], e: "病歷、指紋、臉部特徵及紙本/數位個資皆受保護，且公務機關同樣受個資法規範。" },
+                    { q: "下列何者「不屬於」個人資料保護法所保護的個人資料範圍？", o: ["個人穿著的球鞋品牌與手機型號", "國民身分證統一編號", "醫院就診的病歷資料", "手機解鎖使用的指紋特徵"], e: "單純的球鞋品牌或手機型號無法直接或間接識別特定個人，故不屬於個資。" },
+                    { q: "阿霖在路上撿到一張身分證，為了找失主直接將身分證正反面拍照上傳至公開網路社團，此舉最可能誤觸哪種法規？", o: ["個人資料保護法", "商標法", "著作權法", "專利法"], e: "未經同意公開他人身分證字號、生日、地址等個資，已違反個人資料保護法。" },
+                    { q: "某社群平台在未經用戶明確允許下，擅自收集用戶個資提供給廣告商精準投放廣告，此行為主要違反了什麼原則？", o: ["蒐集與利用個資須盡告知義務並取得當事人同意", "違反網路中立性原則", "違反軟體著作權授權條款", "違反硬體安全加密標準"], e: "依個資法第8~9條，蒐集與利用個資皆須告知並取得當事人同意。" },
+                    { q: "小傑為了賺外快，將全班同學的姓名、電話與住址整理後販賣給補教業者，請問此行為會觸犯什麼法律？", o: ["違反個人資料保護法", "補教業者從事教育事業，所以不違法", "僅違反校規，不觸犯國家法律", "違反電信管理法"], e: "非法蒐集、販賣他人個資給第三人牟利，明確違反《個人資料保護法》。" },
+                    { q: "依《個人資料保護法》第2條規定，下列哪一組資訊全部都屬於個人資料？", o: ["婚姻狀況、職業、指紋、病歷", "生日、血型、球鞋尺寸、喜歡的顏色", "身分證字號、手機殼款式、天氣預報", "姓名、學校校訓、公開的公車時刻表"], e: "婚姻、職業、指紋、病歷皆為個資法第2條明文列舉之個人資料。" },
+                    { q: "關於紙本資料與數位資料在《個資法》中的效力，下列敘述何者正確？", o: ["無論是否經過電腦處理，紙本與數位個資皆受保護", "只有儲存在雲端硬碟的個資才受法律保護", "紙本填寫的問卷個資不受個資法限制", "只有銀行資料庫的個資才算個人資料"], e: "我國個資法已取消「經電腦處理」之限制，紙本與數位個資一體適用。" },
+                    { q: "當公務機關因違法行為致使民眾個人資料遭不法洩漏或侵害時，法律責任為何？", o: ["公務機關依法仍須負損害賠償責任", "公務機關享有絕對豁免權，無須賠償", "僅需口頭道歉，無任何民事賠償責任", "由受害民眾自行吸收所有損失"], e: "依個資法第28條，公務機關違法侵害當事人個資權利者，應負損害賠償責任。" },
+                    { q: "我們每天開啟電子信箱或手機簡訊時，常收到大量未經同意的垃圾廣告信，最主要的原因為何？", o: ["個人資料可能已外流並遭商家不當利用", "電腦螢幕解析度設定過高", "防毒軟體自動訂閱了廣告電子報", "作業系統版本過新導致的正常現象"], e: "個資外流導致不肖商家在未取得同意下發送廣告訊息。" },
+                    { q: "下列哪一種日常行為最能有效保護自己的個人資料不輕易外洩？", o: ["填寫網路抽獎表單前，先確認網站公信力與隱私權政策", "在社群網站公開打卡並秀出登機證與護照內頁", "將身分證與提款卡密碼寫在手機備忘錄並設為公開", "隨意點擊不明簡訊連結並輸入信用卡卡號"], e: "謹慎評估網站公信力與隱私條款，避免隨意填寫個資，是保護個資的基本好習慣。" }
+                ]
+            },
+            {
+                id: 1,
+                name: "惡意軟體鎮妖島",
+                emoji: "🦠",
+                hall: "鎮妖防毒閣",
+                themeColor: 0x059669, // 翡翠綠
+                pos: { x: 85, z: -75 },
+                landmarks: [
+                    { name: "病毒碼煉丹爐", offset: { x: 16, z: 14 } },
+                    { name: "雲端護法塔", offset: { x: -16, z: -12 } },
+                    { name: "東瀛碼頭", offset: { x: 0, z: 26 } }
+                ],
+                summary: {
+                    title: "10-2 惡意軟體類型與防範之道",
+                    points: [
+                        "<strong>惡意軟體 (Malware) 定義：</strong>泛指會造成電腦或網路無法正常運作的程式，常透過檔案下載、電子郵件、LINE 即時通訊與隨身碟傳播。",
+                        "<strong>三大惡意軟體比較：</strong>「電腦病毒」會自我複製並寄生感染正常程式，破壞系統；「特洛伊木馬」偽裝成正常檔案誘騙開啟，暗中竊取私密資料；「電腦蠕蟲」透過網路不斷自我複製，塞爆記憶體與網路頻寬。",
+                        "<strong>防毒軟體與病毒碼：</strong>「病毒碼」是防毒廠商從新病毒擷取的二進位特徵碼。安裝防毒軟體並定期更新病毒碼最有效，但<strong>同一台裝置切勿安裝多套防毒軟體</strong>，以免系統衝突當機。",
+                        "<strong>日常防禦黃金習慣：</strong>開啟作業系統與軟體「自動更新」修補漏洞、只從官網下載軟體、不開啟來源不明檔案、避免瀏覽高危險群網站（色情或盜版資源網）、定期備份至外接硬碟或雲端。"
+                    ]
+                },
+                compare: {
+                    title: "三大常見惡意軟體特性與目的比較表",
+                    head: ["惡意軟體名稱", "傳播與運作特性", "主要破壞目的"],
+                    rows: [
+                        ["電腦病毒 (Virus)", "具有破壞性，可自我複製並「寄生/感染」電腦中其他正常程式", "破壞電腦系統與檔案結構"],
+                        ["特洛伊木馬 (Trojan Horse)", "偽裝並「依附」在正常檔案中，使用者開啟檔案時被啟動（不會自我複製）", "開後門竊取他人帳號密碼與私密資料"],
+                        ["電腦蠕蟲 (Worm)", "無須依附其他程式，透過網路漏洞不斷大量自我複製", "耗盡主記憶體空間與網路頻寬，癱瘓伺服器"],
+                        ["勒索軟體 (Ransomware)", "透過釣魚郵件或漏洞入侵，將電腦內重要檔案高強度加密鎖死", "勒索受害者於期限內支付贖金才解密"]
+                    ]
+                },
+                mistakes: [
+                    {
+                        w: "「為了讓電腦獲得雙重保護，應該在同一台電腦同時安裝兩套以上的防毒軟體。」",
+                        r: "錯誤！同一台電腦或手機不宜安裝多套防毒軟體，否則會互相搶奪資源與判定衝突，導致系統變慢甚至無法運作。"
+                    },
+                    {
+                        w: "「電腦感染了『開機型病毒』（如米開朗基羅病毒），只要立刻按下強制關機鍵就能消滅病毒。」",
+                        r: "錯誤！病毒已寫入開機磁區或系統中，強制關機無法消滅病毒，必須使用乾淨開機片或防毒軟體掃描清除。"
+                    },
+                    {
+                        w: "「定期清理電腦桌面的『資源回收筒』，就能有效防止惡意軟體入侵電腦。」",
+                        r: "錯誤！清理資源回收筒只是釋放硬碟空間，與防範惡意軟體無關；應安裝防毒軟體、更新修補程式與定期備份。"
+                    }
+                ],
+                quiz: [
+                    { q: "要防備筆記型電腦感染電腦病毒，使用下列哪一項機制最為有效？", o: ["安裝並開啟即時保護的防毒軟體且定期更新病毒碼", "時常瀏覽防毒知識宣導網頁", "只閱讀學校寄送的電子郵件", "從網路下載的檔案先存到隨身碟再執行"], e: "開啟即時保護的防毒軟體並定期更新病毒碼，才能在病毒入侵第一時間攔截清除。" },
+                    { q: "下列哪一種惡意軟體會透過網路不斷大量自我複製，耗用主記憶體與網路頻寬，造成郵件伺服器無法正常運作？", o: ["電腦蠕蟲 (Worm)", "特洛伊木馬程式 (Trojan Horse)", "螢幕保護程式", "磁碟重組工具"], e: "電腦蠕蟲的特性就是無須宿主即可透過網路不斷自我複製，塞爆頻寬與記憶體。" },
+                    { q: "小明打開一封旅遊電子郵件的附加檔案後，電腦資料遭暗中竊取外洩；小美則在網站下載資料後，電腦所有檔案都被加密要求付贖金。兩人分別中了什麼？", o: ["①特洛伊木馬程式、②勒索軟體", "①電腦蠕蟲、②網路釣魚", "①防火牆、②鍵盤側錄", "①雲端防毒、②字典攻擊"], e: "依附在檔案中竊取資料的是「特洛伊木馬」；將檔案加密勒索贖金的是「勒索軟體」。" },
+                    { q: "關於防毒軟體的使用觀念，下列敘述何者「錯誤」？", o: ["同一台電腦應同時安裝三套防毒軟體以達三重防護", "病毒碼是防毒公司從新病毒擷取的二進位特徵程式碼", "雲端防毒軟體可將病毒碼存於雲端，節省本機空間", "防毒軟體必須定期更新病毒碼才能辨識最新病毒"], e: "同一台裝置切勿安裝多套防毒軟體，否則會造成軟體衝突與系統異常。" },
+                    { q: "下列哪一項行為「不是」防範惡意軟體入侵的良好習慣？", o: ["為了避免麻煩，永久關閉作業系統與軟體自動更新功能", "到軟體官方網站下載正版應用程式", "定期將重要資料備份至外接硬碟或雲端硬碟", "避免瀏覽色情網站或提供盜版音樂的非法網站"], e: "關閉自動更新會導致系統安全漏洞無法修補，極易遭惡意軟體攻擊。" },
+                    { q: "當防毒軟體公司發現一隻全新電腦病毒後，會從中擷取一段二進位程式碼讓防毒軟體辨認，這段程式碼稱為什麼？", o: ["病毒碼", "驗證碼", "原始碼", "條碼"], e: "病毒碼（Virus Signature）是防毒軟體用來比對與辨識病毒的特徵二進位程式碼。" },
+                    { q: "下列哪一項行動「無助於」減少惡意軟體侵害電腦的機會？", o: ["定期清理桌面上的資源回收筒", "安裝防火牆過濾異常網路連線", "不任意開啟來路不明的 LINE 連結與檔案", "定期更新防毒軟體病毒碼"], e: "清理資源回收筒僅能釋放儲存空間，無法阻擋惡意軟體。" },
+                    { q: "關於「米開朗基羅病毒」與資訊安全的敘述，下列何者「錯誤」？", o: ["若電腦感染開機型病毒，只要立即強制關機即可消滅病毒", "米開朗基羅病毒屬於開機型病毒", "網路蠕蟲可自我複製並透過網路進行傳播", "SSL 是一種可保護資料在網路傳輸過程安全性的加密機制"], e: "強制關機無法清除已寫入磁區的開機型病毒。" },
+                    { q: "LINE 群組常出現「慶祝週年免費贈送官方貼圖，點擊連結並轉傳即可領取」的訊息，這類手法的主要目的為何？", o: ["誘騙使用者點擊惡意連結以騙取個資或植入惡意程式", "官方為了回饋用戶發放的真實福利", "測試手機網路連線速度", "幫用戶自動升級通訊軟體版本"], e: "此為典型的假官方帳號詐騙與惡意連結誘餌，切勿輕信點擊。" },
+                    { q: "惡意軟體通常會透過下列哪些管道進行傳播？①電子郵件 ②即時通訊軟體 ③電腦螢幕 ④隨身碟", o: ["①②④", "①②③", "②③④", "①③④"], e: "電腦螢幕僅為輸出顯示設備，不會傳播惡意軟體；郵件、通訊軟體與隨身碟皆是常見傳播途徑。" }
+                ]
+            },
+            {
+                id: 2,
+                name: "駭客攻防演武島",
+                emoji: "🛡️",
+                hall: "銅牆鐵壁演武堂",
+                themeColor: 0x2563eb, // 寶石藍
+                pos: { x: -85, z: 75 },
+                landmarks: [
+                    { name: "DDoS防禦箭塔", offset: { x: -16, z: -14 } },
+                    { name: "密碼八卦陣", offset: { x: 16, z: 12 } },
+                    { name: "西域碼頭", offset: { x: 0, z: -26 } }
+                ],
+                summary: {
+                    title: "10-3 駭客攻擊手法與全面防禦策略",
+                    points: [
+                        "<strong>常見駭客攻擊手法：</strong>「網頁掛馬（如 XSS 跨網站腳本）」在正常網頁植入惡意程式；「DDoS 分散式阻斷服務」操縱大量電腦發送海量封包癱瘓伺服器；「殭屍網路 (BotNet)」控制受感染的電腦或連網監視器作為攻擊工具。",
+                        "<strong>帳號密碼竊取手法：</strong>「鍵盤側錄」記錄按鍵輸入（可用<strong>螢幕虛擬鍵盤</strong>防範）；「字典攻擊法」用常見懶人密碼庫逐一嘗試破解（可用<strong>圖形驗證碼</strong>防範）；「零時差攻擊 (Zero-day)」趁廠商尚未修補漏洞前發動攻擊。",
+                        "<strong>網路釣魚與社交工程：</strong>「社交工程」利用人性信任（冒充維修人員、親友）降低戒心；「網路釣魚 (Phishing)」偽造極為相似的假網站（如假銀行、假購物網）誘騙輸入帳號、密碼與信用卡號。",
+                        "<strong>強密碼與行動裝置防護：</strong>密碼至少 8 字元以上，混用大小寫英文、數字與符號，不用生日或 1234；不連公共未加密 Wi-Fi（防範假熱點監聽）、不下載權限不合理的 App（如手電筒卻要求讀取相片與通訊錄）。"
+                    ]
+                },
+                compare: {
+                    title: "駭客攻擊手法與對應防範機制一覽表",
+                    head: ["駭客攻擊手法", "攻擊原理說明", "最佳防範對策"],
+                    rows: [
+                        ["鍵盤側錄程式", "暗中記錄使用者實體鍵盤敲擊的帳號與密碼", "使用網路銀行提供的「螢幕虛擬鍵盤」滑鼠點選輸入"],
+                        ["字典攻擊法", "利用程式讀取常用懶人密碼清單，反覆自動嘗試登入", "登入頁面設置「圖形驗證碼」阻擋自動化程式"],
+                        ["DDoS / BotNet 攻擊", "操控大量殭屍電腦或連網攝影機發送巨量流量塞爆伺服器", "架設防火牆流量清洗、所有連網 3C 產品皆設定高強度密碼"],
+                        ["網路釣魚 (Phishing)", "偽造假網站或假簡訊連結，誘騙使用者輸入帳密與信用卡", "確認網址網域（gov/edu/com）與 SSL 加密，不點不明連結"]
+                    ]
+                },
+                mistakes: [
+                    {
+                        w: "「為了防止忘記密碼，可以用自己的生日或身分證字號作為網路銀行密碼。」",
+                        r: "錯誤！生日、身分證字號、電話或 1234、password 都是最容易被駭客猜中與字典攻擊破解的危險密碼。"
+                    },
+                    {
+                        w: "「在咖啡廳或車站看到不用密碼的免費 Wi-Fi（例如名稱很像超商的 Family-WiFi），可以安心連上去刷卡購物。」",
+                        r: "錯誤！駭客常架設名稱極為相似的「假冒未加密 Wi-Fi 熱點」監聽並截取傳輸資料，切勿連上未知 Wi-Fi 進行敏感交易。"
+                    },
+                    {
+                        w: "「下載一個免費的『超亮手電筒 App』時，發現它要求存取『身分識別、通訊錄與相片檔案』權限，這是很正常的。」",
+                        r: "錯誤！手電筒僅需相機閃光燈權限，若要求讀取相片與帳戶個資即為「權限不合理」的可疑惡意 App，應拒絕安裝。"
+                    }
+                ],
+                quiz: [
+                    { q: "網際網路攻擊者操控多台殭屍電腦，透過製造大量網路流量傳給特定目標伺服器使其癱瘓，此攻擊方式稱為什麼？", o: ["分散式阻斷服務攻擊 (DDoS)", "跨網站指令碼攻擊 (XSS)", "鍵盤側錄攻擊", "字典攻擊法"], e: "利用多台電腦發送大量訊息塞爆頻寬使伺服器癱瘓，稱為分散式阻斷服務攻擊（DDoS）。" },
+                    { q: "駭客偽造與知名銀行或購物網站極為相似的假網頁，誘使使用者輸入帳號、密碼與信用卡卡號，這種手法稱為什麼？", o: ["網路釣魚 (Phishing)", "零時差攻擊 (Zero-day)", "磁碟重組攻擊", "藍牙配對攻擊"], e: "偽造仿真假網站誘騙輸入私密個資的手法稱為網路釣魚（Phishing）。" },
+                    { q: "許多網路銀行在登入密碼欄位旁會提供「螢幕虛擬鍵盤」讓使用者用滑鼠點選，主要是為了防範哪一種駭客程式？", o: ["鍵盤側錄程式", "電腦蠕蟲", "分散式阻斷服務攻擊", "網頁掛馬"], e: "螢幕虛擬鍵盤可繞過實體鍵盤訊號擷取，有效防範「鍵盤側錄程式」。" },
+                    { q: "網頁登入時常見要求輸入扭曲文字或選取紅綠燈的「圖形驗證碼」，主要是為了防範駭客使用哪種方式破解密碼？", o: ["字典攻擊法（程式反覆嘗試常用密碼）", "網頁掛馬攻擊", "殭屍網路濫發垃圾信", "實體硬碟偷竊"], e: "圖形驗證碼可阻擋自動化腳本程式不斷讀取字典檔嘗試登入的「字典攻擊法」。" },
+                    { q: "駭客在發現某軟體的安全漏洞後，趁著軟體開發商尚未發布修補程式之前立即發動攻擊，此種攻擊稱為什麼？", o: ["零時差攻擊 (Zero-day Attack)", "社交工程攻擊", "網路監聽攻擊", "勒索軟體攻擊"], e: "在官方修補程式推出前的時間差發動攻擊，稱為「零時差攻擊」。" },
+                    { q: "大雄要申請一個社群帳號，從資訊安全的角度來看，使用下列哪一個密碼最為恰當安全？", o: ["nobida_14d5!K", "12345678", "password", "19990808（大雄生日）"], e: "安全密碼應至少 8 字元以上，並混合大小寫英文、數字與特殊符號，避免懶人密碼與生日。" },
+                    { q: "下列哪一項「不是」保護智慧型手機個人資料的正確做法？", o: ["在公共場所看到完全不用密碼的未知 Wi-Fi 就立刻連上網際網路", "設定指紋鎖、臉部辨識或高強度圖形密碼鎖", "只從官方 App Store 或 Google Play 下載應用程式", "安裝 App 前仔細檢查其要求的存取權限是否合理"], e: "公開未加密 Wi-Fi 可能是駭客架設的監聽陷阱，不應隨意連線。" },
+                    { q: "一位工程師接到自稱系統維修員的電話，對方取得信任後寄來含木馬的假修補程式誘騙安裝。這種利用人性弱點騙取信任的手法稱為什麼？", o: ["社交工程 (Social Engineering)", "分散式阻斷服務 (DDoS)", "檔案壓縮技術", "雲端同步備份"], e: "透過套關係、冒充權威降低戒心以騙取機密的犯罪手法稱為「社交工程」。" },
+                    { q: "小安在瀏覽某正常網站時，因為該網站遭駭客植入惡意腳本程式，導致小安的電腦一連線就中毒，這屬於哪種攻擊？", o: ["網頁掛馬攻擊", "字典攻擊法", "實體線路剪斷", "螢幕截圖攻擊"], e: "在正常網頁中暗藏惡意程式使訪客自動感染，稱為「網頁掛馬攻擊」。" },
+                    { q: "在網咖或圖書館使用公用電腦後，為了保護個人隱私避免帳號密碼或瀏覽紀錄殘留，下列哪項做法最恰當？", o: ["使用無痕式視窗瀏覽，且不在公用電腦進行線上刷卡交易", "將密碼儲存在瀏覽器中方便下次使用", "直接關閉螢幕電源就離開座位", "將個人身分證掃描檔存在公用電腦桌面"], e: "應避免在公用電腦進行敏感交易，並善用無痕模式與刪除 Cookie 保護隱私。" }
+                ]
+            },
+            {
+                id: 3,
+                name: "網路淨化明鏡島",
+                emoji: "🔍",
+                hall: "明鏡識讀閣",
+                themeColor: 0xdc2626, // 朱砂紅
+                pos: { x: 85, z: 75 },
+                landmarks: [
+                    { name: "iWIN守護碑", offset: { x: 16, z: -14 } },
+                    { name: "闢謠明鏡台", offset: { x: -16, z: 12 } },
+                    { name: "北海碼頭", offset: { x: 0, z: -26 } }
+                ],
+                summary: {
+                    title: "10-4 網路內容防護與媒體識讀查證",
+                    points: [
+                        "<strong>常見網路不當內容：</strong>包含「暴力色情」（如偽裝成卡通的暗黑影片「艾莎門 Elsagate」與脫序網路直播亂象）、「危險工具與毒品製作」（如 3D 列印手槍設計圖、自製炸藥教學）以及「網路謠言」。",
+                        "<strong>內容農場 (Content Farm)：</strong>專門為了吸引點擊流量與廣告利潤而建立的網站，內容多為抄襲、誇大聳動標題且未經查證，是網路假消息的主要源頭。",
+                        "<strong>個人面防護守則：</strong>懂得拒絕不當內容並即時關閉視窗、提醒身邊朋友遠離有害網站（如自殘遊戲藍鯨挑戰）；收到通訊軟體轉傳訊息秉持「謠言止於智者」，先查證再分享；可安裝 Google Family Link 等家長監護軟體。",
+                        "<strong>社群與政府防制機制：</strong>社群平台如 Dcard 板主審核、Meta 運用 AI 系統「Rosetta」自動過濾圖像與文字假消息；臺灣政府成立「iWIN 網路內容防護機構」提供申訴檢舉，並可善用 LINE 謠言辨識機器人「真的假的 (@cofacts)」與「美玉姨」即時查證！"
+                    ]
+                },
+                compare: {
+                    title: "網路內容防護三道防線：個人、社群與政府",
+                    head: ["防護層級", "代表機制與工具", "核心運作功能"],
+                    rows: [
+                        ["個人自我防護", "Google Family Link、拒絕不當網頁、查證後再轉傳", "主動關閉不良視窗、保護兒少上網安全、不當謠言共犯"],
+                        ["民間查證工具", "LINE「真的假的 (@cofacts)」、「美玉姨」機器人", "將可疑轉傳訊息與優惠連結送交資料庫即時比對闢謠"],
+                        ["社群平台自律", "Meta AI「Rosetta」、Dcard 板主審核機制", "AI 每日自動辨識數十億筆圖像與文字，過濾仇恨與假消息"],
+                        ["政府法規機構", "臺灣「iWIN 網路內容防護機構」、德國《網路執行法》", "受理兒少不當內容申訴檢舉、科技偵查隊偵辦不實謠言"]
+                    ]
+                },
+                mistakes: [
+                    {
+                        w: "「YouTube Kids 或卡通頻道裡的『艾莎門 (Elsagate)』影片主角都是可愛的艾莎與蜘蛛人，很適合讓小孩自己看。」",
+                        r: "錯誤！「艾莎門」是以卡通人物作偽裝的暗黑暴力色情影片，會嚴重扭曲兒少價值觀並造成恐懼與模仿行為。"
+                    },
+                    {
+                        w: "「LINE 群組收到寫著『緊急！醫院最新通知，務必立刻轉傳給 10 位親友』的健康資訊，應該馬上轉發以示關心。」",
+                        r: "錯誤！越是強調「務必轉傳」的聳動訊息越可能是假消息，應先用「真的假的 (@cofacts)」或「美玉姨」查證，切勿成為謠言共犯。"
+                    },
+                    {
+                        w: "「在網路上隨便編造『某地出現怪異男子擄童』的假故事提醒大家注意安全，出發點是善意的，所以不會觸法。」",
+                        r: "錯誤！散布未經查證的假消息引發社會恐慌，已觸犯《社會秩序維護法》，將面臨法律刑責。"
+                    }
+                ],
+                quiz: [
+                    { q: "近年在影音網站出現許多以知名卡通人物為主角，實際內容卻充滿暴力、血腥與性暗示的爭議影片，這類影片統稱為什麼事件？", o: ["艾莎門 (Elsagate)", "水門事件", "棱鏡計畫", "維基解密"], e: "以冰雪奇緣艾莎等卡通人物偽裝、針對兒少傳播的暗黑惡意影片統稱為「艾莎門」。" },
+                    { q: "專門為了吸引點擊流量與廣告利潤而建立，內容多半抄襲拼湊、標題誇大聳動且未經查證的網站，稱為什麼？", o: ["內容農場 (Content Farm)", "官方資料庫 (Gov Portal)", "雲端備份中心", "開放式課程平台"], e: "內容農場（Content Farm）是網路假消息與未經查證文章的主要來源。" },
+                    { q: "當你在 LINE 群組收到一則真假難辨的優惠活動或健康偏方訊息時，可以將訊息轉傳給哪一個官方推廣的 LINE 謠言辨識機器人查證？", o: ["真的假的 (@cofacts) 或 美玉姨", "小畫家機器人", "Windows 防火牆", "磁碟清理精靈"], e: "搜尋 LINE ID「@cofacts（真的假的）」或邀請「美玉姨」入群，即可即時查證謠言真偽。" },
+                    { q: "臺灣政府為了維護兒少身心健康，提供不當網路內容申訴與檢舉管道的專責機構為何？", o: ["iWIN 網路內容防護機構", "中央氣象署", "智慧財產局", "消費者文教基金會"], e: "「iWIN 網路內容防護機構」專責受理兒少不當網路內容的申訴、檢舉與宣導。" },
+                    { q: "小安看到同學小朋正在用手機瀏覽鼓勵青少年自殘的「藍鯨挑戰」網站，小安最適合採取下列哪一種做法？", o: ["關心並提醒小朋這類網站有害身心健康，應立即關閉", "和小朋一起加入挑戰並拍照上傳", "把網址轉傳到全班群組讓大家一起看", "在網路上公開嘲笑並霸凌小朋"], e: "發現友人接觸有害身心的不當網站時，應適時關心提醒並勸導立即關閉。" },
+                    { q: "Facebook (Meta) 開發了一款人工智慧系統，每天能從數十億筆資料中自動辨識圖像與文字並過濾假消息與仇恨言論，該系統名稱為何？", o: ["Rosetta", "AlphaGo", "Siri", "Cortana"], e: "Meta 的 AI 系統「Rosetta」專門分析圖片與影片中的文字，過濾假消息與不當內容。" },
+                    { q: "下列哪一項「不屬於」常見的網路不當內容？", o: ["博物館公開的 3D 文物模型與公仔列印教學", "在網路上散布自製炸藥與 3D 列印致命手槍設計圖", "偽裝成兒童卡通的暴力虐待影片", "網路直播主為衝人氣進行裸露猥褻或自殘表演"], e: "正常的文物或公仔模型設計圖屬於正當創作，非不當內容；武器製造、暴力色情與自殘皆屬不當內容。" },
+                    { q: "某民眾為了衝高臉書貼文熱度，自導自演「遇到怪人當街擄童」的假事件並在網路散布，引發地方恐慌，最終最可能觸犯哪項法規？", o: ["社會秩序維護法", "專利法", "商標法", "著作權法"], e: "散布謠言足以影響公共安寧者，依《社會秩序維護法》可處拘留或罰鍰。" },
+                    { q: "關於防範網路不當內容的敘述，下列何者「不正確」？", o: ["只要完全拔掉網路線一輩子不上網，就是唯一且最佳的解決方法", "家長可安裝 Google Family Link 等監護軟體過濾不良網頁", "個人應培養媒體識讀判斷力，拒絕瀏覽無公信力網站", "政府與社群平台應建立分級制度與言論檢舉下架機制"], e: "因噎廢食完全不使用網路並非現代數位公民的合理對策，應學會善用防護工具與識讀能力。" },
+                    { q: "下列哪一個頂級網域（Domain）通常代表「政府機關」網站，資訊公信力較高？", o: [".gov", ".com", ".xyz", ".biz"], e: "gov（Government）為政府機關專用網域，edu 為教育機構，公信力較一般商業或個人網站高。" }
+                ]
+            }
+        ];
+
+        // ==========================================
+        // 全域狀態管理
+        // ==========================================
+        const state = {
+            currentIslandIndex: 0,
+            passedIslands: [false, false, false, false],
+            bestScores: [0, 0, 0, 0],
+            startTime: Date.now(),
+            activeModalIsland: 0,
+            activeTab: 'summary',
+            currentQuizQuestions: [],
+            userAnswers: [],
+            quizSubmitted: false,
+            nearTarget: null
+        };
+
+        // 累計學習計時器
+        setInterval(() => {
+            const elapsedSec = Math.floor((Date.now() - state.startTime) / 1000);
+            const mins = String(Math.floor(elapsedSec / 60)).padStart(2, '0');
+            const secs = String(elapsedSec % 60).padStart(2, '0');
+            const timerEl = document.getElementById('timer-text');
+            if (timerEl) timerEl.textContent = `${mins}:${secs}`;
+        }, 1000);
+
+        function showToast(msg, icon = "✨") {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-msg').textContent = msg;
+            document.getElementById('toast-icon').textContent = icon;
+            box.classList.remove('opacity-0', '-translate-y-4');
+            box.classList.add('opacity-100', 'translate-y-0');
+            clearTimeout(window._toastTimer);
+            window._toastTimer = setTimeout(() => {
+                box.classList.remove('opacity-100', 'translate-y-0');
+                box.classList.add('opacity-0', '-translate-y-4');
+            }, 3200);
+        }
+
+        // ==========================================
+        // 階段三：Three.js 3D 引擎與傳統中國風群島建構
+        // ==========================================
+        let scene, camera, renderer, clock;
+        let oceanMesh, shibaGroup;
+        const shibaParts = {};
+        const islandGroups = [];
+        const completionStars = [];
+        const clickableMeshes = [];
+        const floatingLabels = [];
+        const animatedObjects = [];
+
+        // 主角移動與物理狀態
+        const player = {
+            pos: new THREE.Vector3(-85, 2.5, -57),
+            vel: new THREE.Vector3(0, 0, 0),
+            rotY: 0,
+            speed: 26,
+            jumpForce: 15,
+            isGrounded: true,
+            walkCycle: 0
+        };
+
+        // 攝影機自由控制狀態
+        const camControl = {
+            yaw: 0.45,
+            pitch: 0.52,
+            distance: 55,
+            minDistance: 14,
+            maxDistance: 460, // 放寬鳥瞰上限 >400
+            isDragging: false,
+            lastX: 0,
+            lastY: 0
+        };
+
+        // 輸入狀態
+        const keys = {};
+        const joystick = { active: false, dx: 0, dy: 0 };
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+            clock = new THREE.Clock();
+
+            // 1. 場景與古典晨曦霞光背景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1e3a5f);
+            scene.fog = new THREE.FogExp2(0x1e3a5f, 0.0018);
+
+            // 2. 攝影機
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.5, 1200);
+
+            // 3. 渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            container.appendChild(renderer.domElement);
+
+            // 4. 光源系統（高明度溫暖陽光 + 翡翠/天藍環境光）
+            const hemiLight = new THREE.HemisphereLight(0xfffbeb, 0x0f766e, 0.85);
+            hemiLight.position.set(0, 120, 0);
+            scene.add(hemiLight);
+
+            const dirLight = new THREE.DirectionalLight(0xfff3c4, 1.25);
+            dirLight.position.set(110, 160, 90);
+            dirLight.castShadow = true;
+            dirLight.shadow.mapSize.width = 2048;
+            dirLight.shadow.mapSize.height = 2048;
+            dirLight.shadow.camera.near = 10;
+            dirLight.shadow.camera.far = 450;
+            const d = 170;
+            dirLight.shadow.camera.left = -d;
+            dirLight.shadow.camera.right = d;
+            dirLight.shadow.camera.top = d;
+            dirLight.shadow.camera.bottom = -d;
+            scene.add(dirLight);
+
+            // 5. 動態波浪 Shader 海洋
+            createDynamicOcean();
+
+            // 6. 建立四座傳統中國風資安島嶼（各自獨特建築與地標）
+            ISLAND_DATA.forEach((data, idx) => {
+                buildChineseIsland(data, idx);
+            });
+
+            // 7. 建立跨海白玉拱橋與海上發光浮標航道
+            buildBridgesAndSeaRoutes();
+
+            // 8. 建立主角：Q版柴犬資安警長
+            buildShibaSheriff();
+
+            // 9. 建立空中飛鳥與金色靈氣粒子
+            buildAmbientWildlifeAndParticles();
+
+            // 10. 綁定事件監聽
+            setupControls();
+            window.addEventListener('resize', onWindowResize);
+
+            // 啟動主動畫迴圈
+            animate();
+        }
+
+        // 動態波光粼粼海洋 Shader
+        function createDynamicOcean() {
+            const oceanGeo = new THREE.PlaneGeometry(1400, 1400, 96, 96);
+            oceanGeo.rotateX(-Math.PI / 2);
+
+            const oceanMat = new THREE.ShaderMaterial({
+                uniforms: {
+                    uTime: { value: 0 },
+                    uDeepColor: { value: new THREE.Color(0x0c4a6e) },
+                    uShallowColor: { value: new THREE.Color(0x0d9488) },
+                    uFoamColor: { value: new THREE.Color(0xe0f2fe) }
+                },
+                vertexShader: `
+                    uniform float uTime;
+                    varying vec3 vWorldPos;
+                    varying float vWave;
+                    void main() {
+                        vec3 pos = position;
+                        float w1 = sin(pos.x * 0.04 + uTime * 1.4) * cos(pos.z * 0.04 + uTime * 1.1) * 0.65;
+                        float w2 = sin((pos.x + pos.z) * 0.08 - uTime * 2.0) * 0.3;
+                        pos.y += w1 + w2;
+                        vWave = w1 + w2;
+                        vec4 worldPosition = modelMatrix * vec4(pos, 1.0);
+                        vWorldPos = worldPosition.xyz;
+                        gl_Position = projectionMatrix * viewMatrix * worldPosition;
+                    }
+                `,
+                fragmentShader: `
+                    uniform float uTime;
+                    uniform vec3 uDeepColor;
+                    uniform vec3 uShallowColor;
+                    uniform vec3 uFoamColor;
+                    varying vec3 vWorldPos;
+                    varying float vWave;
+                    void main() {
+                        float distFromCenter = length(vWorldPos.xz);
+                        float mixFactor = clamp(1.0 - distFromCenter / 260.0, 0.0, 1.0);
+                        vec3 baseCol = mix(uDeepColor, uShallowColor, mixFactor * 0.75);
+                        float sparkle = smoothstep(0.62, 0.95, sin(vWorldPos.x * 0.25 + uTime * 2.5) * cos(vWorldPos.z * 0.25 - uTime * 2.1));
+                        vec3 finalCol = mix(baseCol, uFoamColor, sparkle * 0.35 + max(0.0, vWave) * 0.15);
+                        gl_FragColor = vec4(finalCol, 0.94);
+                    }
+                `,
+                transparent: true
+            });
+
+            oceanMesh = new THREE.Mesh(oceanGeo, oceanMat);
+            scene.add(oceanMesh);
+        }
+
+        // 建立 3D 空飄地標 HTML 標籤
+        function addFloatingLabel(text, worldPos, type, islandId) {
+            const el = document.createElement('div');
+            el.className = `floating-label label-${type}`;
+            el.textContent = text;
+            document.getElementById('labels-container').appendChild(el);
+            floatingLabels.push({ element: el, worldPos, type, islandId });
+        }
+
+        // 建構傳統中國風島嶼 (每座島皆有獨特地形配色、主建築造型與專屬地標奇觀)
+        function buildChineseIsland(data, idx) {
+            const group = new THREE.Group();
+            group.position.set(data.pos.x, 0, data.pos.z);
+            scene.add(group);
+            islandGroups.push(group);
+
+            // 1. 依據每座島嶼主題設計獨特地形配色（高明度對比）
+            const terrainThemes = [
+                { beach: 0xfde68a, grass: 0x4d7c0f, road: 0xfafaf9 }, // 0: 個資法護法島 (金沙+翠綠草地+白玉石路)
+                { beach: 0xfed7aa, grass: 0x0f766e, road: 0xfef3c7 }, // 1: 惡意軟體鎮妖島 (暖橘沙+青黛苔地+金砂石路)
+                { beach: 0xe2e8f0, grass: 0x3f6212, road: 0xf1f5f9 }, // 2: 駭客攻防演武島 (銀白沙+橄欖演武場+青石板路)
+                { beach: 0xfecdd3, grass: 0x15803d, road: 0xfff1f2 }  // 3: 網路淨化明鏡島 (粉櫻沙+碧綠竹原+漢白玉路)
+            ];
+            const tTheme = terrainThemes[idx];
+
+            const beachGeo = new THREE.CylinderGeometry(35, 39, 2.2, 32);
+            const beachMat = new THREE.MeshStandardMaterial({ color: tTheme.beach, roughness: 0.85 });
+            const beach = new THREE.Mesh(beachGeo, beachMat);
+            beach.position.y = 0.6;
+            beach.receiveShadow = true;
+            group.add(beach);
+
+            const grassGeo = new THREE.CylinderGeometry(31, 33, 1.2, 32);
+            const grassMat = new THREE.MeshStandardMaterial({ color: tTheme.grass, roughness: 0.8 });
+            const grass = new THREE.Mesh(grassGeo, grassMat);
+            grass.position.y = 1.7;
+            grass.receiveShadow = true;
+            group.add(grass);
+
+            // 2. 島內寬敞實體石板道路與中央廣場
+            const plazaGeo = new THREE.CylinderGeometry(12, 12.5, 0.3, 24);
+            const stoneMat = new THREE.MeshStandardMaterial({ color: tTheme.road, roughness: 0.65 });
+            const plaza = new THREE.Mesh(plazaGeo, stoneMat);
+            plaza.position.y = 2.35;
+            plaza.receiveShadow = true;
+            group.add(plaza);
+
+            const roadNS = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.28, 62), stoneMat);
+            roadNS.position.y = 2.34;
+            roadNS.receiveShadow = true;
+            group.add(roadNS);
+
+            const roadEW = new THREE.Mesh(new THREE.BoxGeometry(62, 0.28, 5.5), stoneMat);
+            roadEW.position.y = 2.34;
+            roadEW.receiveShadow = true;
+            group.add(roadEW);
+
+            // 3. 依據島嶼編號建造截然不同的專屬中式主建築！
+            let hallGroup;
+            if (idx === 0) {
+                hallGroup = createImperialHall(data.themeColor);      // 島0：皇家重簷護法大殿
+            } else if (idx === 1) {
+                hallGroup = createDemonPagoda(data.themeColor);       // 島1：三層八角鎮妖寶塔（塔頂封印病毒球）
+            } else if (idx === 2) {
+                hallGroup = createFortressGate(data.themeColor);      // 島2：銅牆鐵壁演武城樓（外罩藍色防禦護盾）
+            } else {
+                hallGroup = createMirrorPavilion(data.themeColor);    // 島3：八角明鏡閣（懸掛巨大闢謠神鏡與旋轉雷達）
+            }
+            hallGroup.position.set(0, 2.4, -4);
+            group.add(hallGroup);
+
+            // 為閣樓加入可點擊碰撞盒與空飄標籤
+            const hitBox = new THREE.Mesh(
+                new THREE.BoxGeometry(15, 16, 15),
+                new THREE.MeshBasicMaterial({ visible: false })
+            );
+            hitBox.position.set(0, 8, -4);
+            hitBox.userData = { islandId: idx, type: 'hall' };
+            group.add(hitBox);
+            clickableMeshes.push(hitBox);
+
+            // 島嶼名稱高空標籤
+            addFloatingLabel(`${data.emoji} ${data.name}`, new THREE.Vector3(data.pos.x, 24.5, data.pos.z - 4), 'island', idx);
+            // 學習館名稱標籤
+            addFloatingLabel(`🏛️ ${data.hall}`, new THREE.Vector3(data.pos.x, 16.5, data.pos.z - 4), 'hall', idx);
+
+            // 4. 過關巨大「完成之星」（初始隱藏，過關後閃耀升起）
+            const starMesh = createCompletionStar();
+            starMesh.position.set(0, 20.5, -4);
+            starMesh.visible = false;
+            group.add(starMesh);
+            completionStars.push(starMesh);
+
+            // 5. 每座島獨有的特色地標建築群與專屬空飄標籤
+            buildUniqueIslandLandmarks(group, data, idx);
+
+            // 6. 漂浮全息資安八卦陣（空中旋轉特效）
+            const baguaRing = createFloatingBagua(data.themeColor);
+            baguaRing.position.set(0, 14.5, -4);
+            group.add(baguaRing);
+            animatedObjects.push({ obj: baguaRing, type: 'spinY', speed: 0.6 });
+
+            // 7. 依據島嶼特色生成專屬植被與裝飾群
+            populateUniqueIslandDecorations(group, idx);
+        }
+
+        // 【島0主建築】個資法護法殿：皇家重簷歇山頂大殿 + 律法金卷軸門楣
+        function createImperialHall(accentHex) {
+            const pGroup = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.BoxGeometry(13.5, 1.2, 12.5), new THREE.MeshStandardMaterial({ color: 0xfefce8, roughness: 0.6 }));
+            base.position.y = 0.6;
+            base.castShadow = true;
+            base.receiveShadow = true;
+            pGroup.add(base);
+
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.4 });
+            [[-5, -4.5], [-1.7, -4.5], [1.7, -4.5], [5, -4.5], [-5, 4.5], [-1.7, 4.5], [1.7, 4.5], [5, 4.5]].forEach(([px, pz]) => {
+                const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.48, 5.2, 12), pillarMat);
+                pillar.position.set(px, 3.8, pz);
+                pillar.castShadow = true;
+                pGroup.add(pillar);
+            });
+
+            const coreWall = new THREE.Mesh(new THREE.BoxGeometry(9.2, 4.8, 7.8), new THREE.MeshStandardMaterial({ color: 0xfffbeb, roughness: 0.7 }));
+            coreWall.position.y = 3.6;
+            pGroup.add(coreWall);
+
+            // 大殿正門金色「律法卷軸」徽記
+            const scrollMat = new THREE.MeshStandardMaterial({ color: accentHex, emissive: accentHex, emissiveIntensity: 0.55, metalness: 0.5 });
+            const scrollCore = new THREE.Mesh(new THREE.CylinderGeometry(0.45, 0.45, 3.4, 16), scrollMat);
+            scrollCore.rotation.z = Math.PI / 2;
+            scrollCore.position.set(0, 4.6, 4.1);
+            pGroup.add(scrollCore);
+
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.3, metalness: 0.25 });
+            const roof1 = new THREE.Mesh(new THREE.ConeGeometry(9.4, 2.8, 4), roofMat);
+            roof1.position.y = 7.5;
+            roof1.rotation.y = Math.PI / 4;
+            roof1.castShadow = true;
+            pGroup.add(roof1);
+
+            const upperBody = new THREE.Mesh(new THREE.BoxGeometry(6.0, 2.4, 5.4), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
+            upperBody.position.y = 9.3;
+            pGroup.add(upperBody);
+
+            const roof2 = new THREE.Mesh(new THREE.ConeGeometry(6.5, 2.6, 4), roofMat);
+            roof2.position.y = 11.7;
+            roof2.rotation.y = Math.PI / 4;
+            roof2.castShadow = true;
+            pGroup.add(roof2);
+
+            const finial = new THREE.Mesh(new THREE.SphereGeometry(0.65, 12, 12), new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xd97706, emissiveIntensity: 0.6 }));
+            finial.position.y = 13.4;
+            pGroup.add(finial);
+
+            [[-5.2, 4.8], [5.2, 4.8]].forEach(([lx, lz]) => {
+                const lantern = createRedLantern();
+                lantern.position.set(lx, 5.5, lz);
+                pGroup.add(lantern);
+                animatedObjects.push({ obj: lantern, type: 'sway', speed: 2.2 });
+            });
+            return pGroup;
+        }
+
+        // 【島1主建築】鎮妖防毒閣：三層八角鎮妖寶塔 + 塔頂封印旋轉病毒球
+        function createDemonPagoda(accentHex) {
+            const pGroup = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(6.8, 7.5, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 }));
+            base.position.y = 0.6;
+            base.castShadow = true;
+            pGroup.add(base);
+
+            const tierSpecs = [
+                { y: 3.2, rBody: 4.4, hBody: 4.0, rRoof: 6.4, hRoof: 2.0 },
+                { y: 7.4, rBody: 3.4, hBody: 3.2, rRoof: 5.2, hRoof: 1.8 },
+                { y: 11.0, rBody: 2.4, hBody: 2.6, rRoof: 4.0, hRoof: 1.6 }
+            ];
+
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x065f46, roughness: 0.5 }); // 翡翠琉璃塔身
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, roughness: 0.3, metalness: 0.3 }); // 金瓦塔簷
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
+
+            tierSpecs.forEach((t, index) => {
+                const body = new THREE.Mesh(new THREE.CylinderGeometry(t.rBody, t.rBody, t.hBody, 8), bodyMat);
+                body.position.y = t.y;
+                body.castShadow = true;
+                pGroup.add(body);
+
+                // 八角紅柱
+                for (let a = 0; a < 8; a++) {
+                    const ang = (a / 8) * Math.PI * 2;
+                    const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, t.hBody, 8), pillarMat);
+                    pillar.position.set(Math.cos(ang) * (t.rBody + 0.15), t.y, Math.sin(ang) * (t.rBody + 0.15));
+                    pGroup.add(pillar);
+                }
+
+                const roof = new THREE.Mesh(new THREE.ConeGeometry(t.rRoof, t.hRoof, 8), roofMat);
+                roof.position.y = t.y + t.hBody / 2 + t.hRoof / 2;
+                roof.castShadow = true;
+                pGroup.add(roof);
+            });
+
+            // 塔頂封印著一顆被金環鎖住的「惡意病毒球」
+            const virusSealGroup = new THREE.Group();
+            virusSealGroup.position.y = 14.8;
+            const virusCore = new THREE.Mesh(
+                new THREE.IcosahedronGeometry(1.1, 1),
+                new THREE.MeshStandardMaterial({ color: 0xa855f7, emissive: 0x7e22ce, emissiveIntensity: 0.7 })
+            );
+            virusSealGroup.add(virusCore);
+            // 病毒刺突
+            for (let s = 0; s < 12; s++) {
+                const spike = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.7, 6), new THREE.MeshStandardMaterial({ color: 0xf43f5e, emissive: 0xe11d48, emissiveIntensity: 0.5 }));
+                const phi = Math.acos(-1 + (2 * s) / 12);
+                const theta = Math.sqrt(12 * Math.PI) * phi;
+                spike.position.setFromSphericalCoords(1.25, phi, theta);
+                spike.lookAt(0, 0, 0);
+                spike.rotateX(-Math.PI / 2);
+                virusSealGroup.add(spike);
+            }
+            pGroup.add(virusSealGroup);
+            animatedObjects.push({ obj: virusSealGroup, type: 'floatSpin', baseY: 14.8, speed: 1.5 });
+
+            return pGroup;
+        }
+
+        // 【島2主建築】銅牆鐵壁演武堂：雄偉城牆關隘堡壘 + 雙角樓 + 藍色防火牆護盾罩
+        function createFortressGate(accentHex) {
+            const pGroup = new THREE.Group();
+
+            // 城牆基座（青灰城磚+紅牆）
+            const wallMat = new THREE.MeshStandardMaterial({ color: 0x991b1b, roughness: 0.6 });
+            const stoneBaseMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.8 });
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0x1d4ed8, roughness: 0.35, metalness: 0.25 }); // 琉璃寶藍瓦頂
+
+            const rampart = new THREE.Mesh(new THREE.BoxGeometry(14.5, 4.5, 9.5), stoneBaseMat);
+            rampart.position.y = 2.25;
+            rampart.castShadow = true;
+            pGroup.add(rampart);
+
+            // 城門拱洞裝飾
+            const gateArch = new THREE.Mesh(new THREE.BoxGeometry(3.6, 3.2, 9.8), new THREE.MeshStandardMaterial({ color: 0x0f172a }));
+            gateArch.position.y = 1.6;
+            pGroup.add(gateArch);
+
+            // 城牆垛口
+            for (let x = -6.5; x <= 6.5; x += 2.6) {
+                const merlon = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.8), stoneBaseMat);
+                merlon.position.set(x, 4.9, 4.4);
+                pGroup.add(merlon);
+            }
+
+            // 中央主城樓
+            const mainKeep = new THREE.Mesh(new THREE.BoxGeometry(8.5, 4.2, 6.2), wallMat);
+            mainKeep.position.y = 6.6;
+            mainKeep.castShadow = true;
+            pGroup.add(mainKeep);
+
+            const mainRoof = new THREE.Mesh(new THREE.ConeGeometry(7.2, 2.8, 4), roofMat);
+            mainRoof.position.y = 10.1;
+            mainRoof.rotation.y = Math.PI / 4;
+            mainRoof.castShadow = true;
+            pGroup.add(mainRoof);
+
+            // 左右兩座角樓哨塔
+            [-6.2, 6.2].forEach(tx => {
+                const tower = new THREE.Mesh(new THREE.BoxGeometry(3.2, 5.2, 3.8), wallMat);
+                tower.position.set(tx, 6.2, 0);
+                pGroup.add(tower);
+
+                const tRoof = new THREE.Mesh(new THREE.ConeGeometry(3.0, 2.0, 4), roofMat);
+                tRoof.position.set(tx, 9.8, 0);
+                tRoof.rotation.y = Math.PI / 4;
+                pGroup.add(tRoof);
+            });
+
+            // 半透明「防火牆能量護盾穹頂」包覆演武堂
+            const shieldGeo = new THREE.SphereGeometry(10.5, 24, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const shieldMat = new THREE.MeshBasicMaterial({
+                color: 0x38bdf8,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.28
+            });
+            const shieldDome = new THREE.Mesh(shieldGeo, shieldMat);
+            shieldDome.position.y = 0.2;
+            pGroup.add(shieldDome);
+            animatedObjects.push({ obj: shieldDome, type: 'spinY', speed: 0.25 });
+
+            return pGroup;
+        }
+
+        // 【島3主建築】明鏡識讀閣：八角臨水樓閣 + 巨大發光闢謠神鏡 + 屋頂資安靈氣雷達
+        function createMirrorPavilion(accentHex) {
+            const pGroup = new THREE.Group();
+
+            // 漢白玉八角台基
+            const base = new THREE.Mesh(new THREE.CylinderGeometry(7.2, 7.8, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
+            base.position.y = 0.6;
+            base.castShadow = true;
+            pGroup.add(base);
+
+            // 朱紅八柱與二層閣樓
+            const pillarMat = new THREE.MeshStandardMaterial({ color: 0xdc2626 });
+            for (let i = 0; i < 8; i++) {
+                const ang = (i / 8) * Math.PI * 2;
+                const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 5.6, 10), pillarMat);
+                pillar.position.set(Math.cos(ang) * 5.6, 4.0, Math.sin(ang) * 5.6);
+                pillar.castShadow = true;
+                pGroup.add(pillar);
+            }
+
+            const innerChamber = new THREE.Mesh(new THREE.CylinderGeometry(4.4, 4.4, 5.4, 8), new THREE.MeshStandardMaterial({ color: 0xfff1f2 }));
+            innerChamber.position.y = 3.9;
+            pGroup.add(innerChamber);
+
+            // 正前方懸掛一面巨大的「金色闢謠明鏡」
+            const mirrorFrame = new THREE.Mesh(
+                new THREE.TorusGeometry(1.8, 0.28, 12, 24),
+                new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.7, roughness: 0.2 })
+            );
+            mirrorFrame.position.set(0, 4.4, 4.7);
+            pGroup.add(mirrorFrame);
+
+            const mirrorGlass = new THREE.Mesh(
+                new THREE.CircleGeometry(1.65, 24),
+                new THREE.MeshStandardMaterial({ color: 0xe0f2fe, emissive: 0x38bdf8, emissiveIntensity: 0.75, metalness: 0.9, roughness: 0.1 })
+            );
+            mirrorGlass.position.set(0, 4.4, 4.75);
+            pGroup.add(mirrorGlass);
+
+            // 緋紅琉璃金邊八角大屋頂
+            const roofMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, roughness: 0.35, metalness: 0.2 });
+            const roof1 = new THREE.Mesh(new THREE.ConeGeometry(8.5, 3.2, 8), roofMat);
+            roof1.position.y = 8.4;
+            roof1.castShadow = true;
+            pGroup.add(roof1);
+
+            // 屋頂上方「旋轉資安掃描雷達天線」（東方科技融合）
+            const radarGroup = new THREE.Group();
+            radarGroup.position.y = 11.2;
+            const radarMast = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 2.2, 8), new THREE.MeshStandardMaterial({ color: 0xfbbf24 }));
+            radarGroup.add(radarMast);
+
+            const dish = new THREE.Mesh(
+                new THREE.SphereGeometry(1.6, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.4),
+                new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xf59e0b, emissiveIntensity: 0.4, side: THREE.DoubleSide })
+            );
+            dish.position.y = 1.2;
+            dish.rotation.x = Math.PI * 0.72;
+            radarGroup.add(dish);
+            pGroup.add(radarGroup);
+            animatedObjects.push({ obj: radarGroup, type: 'spinY', speed: 1.8 });
+
+            return pGroup;
+        }
+
+        // 建立每座島嶼獨有的三座特色地標建築
+        function buildUniqueIslandLandmarks(group, data, idx) {
+            data.landmarks.forEach((lm, lIdx) => {
+                const lmPos = new THREE.Vector3(lm.offset.x, 2.4, lm.offset.z);
+
+                // 第三個地標統一為各島碼頭，但造型依島嶼微調
+                if (lm.name.includes("碼頭")) {
+                    const dock = createChineseDock(data.themeColor);
+                    dock.position.set(lm.offset.x, 1.4, lm.offset.z + (lm.offset.z > 0 ? 4 : -4));
+                    if (lm.offset.z < 0) dock.rotation.y = Math.PI;
+                    group.add(dock);
+                } else if (idx === 0) {
+                    // 島0專屬地標：巨大金字個資法戒碑 & 四角金頂隱私守護亭
+                    if (lIdx === 0) {
+                        const stele = createStoneStele(0xf59e0b);
+                        stele.scale.setScalar(1.25);
+                        stele.position.copy(lmPos);
+                        group.add(stele);
+                    } else {
+                        const gazebo = createMiniGazebo(0xb91c1c, 0xf59e0b);
+                        gazebo.position.copy(lmPos);
+                        group.add(gazebo);
+                    }
+                } else if (idx === 1) {
+                    // 島1專屬地標：三足青銅病毒碼煉丹爐（上方漂浮旋轉丹火） & 高聳雲端護法塔
+                    if (lIdx === 0) {
+                        const cauldron = new THREE.Group();
+                        cauldron.position.copy(lmPos);
+                        const pot = new THREE.Mesh(new THREE.SphereGeometry(1.7, 16, 12), new THREE.MeshStandardMaterial({ color: 0x065f46, metalness: 0.6, roughness: 0.3 }));
+                        pot.position.y = 1.8;
+                        cauldron.add(pot);
+                        const rim = new THREE.Mesh(new THREE.TorusGeometry(1.3, 0.25, 8, 16), new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.7 }));
+                        rim.rotation.x = Math.PI / 2;
+                        rim.position.y = 3.1;
+                        cauldron.add(rim);
+                        // 漂浮翡翠丹火
+                        const pillFire = new THREE.Mesh(new THREE.OctahedronGeometry(0.75, 0), new THREE.MeshStandardMaterial({ color: 0x34d399, emissive: 0x10b981, emissiveIntensity: 0.9 }));
+                        pillFire.position.y = 4.4;
+                        cauldron.add(pillFire);
+                        animatedObjects.push({ obj: pillFire, type: 'floatSpin', baseY: 4.4, speed: 2.5 });
+                        group.add(cauldron);
+                    } else {
+                        const cloudTower = new THREE.Group();
+                        cloudTower.position.copy(lmPos);
+                        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 1.3, 5.5, 8), new THREE.MeshStandardMaterial({ color: 0xe0f2fe }));
+                        shaft.position.y = 2.75;
+                        cloudTower.add(shaft);
+                        const topCap = new THREE.Mesh(new THREE.ConeGeometry(2.2, 1.8, 8), new THREE.MeshStandardMaterial({ color: 0x059669 }));
+                        topCap.position.y = 6.2;
+                        cloudTower.add(topCap);
+                        group.add(cloudTower);
+                    }
+                } else if (idx === 2) {
+                    // 島2專屬地標：雙層木造 DDoS防禦箭塔 & 地面發光旋轉密碼八卦陣
+                    if (lIdx === 0) {
+                        const watchtower = new THREE.Group();
+                        watchtower.position.copy(lmPos);
+                        const frame = new THREE.Mesh(new THREE.BoxGeometry(2.8, 5.2, 2.8), new THREE.MeshStandardMaterial({ color: 0x78350f, wireframe: true }));
+                        frame.position.y = 2.6;
+                        watchtower.add(frame);
+                        const platform = new THREE.Mesh(new THREE.BoxGeometry(3.6, 0.4, 3.6), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
+                        platform.position.y = 4.6;
+                        watchtower.add(platform);
+                        const roof = new THREE.Mesh(new THREE.ConeGeometry(3.2, 1.8, 4), new THREE.MeshStandardMaterial({ color: 0x1d4ed8 }));
+                        roof.position.y = 5.7;
+                        roof.rotation.y = Math.PI / 4;
+                        watchtower.add(roof);
+                        group.add(watchtower);
+                    } else {
+                        const pwdArray = new THREE.Group();
+                        pwdArray.position.set(lmPos.x, 2.55, lmPos.z);
+                        const outerRing = new THREE.Mesh(new THREE.RingGeometry(2.6, 3.2, 8), new THREE.MeshBasicMaterial({ color: 0x2563eb, side: THREE.DoubleSide }));
+                        outerRing.rotation.x = Math.PI / 2;
+                        pwdArray.add(outerRing);
+                        const lockCore = new THREE.Mesh(new THREE.OctahedronGeometry(0.9, 0), new THREE.MeshStandardMaterial({ color: 0x60a5fa, emissive: 0x2563eb, emissiveIntensity: 0.8 }));
+                        lockCore.position.y = 1.6;
+                        pwdArray.add(lockCore);
+                        animatedObjects.push({ obj: pwdArray, type: 'spinY', speed: 1.4 });
+                        group.add(pwdArray);
+                    }
+                } else {
+                    // 島3專屬地標：iWIN 漢白玉守護碑 & 射出淨化光柱的闢謠明鏡台
+                    if (lIdx === 0) {
+                        const iwinStele = createStoneStele(0xef4444);
+                        iwinStele.position.copy(lmPos);
+                        group.add(iwinStele);
+                    } else {
+                        const mirrorAltar = new THREE.Group();
+                        mirrorAltar.position.copy(lmPos);
+                        const pedestal = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 1.2, 8), new THREE.MeshStandardMaterial({ color: 0xfef2f2 }));
+                        pedestal.position.y = 0.6;
+                        mirrorAltar.add(pedestal);
+                        // 向上射出的金色闢謠光束
+                        const beam = new THREE.Mesh(
+                            new THREE.CylinderGeometry(0.4, 1.1, 7.5, 16, 1, true),
+                            new THREE.MeshBasicMaterial({ color: 0xfde047, transparent: true, opacity: 0.45, side: THREE.DoubleSide })
+                        );
+                        beam.position.y = 4.6;
+                        mirrorAltar.add(beam);
+                        animatedObjects.push({ obj: beam, type: 'spinY', speed: 2.0 });
+                        group.add(mirrorAltar);
+                    }
+                }
+
+                addFloatingLabel(lm.name, new THREE.Vector3(data.pos.x + lm.offset.x, 8.6, data.pos.z + lm.offset.z), 'landmark', idx);
+            });
+        }
+
+        function createRedLantern() {
+            const g = new THREE.Group();
+            const body = new THREE.Mesh(
+                new THREE.SphereGeometry(0.55, 12, 12),
+                new THREE.MeshStandardMaterial({ color: 0xef4444, emissive: 0xdc2626, emissiveIntensity: 0.65 })
+            );
+            body.scale.set(1, 1.2, 1);
+            g.add(body);
+            const cap = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 8), new THREE.MeshStandardMaterial({ color: 0xfbbf24 }));
+            cap.position.y = 0.65;
+            g.add(cap);
+            return g;
+        }
+
+        function createStoneStele(accentHex) {
+            const g = new THREE.Group();
+            const base = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.8, 1.8), new THREE.MeshStandardMaterial({ color: 0xd6d3d1 }));
+            base.position.y = 0.4;
+            g.add(base);
+            const tablet = new THREE.Mesh(new THREE.BoxGeometry(2.0, 3.6, 0.6), new THREE.MeshStandardMaterial({ color: 0x334155 }));
+            tablet.position.y = 2.4;
+            tablet.castShadow = true;
+            g.add(tablet);
+            const rune = new THREE.Mesh(
+                new THREE.RingGeometry(0.4, 0.65, 16),
+                new THREE.MeshBasicMaterial({ color: accentHex, side: THREE.DoubleSide })
+            );
+            rune.position.set(0, 2.6, 0.32);
+            g.add(rune);
+            return g;
+        }
+
+        function createMiniGazebo(pillarColor = 0xb91c1c, roofColor = 0xd97706) {
+            const g = new THREE.Group();
+            const pMat = new THREE.MeshStandardMaterial({ color: pillarColor });
+            [[-1.6, -1.6], [1.6, -1.6], [-1.6, 1.6], [1.6, 1.6]].forEach(([x, z]) => {
+                const p = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 3.2, 8), pMat);
+                p.position.set(x, 1.6, z);
+                g.add(p);
+            });
+            const roof = new THREE.Mesh(
+                new THREE.ConeGeometry(3.2, 1.8, 6),
+                new THREE.MeshStandardMaterial({ color: roofColor })
+            );
+            roof.position.y = 3.9;
+            roof.castShadow = true;
+            g.add(roof);
+            return g;
+        }
+
+        function createChineseDock(accentHex = 0xdc2626) {
+            const g = new THREE.Group();
+            const woodMat = new THREE.MeshStandardMaterial({ color: 0x92400e, roughness: 0.8 });
+            const deck = new THREE.Mesh(new THREE.BoxGeometry(5.5, 0.4, 9), woodMat);
+            deck.position.y = 0.5;
+            deck.receiveShadow = true;
+            g.add(deck);
+            // 碼頭燈籠柱與主題色旗幟
+            [[-2.4, 3.8], [2.4, 3.8]].forEach(([x, z]) => {
+                const post = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 3.8, 8), new THREE.MeshStandardMaterial({ color: accentHex }));
+                post.position.set(x, 2.0, z);
+                g.add(post);
+                const lantern = createRedLantern();
+                lantern.scale.setScalar(0.75);
+                lantern.position.set(x, 3.5, z);
+                g.add(lantern);
+            });
+            return g;
+        }
+
+        function createFloatingBagua(accentHex) {
+            const g = new THREE.Group();
+            const ring1 = new THREE.Mesh(
+                new THREE.RingGeometry(4.2, 4.8, 8),
+                new THREE.MeshBasicMaterial({ color: accentHex, side: THREE.DoubleSide, transparent: true, opacity: 0.75 })
+            );
+            ring1.rotation.x = Math.PI / 2;
+            g.add(ring1);
+
+            const ring2 = new THREE.Mesh(
+                new THREE.RingGeometry(2.6, 2.9, 16),
+                new THREE.MeshBasicMaterial({ color: 0xfef08a, side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+            );
+            ring2.rotation.x = Math.PI / 2;
+            g.add(ring2);
+            return g;
+        }
+
+        // 單島過關巨大「完成之星」
+        function createCompletionStar() {
+            const g = new THREE.Group();
+            const mat = new THREE.MeshStandardMaterial({
+                color: 0xfde047,
+                emissive: 0xf59e0b,
+                emissiveIntensity: 0.9,
+                metalness: 0.4,
+                roughness: 0.2
+            });
+            const core = new THREE.Mesh(new THREE.OctahedronGeometry(2.4, 0), mat);
+            const ring = new THREE.Mesh(new THREE.TorusGeometry(3.2, 0.25, 10, 24), mat);
+            g.add(core, ring);
+            animatedObjects.push({ obj: g, type: 'floatSpin', baseY: 20.5, speed: 1.8 });
+            return g;
+        }
+
+        // 依據四座島嶼主題生成各具特色的植被與環境裝飾
+        function populateUniqueIslandDecorations(group, idx) {
+            const bambooMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.6 });
+            const pineLeafMat = new THREE.MeshStandardMaterial({ color: 0x065f46, roughness: 0.75 });
+            const sakuraLeafMat = new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.65 }); // 粉櫻花樹
+            const autumnLeafMat = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.65 }); // 金秋楓樹
+            const trunkMat = new THREE.MeshStandardMaterial({ color: 0x78350f });
+            const rockMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.9 });
+
+            for (let i = 0; i < 28; i++) {
+                const angle = (i / 28) * Math.PI * 2;
+                const radius = 17 + (i % 3) * 4.2;
+                const x = Math.cos(angle) * radius;
+                const z = Math.sin(angle) * radius;
+
+                // 避開十字道路區域
+                if (Math.abs(x) < 4.5 || Math.abs(z) < 4.5) continue;
+
+                if (idx === 0) {
+                    // 島0（個資法護法島）：翠竹林 + 皇家金楓樹
+                    if (i % 2 === 0) {
+                        const bambooCluster = new THREE.Group();
+                        bambooCluster.position.set(x, 2.2, z);
+                        for (let b = 0; b < 3; b++) {
+                            const h = 6.0 + Math.random() * 3.0;
+                            const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, h, 8), bambooMat);
+                            stalk.position.set((b - 1) * 0.6, h / 2, (b % 2) * 0.5);
+                            stalk.castShadow = true;
+                            bambooCluster.add(stalk);
+                        }
+                        group.add(bambooCluster);
+                    } else {
+                        const maple = createStyledTree(trunkMat, autumnLeafMat);
+                        maple.position.set(x, 2.2, z);
+                        group.add(maple);
+                    }
+                } else if (idx === 1) {
+                    // 島1（惡意軟體鎮妖島）：蒼勁迎客松 + 奇形太湖石陣
+                    if (i % 2 === 0) {
+                        const pine = createStyledTree(trunkMat, pineLeafMat);
+                        pine.position.set(x, 2.2, z);
+                        group.add(pine);
+                    } else {
+                        const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(1.5 + Math.random() * 0.7, 0), rockMat);
+                        rock.scale.set(1, 1.5, 0.9);
+                        rock.position.set(x, 3.0, z);
+                        rock.castShadow = true;
+                        group.add(rock);
+                    }
+                } else if (idx === 2) {
+                    // 島2（駭客攻防演武島）：演武旗幟槍架 + 拒馬防禦樁 + 青松
+                    if (i % 3 === 0) {
+                        const bannerGroup = new THREE.Group();
+                        bannerGroup.position.set(x, 2.2, z);
+                        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.14, 5.5, 8), trunkMat);
+                        pole.position.y = 2.75;
+                        bannerGroup.add(pole);
+                        const flag = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.2, 1.3), new THREE.MeshStandardMaterial({ color: 0x1d4ed8 }));
+                        flag.position.set(0, 4.2, 0.7);
+                        bannerGroup.add(flag);
+                        group.add(bannerGroup);
+                    } else if (i % 3 === 1) {
+                        const pine = createStyledTree(trunkMat, pineLeafMat);
+                        pine.position.set(x, 2.2, z);
+                        group.add(pine);
+                    } else {
+                        const barricade = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.1, 1.1), new THREE.MeshStandardMaterial({ color: 0x64748b }));
+                        barricade.position.set(x, 2.75, z);
+                        barricade.rotation.y = angle;
+                        group.add(barricade);
+                    }
+                } else {
+                    // 島3（網路淨化明鏡島）：滿園粉色桃花樹 + 白玉燈籠柱
+                    if (i % 2 === 0) {
+                        const sakura = createStyledTree(trunkMat, sakuraLeafMat);
+                        sakura.position.set(x, 2.2, z);
+                        group.add(sakura);
+                    } else {
+                        const bambooCluster = new THREE.Group();
+                        bambooCluster.position.set(x, 2.2, z);
+                        for (let b = 0; b < 3; b++) {
+                            const h = 5.5 + Math.random() * 2.5;
+                            const stalk = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.18, h, 8), bambooMat);
+                            stalk.position.set((b - 1) * 0.55, h / 2, (b % 2) * 0.45);
+                            bambooCluster.add(stalk);
+                        }
+                        group.add(bambooCluster);
+                    }
+                }
+            }
+
+            // 沿石板路旁設置 8 盞古典燈籠柱
+            const lanternSpots = [
+                [-4.2, 12], [4.2, 12], [-4.2, -16], [4.2, -16],
+                [12, -4.2], [12, 4.2], [-12, -4.2], [-12, 4.2]
+            ];
+            lanternSpots.forEach(([lx, lz]) => {
+                const post = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.2, 3.6, 8), new THREE.MeshStandardMaterial({ color: 0x991b1b }));
+                post.position.set(lx, 4.0, lz);
+                group.add(post);
+                const lantern = createRedLantern();
+                lantern.scale.setScalar(0.65);
+                lantern.position.set(lx, 5.5, lz);
+                group.add(lantern);
+            });
+        }
+
+        function createStyledTree(trunkMat, leafMat) {
+            const tree = new THREE.Group();
+            const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.45, 3.8, 8), trunkMat);
+            trunk.position.y = 1.9;
+            trunk.castShadow = true;
+            tree.add(trunk);
+
+            const crown1 = new THREE.Mesh(new THREE.DodecahedronGeometry(2.1, 1), leafMat);
+            crown1.scale.set(1.3, 0.65, 1.3);
+            crown1.position.y = 4.2;
+            crown1.castShadow = true;
+            tree.add(crown1);
+
+            const crown2 = new THREE.Mesh(new THREE.DodecahedronGeometry(1.4, 1), leafMat);
+            crown2.scale.set(1.2, 0.6, 1.2);
+            crown2.position.set(0.8, 5.2, 0.4);
+            tree.add(crown2);
+            return tree;
+        }
+
+        // 建構跨海白玉拱橋與海上發光航道浮標（確保四島互通）
+        function buildBridgesAndSeaRoutes() {
+            const bridgeMat = new THREE.MeshStandardMaterial({ color: 0xfefce8, roughness: 0.5 });
+            const railMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.4 });
+            const buoyMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xf59e0b, emissiveIntensity: 0.8 });
+
+            // 連接序列：0 <-> 1 (北橋), 1 <-> 3 (東橋), 3 <-> 2 (南橋), 2 <-> 0 (西橋)
+            const connections = [
+                { from: ISLAND_DATA[0].pos, to: ISLAND_DATA[1].pos, name: "護法鎮妖跨海橋" },
+                { from: ISLAND_DATA[1].pos, to: ISLAND_DATA[3].pos, name: "鎮妖明鏡跨海橋" },
+                { from: ISLAND_DATA[3].pos, to: ISLAND_DATA[2].pos, name: "明鏡演武跨海橋" },
+                { from: ISLAND_DATA[2].pos, to: ISLAND_DATA[0].pos, name: "演武護法跨海橋" }
+            ];
+
+            connections.forEach(conn => {
+                const start = new THREE.Vector3(conn.from.x, 2.2, conn.from.z);
+                const end = new THREE.Vector3(conn.to.x, 2.2, conn.to.z);
+                const mid = start.clone().add(end).multiplyScalar(0.5);
+                const dist = start.distanceTo(end) - 56; // 扣除兩端島嶼半徑
+                const angle = Math.atan2(end.x - start.x, end.z - start.z);
+
+                const bridgeGroup = new THREE.Group();
+                bridgeGroup.position.set(mid.x, 2.2, mid.z);
+                bridgeGroup.rotation.y = angle;
+
+                // 分段建構微拱橋面
+                const segments = 16;
+                const segLen = dist / segments;
+                for (let i = 0; i < segments; i++) {
+                    const t = (i + 0.5) / segments;
+                    const archY = Math.sin(t * Math.PI) * 3.2;
+                    const zPos = (t - 0.5) * dist;
+
+                    const plank = new THREE.Mesh(new THREE.BoxGeometry(6.4, 0.5, segLen + 0.2), bridgeMat);
+                    plank.position.set(0, archY, zPos);
+                    plank.receiveShadow = true;
+                    bridgeGroup.add(plank);
+
+                    // 兩側紅漆護欄柱
+                    if (i % 2 === 0) {
+                        [-2.9, 2.9].forEach(rx => {
+                            const post = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 1.6, 8), railMat);
+                            post.position.set(rx, archY + 0.9, zPos);
+                            bridgeGroup.add(post);
+                        });
+                    }
+                }
+                scene.add(bridgeGroup);
+
+                // 海上發光浮標航線指引（橋兩側海域）
+                for (let b = -2; b <= 2; b++) {
+                    const buoy = new THREE.Mesh(new THREE.OctahedronGeometry(0.9, 0), buoyMat);
+                    const perpX = Math.cos(angle) * 11;
+                    const perpZ = -Math.sin(angle) * 11;
+                    buoy.position.set(mid.x + perpX + Math.sin(angle) * b * 14, 0.8, mid.z + perpZ + Math.cos(angle) * b * 14);
+                    scene.add(buoy);
+                    animatedObjects.push({ obj: buoy, type: 'floatSpin', baseY: 0.8, speed: 2.2 });
+                }
+            });
+        }
+
+        // 建構主角：Q版柴犬資安警長（赤柴毛色、白臉頰、警長大盤帽、紅色俠客披風）
+        function buildShibaSheriff() {
+            shibaGroup = new THREE.Group();
+            shibaGroup.position.copy(player.pos);
+            scene.add(shibaGroup);
+
+            const furOrange = new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.6 }); // 亮橘柴犬毛色
+            const furCream = new THREE.MeshStandardMaterial({ color: 0xfffbeb, roughness: 0.7 });  // 奶白腹部與臉頰
+            const uniformBlue = new THREE.MeshStandardMaterial({ color: 0x1e3a8a, roughness: 0.5 }); // 警長深藍制服
+            const capeRed = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.5, side: THREE.DoubleSide }); // 紅色披風
+            const goldMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, metalness: 0.6, roughness: 0.2 });
+
+            // 身體（警長制服）
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 1.05, 1.7, 16), uniformBlue);
+            body.position.y = 1.25;
+            body.castShadow = true;
+            shibaGroup.add(body);
+
+            // 金色警長星徽
+            const badge = new THREE.Mesh(new THREE.OctahedronGeometry(0.28, 0), goldMat);
+            badge.position.set(0.45, 1.55, 0.88);
+            shibaGroup.add(badge);
+
+            // 紅色威風披風
+            const cape = new THREE.Mesh(new THREE.BoxGeometry(1.6, 1.6, 0.12), capeRed);
+            cape.position.set(0, 1.3, -0.95);
+            cape.rotation.x = 0.25;
+            cape.castShadow = true;
+            shibaGroup.add(cape);
+            shibaParts.cape = cape;
+
+            // 柴犬圓滾滾大頭
+            const headGroup = new THREE.Group();
+            headGroup.position.set(0, 2.75, 0.1);
+            shibaGroup.add(headGroup);
+            shibaParts.head = headGroup;
+
+            const head = new THREE.Mesh(new THREE.SphereGeometry(1.15, 20, 20), furOrange);
+            head.castShadow = true;
+            headGroup.add(head);
+
+            // 奶白色吻部與臉頰
+            const muzzle = new THREE.Mesh(new THREE.SphereGeometry(0.68, 16, 16), furCream);
+            muzzle.scale.set(1.15, 0.85, 0.9);
+            muzzle.position.set(0, -0.25, 0.72);
+            headGroup.add(muzzle);
+
+            // 黑亮鼻頭與豆豆眼
+            const nose = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 10), new THREE.MeshStandardMaterial({ color: 0x18181b }));
+            nose.position.set(0, -0.12, 1.32);
+            headGroup.add(nose);
+
+            const eyeMat = new THREE.MeshStandardMaterial({ color: 0x09090b });
+            const browMat = furCream;
+            [-0.42, 0.42].forEach(ex => {
+                const eye = new THREE.Mesh(new THREE.SphereGeometry(0.14, 10, 10), eyeMat);
+                eye.position.set(ex, 0.15, 1.02);
+                headGroup.add(eye);
+                // 柴犬招牌白眉毛
+                const brow = new THREE.Mesh(new THREE.SphereGeometry(0.13, 8, 8), browMat);
+                brow.position.set(ex, 0.38, 0.98);
+                headGroup.add(brow);
+            });
+
+            // 尖尖三角柴犬耳
+            [-0.75, 0.75].forEach(earX => {
+                const ear = new THREE.Mesh(new THREE.ConeGeometry(0.38, 0.85, 4), furOrange);
+                ear.position.set(earX, 1.05, 0);
+                ear.rotation.z = earX > 0 ? -0.25 : 0.25;
+                headGroup.add(ear);
+            });
+
+            // 資安警長大盤帽
+            const capTop = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 0.72, 0.45, 16), uniformBlue);
+            capTop.position.set(0, 1.15, 0.05);
+            capTop.rotation.x = -0.12;
+            headGroup.add(capTop);
+
+            const capVisor = new THREE.Mesh(new THREE.CylinderGeometry(0.85, 0.85, 0.08, 16, 1, false, -Math.PI / 2, Math.PI), new THREE.MeshStandardMaterial({ color: 0x09090b }));
+            capVisor.position.set(0, 0.92, 0.28);
+            headGroup.add(capVisor);
+
+            const capEmblem = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 10), goldMat);
+            capEmblem.position.set(0, 1.15, 0.82);
+            headGroup.add(capEmblem);
+
+            // 四肢與捲捲柴犬尾巴
+            const legGeo = new THREE.CylinderGeometry(0.24, 0.22, 0.75, 10);
+            shibaParts.legFL = new THREE.Mesh(legGeo, furCream);
+            shibaParts.legFL.position.set(-0.48, 0.38, 0.45);
+            shibaParts.legFR = new THREE.Mesh(legGeo, furCream);
+            shibaParts.legFR.position.set(0.48, 0.38, 0.45);
+            shibaParts.legBL = new THREE.Mesh(legGeo, furOrange);
+            shibaParts.legBL.position.set(-0.48, 0.38, -0.45);
+            shibaParts.legBR = new THREE.Mesh(legGeo, furOrange);
+            shibaParts.legBR.position.set(0.48, 0.38, -0.45);
+            shibaGroup.add(shibaParts.legFL, shibaParts.legFR, shibaParts.legBL, shibaParts.legBR);
+
+            // 捲尾巴
+            const tail = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.16, 8, 16), furOrange);
+            tail.position.set(0, 1.1, -1.05);
+            tail.rotation.y = Math.PI / 2;
+            shibaGroup.add(tail);
+            shibaParts.tail = tail;
+        }
+
+        // 空中飛鳥群與靈氣粒子特效
+        function buildAmbientWildlifeAndParticles() {
+            // 1. 空中盤旋仙鶴/白鷗群 (16隻)
+            const birdMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xfef3c7, emissiveIntensity: 0.3 });
+            for (let i = 0; i < 16; i++) {
+                const bird = new THREE.Group();
+                const body = new THREE.Mesh(new THREE.ConeGeometry(0.3, 1.4, 6), birdMat);
+                body.rotation.x = Math.PI / 2;
+                const wingL = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.45), birdMat);
+                wingL.position.x = -0.8;
+                const wingR = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 0.45), birdMat);
+                wingR.position.x = 0.8;
+                bird.add(body, wingL, wingR);
+
+                const orbitRadius = 45 + (i % 4) * 35;
+                const height = 28 + (i % 5) * 6;
+                const phase = (i / 16) * Math.PI * 2;
+                scene.add(bird);
+                animatedObjects.push({
+                    obj: bird,
+                    wingL,
+                    wingR,
+                    type: 'birdOrbit',
+                    radius: orbitRadius,
+                    height,
+                    phase,
+                    speed: 0.18 + (i % 3) * 0.05
+                });
+            }
+
+            // 2. 漂浮金色靈氣粒子 (350顆)
+            const pCount = 350;
+            const pGeo = new THREE.BufferGeometry();
+            const pPos = new Float32Array(pCount * 3);
+            for (let i = 0; i < pCount; i++) {
+                pPos[i * 3] = (Math.random() - 0.5) * 260;
+                pPos[i * 3 + 1] = 2 + Math.random() * 35;
+                pPos[i * 3 + 2] = (Math.random() - 0.5) * 260;
+            }
+            pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+            const pMat = new THREE.PointsMaterial({ color: 0xfde047, size: 0.9, transparent: true, opacity: 0.75 });
+            const particles = new THREE.Points(pGeo, pMat);
+            scene.add(particles);
+            animatedObjects.push({ obj: particles, type: 'spinY', speed: 0.03 });
+        }
+
+        // ==========================================
+        // 互動控制系統 (鍵盤、滑鼠、觸控搖桿、Raycaster)
+        // ==========================================
+        function setupControls() {
+            const canvas = renderer.domElement;
+
+            // 鍵盤事件
+            window.addEventListener('keydown', (e) => {
+                if (document.activeElement.tagName === 'INPUT') return;
+                keys[e.code] = true;
+                if (e.code === 'Space' && player.isGrounded) {
+                    player.vel.y = player.jumpForce;
+                    player.isGrounded = false;
+                }
+                if (e.code === 'KeyE') {
+                    triggerCurrentInteraction();
+                }
+            });
+            window.addEventListener('keyup', (e) => {
+                keys[e.code] = false;
+            });
+
+            // 跳躍按鈕
+            const jumpBtn = document.getElementById('jump-btn');
+            jumpBtn.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                if (player.isGrounded) {
+                    player.vel.y = player.jumpForce;
+                    player.isGrounded = false;
+                }
+            });
+
+            // 滑鼠/觸控旋轉視角 & 點擊建築 Raycaster
+            let downX = 0, downY = 0;
+            canvas.addEventListener('pointerdown', (e) => {
+                camControl.isDragging = true;
+                camControl.lastX = e.clientX;
+                camControl.lastY = e.clientY;
+                downX = e.clientX;
+                downY = e.clientY;
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!camControl.isDragging) return;
+                const dx = e.clientX - camControl.lastX;
+                const dy = e.clientY - camControl.lastY;
+                camControl.yaw -= dx * 0.006;
+                camControl.pitch = Math.max(0.15, Math.min(1.42, camControl.pitch + dy * 0.006));
+                camControl.lastX = e.clientX;
+                camControl.lastY = e.clientY;
+            });
+
+            window.addEventListener('pointerup', (e) => {
+                camControl.isDragging = false;
+                // 若幾乎沒有拖曳，視為點擊場景物件 (支援手機與電腦點擊進入學習館)
+                if (Math.hypot(e.clientX - downX, e.clientY - downY) < 8) {
+                    handleSceneClick(e.clientX, e.clientY);
+                }
+            });
+
+            // 滑鼠滾輪自由縮放 (支援遠距離鳥瞰 >400)
+            canvas.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camControl.distance = Math.max(
+                    camControl.minDistance,
+                    Math.min(camControl.maxDistance, camControl.distance + e.deltaY * 0.08)
+                );
+            }, { passive: false });
+
+            // 手機雙指縮放支援
+            let initialPinchDist = null;
+            canvas.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 2) {
+                    initialPinchDist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                }
+            }, { passive: true });
+
+            canvas.addEventListener('touchmove', (e) => {
+                if (e.touches.length === 2 && initialPinchDist) {
+                    const currentDist = Math.hypot(
+                        e.touches[0].clientX - e.touches[1].clientX,
+                        e.touches[0].clientY - e.touches[1].clientY
+                    );
+                    const delta = initialPinchDist - currentDist;
+                    camControl.distance = Math.max(
+                        camControl.minDistance,
+                        Math.min(camControl.maxDistance, camControl.distance + delta * 0.35)
+                    );
+                    initialPinchDist = currentDist;
+                }
+            }, { passive: true });
+
+            // 虛擬搖桿 (Virtual Joystick)
+            const joyZone = document.getElementById('joystick-zone');
+            const joyKnob = document.getElementById('joystick-knob');
+            const maxRadius = 38;
+
+            const handleJoyMove = (clientX, clientY) => {
+                const rect = joyZone.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                let dx = clientX - centerX;
+                let dy = clientY - centerY;
+                const dist = Math.hypot(dx, dy);
+                if (dist > maxRadius) {
+                    dx = (dx / dist) * maxRadius;
+                    dy = (dy / dist) * maxRadius;
+                }
+                joyKnob.style.transform = `translate(${dx}px, ${dy}px)`;
+                joystick.dx = dx / maxRadius;
+                joystick.dy = dy / maxRadius;
+            };
+
+            joyZone.addEventListener('pointerdown', (e) => {
+                e.stopPropagation();
+                joystick.active = true;
+                joyZone.setPointerCapture(e.pointerId);
+                handleJoyMove(e.clientX, e.clientY);
+            });
+
+            joyZone.addEventListener('pointermove', (e) => {
+                if (!joystick.active) return;
+                e.stopPropagation();
+                handleJoyMove(e.clientX, e.clientY);
+            });
+
+            const resetJoy = (e) => {
+                if (!joystick.active) return;
+                joystick.active = false;
+                joystick.dx = 0;
+                joystick.dy = 0;
+                joyKnob.style.transform = `translate(0px, 0px)`;
+            };
+            joyZone.addEventListener('pointerup', resetJoy);
+            joyZone.addEventListener('pointercancel', resetJoy);
+        }
+
+        // Raycaster 點擊學習閣樓互動
+        function handleSceneClick(clientX, clientY) {
+            const mouse = new THREE.Vector2(
+                (clientX / window.innerWidth) * 2 - 1,
+                -(clientY / window.innerHeight) * 2 + 1
+            );
+            const raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(clickableMeshes, false);
+            if (intersects.length > 0) {
+                const hit = intersects[0].object.userData;
+                if (hit && hit.type === 'hall') {
+                    openLearningModal(hit.islandId);
+                }
+            }
+        }
+
+        // 計算地形高度（包含 4 座島嶼與 4 座跨海拱橋，確保柴犬可平滑走過跨海大橋）
+        function getTerrainHeight(x, z) {
+            // 1. 檢查是否在任一島嶼範圍內
+            for (let i = 0; i < ISLAND_DATA.length; i++) {
+                const ip = ISLAND_DATA[i].pos;
+                const d = Math.hypot(x - ip.x, z - ip.z);
+                if (d < 33) {
+                    return 2.4;
+                } else if (d < 36.5) {
+                    return 1.7;
+                }
+            }
+
+            // 2. 檢查是否在跨海拱橋上
+            const connections = [
+                { from: ISLAND_DATA[0].pos, to: ISLAND_DATA[1].pos },
+                { from: ISLAND_DATA[1].pos, to: ISLAND_DATA[3].pos },
+                { from: ISLAND_DATA[3].pos, to: ISLAND_DATA[2].pos },
+                { from: ISLAND_DATA[2].pos, to: ISLAND_DATA[0].pos }
+            ];
+
+            for (const conn of connections) {
+                const ax = conn.from.x, az = conn.from.z;
+                const bx = conn.to.x, bz = conn.to.z;
+                const abx = bx - ax, abz = bz - az;
+                const abLenSq = abx * abx + abz * abz;
+                const t = ((x - ax) * abx + (z - az) * abz) / abLenSq;
+                if (t >= 0.15 && t <= 0.85) {
+                    const projX = ax + t * abx;
+                    const projZ = az + t * abz;
+                    const perpDist = Math.hypot(x - projX, z - projZ);
+                    if (perpDist < 3.6) {
+                        const bridgeT = (t - 0.18) / 0.64;
+                        const clampedT = Math.max(0, Math.min(1, bridgeT));
+                        return 2.4 + Math.sin(clampedT * Math.PI) * 3.2;
+                    }
+                }
+            }
+
+            // 3. 落水高度（若掉入海中會自動被仙鶴救回最近島嶼）
+            return -1.5;
+        }
+
+        // 快速傳送至指定島嶼
+        function teleportToIsland(idx) {
+            const target = ISLAND_DATA[idx];
+            player.pos.set(target.pos.x, 2.5, target.pos.z + 18);
+            player.vel.set(0, 0, 0);
+            state.currentIslandIndex = idx;
+            updateTopbarIsland();
+            showToast(`已傳送至「${target.name}」`, target.emoji);
+        }
+
+        function resetCameraView() {
+            camControl.yaw = 0.45;
+            camControl.pitch = 0.52;
+            camControl.distance = 55;
+            showToast("攝影機視角已重置", "🎥");
+        }
+
+        function updateTopbarIsland() {
+            const data = ISLAND_DATA[state.currentIslandIndex];
+            document.getElementById('current-island-badge').textContent = `📍 ${data.name}`;
+        }
+
+        // ==========================================
+        // 主動畫迴圈 (Animation Loop)
+        // ==========================================
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const dt = Math.min(clock.getDelta(), 0.05);
+            const elapsed = clock.getElapsedTime();
+
+            // 1. 更新動態海洋 Shader
+            if (oceanMesh) {
+                oceanMesh.material.uniforms.uTime.value = elapsed;
+            }
+
+            // 2. 更新場景動態裝飾 (八卦陣自轉、水晶懸浮、燈籠搖曳、仙鶴飛翔)
+            animatedObjects.forEach(item => {
+                if (item.type === 'spinY') {
+                    item.obj.rotation.y += item.speed * dt;
+                } else if (item.type === 'floatSpin') {
+                    item.obj.rotation.y += item.speed * dt;
+                    item.obj.position.y = item.baseY + Math.sin(elapsed * 2.5) * 0.45;
+                } else if (item.type === 'sway') {
+                    item.obj.rotation.z = Math.sin(elapsed * item.speed) * 0.12;
+                } else if (item.type === 'birdOrbit') {
+                    const ang = elapsed * item.speed + item.phase;
+                    item.obj.position.set(
+                        Math.cos(ang) * item.radius,
+                        item.height + Math.sin(elapsed * 2 + item.phase) * 2.2,
+                        Math.sin(ang) * item.radius
+                    );
+                    item.obj.rotation.y = -ang;
+                    const flap = Math.sin(elapsed * 9 + item.phase) * 0.45;
+                    item.wingL.rotation.z = flap;
+                    item.wingR.rotation.z = -flap;
+                }
+            });
+
+            // 3. 更新柴犬警長移動與物理
+            updatePlayerMovement(dt, elapsed);
+
+            // 4. 更新攝影機跟隨與自由縮放
+            const camTarget = new THREE.Vector3(player.pos.x, player.pos.y + 3.2, player.pos.z);
+            const camX = camTarget.x + Math.sin(camControl.yaw) * Math.cos(camControl.pitch) * camControl.distance;
+            const camY = camTarget.y + Math.sin(camControl.pitch) * camControl.distance;
+            const camZ = camTarget.z + Math.cos(camControl.yaw) * Math.cos(camControl.pitch) * camControl.distance;
+            camera.position.lerp(new THREE.Vector3(camX, camY, camZ), 0.16);
+            camera.lookAt(camTarget);
+
+            // 5. 更新 3D 空飄標籤 2D 螢幕投影
+            updateFloatingLabels();
+
+            renderer.render(scene, camera);
+        }
+
+        function updatePlayerMovement(dt, elapsed) {
+            // 計算輸入方向（相對於攝影機視角）
+            let moveForward = 0;
+            let moveRight = 0;
+
+            if (keys['KeyW'] || keys['ArrowUp']) moveForward += 1;
+            if (keys['KeyS'] || keys['ArrowDown']) moveForward -= 1;
+            if (keys['KeyD'] || keys['ArrowRight']) moveRight += 1;
+            if (keys['KeyA'] || keys['ArrowLeft']) moveRight -= 1;
+
+            if (joystick.active) {
+                moveForward -= joystick.dy;
+                moveRight += joystick.dx;
+            }
+
+            const inputLen = Math.hypot(moveForward, moveRight);
+            if (inputLen > 0.05) {
+                const normF = moveForward / Math.max(1, inputLen);
+                const normR = moveRight / Math.max(1, inputLen);
+
+                const forwardVec = new THREE.Vector3(-Math.sin(camControl.yaw), 0, -Math.cos(camControl.yaw));
+                const rightVec = new THREE.Vector3(Math.cos(camControl.yaw), 0, -Math.sin(camControl.yaw));
+
+                const moveDir = new THREE.Vector3()
+                    .addScaledVector(forwardVec, normF)
+                    .addScaledVector(rightVec, normR)
+                    .normalize();
+
+                player.pos.x += moveDir.x * player.speed * dt;
+                player.pos.z += moveDir.z * player.speed * dt;
+
+                // 平滑轉向
+                const targetRot = Math.atan2(moveDir.x, moveDir.z);
+                let diff = targetRot - player.rotY;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                player.rotY += diff * 0.2;
+
+                // 奔跑四肢擺動動畫
+                player.walkCycle += dt * 14;
+                const swing = Math.sin(player.walkCycle) * 0.55;
+                shibaParts.legFL.rotation.x = swing;
+                shibaParts.legBR.rotation.x = swing;
+                shibaParts.legFR.rotation.x = -swing;
+                shibaParts.legBL.rotation.x = -swing;
+                shibaParts.cape.rotation.x = 0.45 + Math.sin(player.walkCycle * 2) * 0.12;
+                shibaParts.head.position.y = 2.75 + Math.abs(Math.sin(player.walkCycle)) * 0.15;
+            } else {
+                // 待機呼吸與搖尾巴
+                shibaParts.legFL.rotation.x *= 0.8;
+                shibaParts.legFR.rotation.x *= 0.8;
+                shibaParts.legBL.rotation.x *= 0.8;
+                shibaParts.legBR.rotation.x *= 0.8;
+                shibaParts.cape.rotation.x = 0.22;
+                shibaParts.tail.rotation.z = Math.sin(elapsed * 6) * 0.35;
+            }
+
+            // 重力與地形碰撞
+            const groundH = getTerrainHeight(player.pos.x, player.pos.z);
+            player.vel.y -= 38 * dt;
+            player.pos.y += player.vel.y * dt;
+
+            if (player.pos.y <= groundH) {
+                player.pos.y = groundH;
+                player.vel.y = 0;
+                player.isGrounded = true;
+            }
+
+            // 若不小心跌入深海，自動救回最近島嶼
+            if (player.pos.y < -0.5) {
+                showToast("柴犬警長被海浪沖回岸邊啦！", "🌊");
+                teleportToIsland(state.currentIslandIndex);
+            }
+
+            shibaGroup.position.copy(player.pos);
+            shibaGroup.rotation.y = player.rotY;
+
+            // 偵測目前所在島嶼與是否靠近學習閣樓
+            checkProximityInteractions();
+        }
+
+        function checkProximityInteractions() {
+            let nearestIsland = state.currentIslandIndex;
+            let minIslandDist = Infinity;
+            let foundHall = null;
+
+            ISLAND_DATA.forEach((isl, idx) => {
+                const distToCenter = Math.hypot(player.pos.x - isl.pos.x, player.pos.z - isl.pos.z);
+                if (distToCenter < minIslandDist) {
+                    minIslandDist = distToCenter;
+                    nearestIsland = idx;
+                }
+
+                // 檢查是否靠近該島的學習閣樓
+                const distToHall = Math.hypot(player.pos.x - isl.pos.x, player.pos.z - (isl.pos.z - 4));
+                if (distToHall < 13) {
+                    foundHall = { type: 'hall', islandId: idx, hallName: isl.hall };
+                }
+            });
+
+            if (nearestIsland !== state.currentIslandIndex && minIslandDist < 38) {
+                state.currentIslandIndex = nearestIsland;
+                updateTopbarIsland();
+            }
+
+            const promptBox = document.getElementById('interact-prompt');
+            if (foundHall) {
+                state.nearTarget = foundHall;
+                document.getElementById('interact-text').textContent = `進入「${foundHall.hallName}」研習 (按 E 或點擊)`;
+                promptBox.classList.remove('hidden');
+            } else {
+                state.nearTarget = null;
+                promptBox.classList.add('hidden');
+            }
+        }
+
+        function triggerCurrentInteraction() {
+            if (state.nearTarget && state.nearTarget.type === 'hall') {
+                openLearningModal(state.nearTarget.islandId);
+            } else {
+                // 若不在閣樓旁但點擊 E，開啟目前所在島嶼學習館
+                openLearningModal(state.currentIslandIndex);
+            }
+        }
+
+        // 3D 座標投影至 2D 螢幕更新空飄標籤
+        function updateFloatingLabels() {
+            const widthHalf = window.innerWidth / 2;
+            const heightHalf = window.innerHeight / 2;
+
+            floatingLabels.forEach(item => {
+                const dist = camera.position.distanceTo(item.worldPos);
+                // 根據距離控制次要地標顯示，避免拉太遠時重疊
+                if (item.type === 'landmark' && dist > 155) {
+                    item.element.style.opacity = '0';
+                    return;
+                }
+                if (item.type === 'hall' && dist > 260) {
+                    item.element.style.opacity = '0';
+                    return;
+                }
+
+                const vec = item.worldPos.clone().project(camera);
+                if (vec.z > 1) {
+                    item.element.style.opacity = '0';
+                    return;
+                }
+
+                const x = (vec.x * widthHalf) + widthHalf;
+                const y = -(vec.y * heightHalf) + heightHalf;
+
+                item.element.style.opacity = '1';
+                item.element.style.left = `${x}px`;
+                item.element.style.top = `${y}px`;
+            });
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // ==========================================
+        // 階段四：學習面板、測驗系統與榮譽證書 UI 邏輯
+        // ==========================================
+        function toggleHelpModal(show) {
+            const el = document.getElementById('help-modal');
+            if (show) {
+                el.classList.remove('hidden');
+                el.classList.add('flex');
+            } else {
+                el.classList.add('hidden');
+                el.classList.remove('flex');
+            }
+        }
+
+        function openLearningModal(islandIdx) {
+            state.activeModalIsland = islandIdx;
+            const data = ISLAND_DATA[islandIdx];
+
+            document.getElementById('modal-island-emoji').textContent = data.emoji;
+            document.getElementById('modal-island-subtitle').textContent = `${data.name}・數位科技概論 CH10`;
+            document.getElementById('modal-hall-title').textContent = data.hall;
+
+            const modal = document.getElementById('learning-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // 預設開啟重點整理
+            switchTab('summary');
+        }
+
+        function closeLearningModal() {
+            const modal = document.getElementById('learning-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function switchTab(tabName) {
+            state.activeTab = tabName;
+            ['summary', 'compare', 'mistakes', 'quiz'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                if (t === tabName) {
+                    btn.className = "tab-btn px-3 sm:px-4 py-2.5 rounded-t-xl font-black text-xs sm:text-sm whitespace-nowrap bg-white text-red-900 border-t-2 border-x-2 border-amber-400 shadow-sm";
+                } else {
+                    btn.className = "tab-btn px-3 sm:px-4 py-2.5 rounded-t-xl font-bold text-xs sm:text-sm whitespace-nowrap text-amber-900/75 hover:bg-amber-200/60";
+                }
+            });
+
+            const container = document.getElementById('modal-content-area');
+            const data = ISLAND_DATA[state.activeModalIsland];
+
+            if (tabName === 'summary') {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-5 border border-amber-200 shadow-sm">
+                        <h3 class="text-lg sm:text-xl font-black text-red-900 font-serif-tc mb-4 flex items-center gap-2">
+                            <span>📌</span> ${data.summary.title}
+                        </h3>
+                        <ul class="space-y-3">
+                            ${data.summary.points.map((pt, i) => `
+                                <li class="flex items-start gap-3 p-3 rounded-xl bg-amber-50/70 border border-amber-200/80 text-sm sm:text-base leading-relaxed">
+                                    <span class="w-6 h-6 rounded-full bg-red-800 text-amber-100 font-bold text-xs flex items-center justify-center shrink-0 mt-0.5">${i + 1}</span>
+                                    <span>${pt}</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                        <div class="mt-5 flex justify-end">
+                            <button onclick="switchTab('compare')" class="px-4 py-2 rounded-xl bg-amber-600 text-white font-bold text-sm hover:bg-amber-700 transition">
+                                下一步：觀點比較 ➔
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'compare') {
+                container.innerHTML = `
+                    <div class="bg-white rounded-2xl p-5 border border-amber-200 shadow-sm">
+                        <h3 class="text-lg sm:text-xl font-black text-red-900 font-serif-tc mb-4 flex items-center gap-2">
+                            <span>⚖️</span> ${data.compare.title}
+                        </h3>
+                        <div class="overflow-x-auto rounded-xl border border-amber-300">
+                            <table class="w-full text-left border-collapse text-xs sm:text-sm">
+                                <thead>
+                                    <tr class="bg-red-900 text-amber-100">
+                                        ${data.compare.head.map(h => `<th class="p-3 font-bold border-b border-amber-400">${h}</th>`).join('')}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${data.compare.rows.map((row, rIdx) => `
+                                        <tr class="${rIdx % 2 === 0 ? 'bg-amber-50/50' : 'bg-white'} border-b border-amber-200">
+                                            ${row.map((cell, cIdx) => `<td class="p-3 ${cIdx === 0 ? 'font-bold text-red-900' : 'text-slate-700'}">${cell}</td>`).join('')}
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-5 flex justify-end">
+                            <button onclick="switchTab('mistakes')" class="px-4 py-2 rounded-xl bg-amber-600 text-white font-bold text-sm hover:bg-amber-700 transition">
+                                下一步：易錯概念 ➔
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'mistakes') {
+                container.innerHTML = `
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border border-red-200 rounded-xl p-3 text-xs sm:text-sm text-red-900 font-bold">
+                            💡 統測高頻陷阱區：仔細分辨以下常見錯誤迷思，測驗輕鬆拿高分！
+                        </div>
+                        ${data.mistakes.map(m => `
+                            <div class="bg-white rounded-2xl p-4 border-2 border-amber-200 shadow-sm space-y-2">
+                                <div class="flex items-start gap-2 text-red-700 font-bold text-sm sm:text-base">
+                                    <span class="text-lg shrink-0">❌</span>
+                                    <span>迷思：${m.w}</span>
+                                </div>
+                                <div class="flex items-start gap-2 text-emerald-800 bg-emerald-50 p-3 rounded-xl font-medium text-sm sm:text-base">
+                                    <span class="text-lg shrink-0">✅</span>
+                                    <span>正解：${m.r}</span>
+                                </div>
+                            </div>
+                        `).join('')}
+                        <div class="pt-2 flex justify-end">
+                            <button onclick="switchTab('quiz')" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-red-800 to-amber-700 text-white font-black text-sm shadow hover:brightness-110 transition">
+                                前往測驗挑戰 (10題) 🎯
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (tabName === 'quiz') {
+                initQuizForIsland(state.activeModalIsland);
+            }
+        }
+
+        // 初始化測驗（隨機打亂題目順序與選項順序）
+        function initQuizForIsland(islandIdx) {
+            const rawQuiz = ISLAND_DATA[islandIdx].quiz;
+            // 複製並打亂題目
+            const shuffledQuestions = [...rawQuiz].sort(() => Math.random() - 0.5).map((item, qIdx) => {
+                const correctText = item.o[0]; // 第一個為正解
+                const shuffledOpts = [...item.o].sort(() => Math.random() - 0.5);
+                return {
+                    index: qIdx,
+                    q: item.q,
+                    options: shuffledOpts,
+                    correctText: correctText,
+                    explanation: item.e
+                };
+            });
+
+            state.currentQuizQuestions = shuffledQuestions;
+            state.userAnswers = new Array(shuffledQuestions.length).fill(null);
+            state.quizSubmitted = false;
+
+            renderQuizUI();
+        }
+
+        function renderQuizUI() {
+            const container = document.getElementById('modal-content-area');
+            const islandIdx = state.activeModalIsland;
+            const best = state.bestScores[islandIdx];
+
+            let html = `
+                <div class="flex flex-wrap items-center justify-between gap-2 bg-amber-100 p-3 rounded-xl border border-amber-300 text-xs sm:text-sm">
+                    <span class="font-bold text-amber-900">🎯 過關條件：答對 <strong>8 / 10 題</strong> 即可點亮本島「完成之星」</span>
+                    <span class="font-bold text-red-800">歷史最高分：${best} / 10 題</span>
+                </div>
+                <div class="space-y-4">
+            `;
+
+            state.currentQuizQuestions.forEach((item, qIdx) => {
+                const chosen = state.userAnswers[qIdx];
+                const isAnswered = chosen !== null;
+                const isCorrect = chosen === item.correctText;
+
+                html += `
+                    <div class="bg-white rounded-2xl p-4 sm:p-5 border-2 ${isAnswered ? (isCorrect ? 'border-emerald-500' : 'border-red-400') : 'border-amber-200'} shadow-sm">
+                        <div class="font-bold text-slate-900 text-sm sm:text-base mb-3 flex items-start gap-2">
+                            <span class="px-2 py-0.5 rounded bg-red-900 text-amber-100 text-xs shrink-0 mt-0.5">Q${qIdx + 1}</span>
+                            <span>${item.q}</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2">
+                `;
+
+                item.options.forEach((optText, oIdx) => {
+                    const labels = ['A', 'B', 'C', 'D'];
+                    let btnClass = "text-left p-3 rounded-xl border text-xs sm:text-sm font-medium transition flex items-center gap-2.5 ";
+
+                    if (!isAnswered) {
+                        btnClass += "bg-amber-50/40 border-amber-200 hover:bg-amber-100 hover:border-amber-400 cursor-pointer";
+                    } else {
+                        if (optText === item.correctText) {
+                            btnClass += "bg-emerald-100 border-emerald-500 text-emerald-950 font-bold";
+                        } else if (optText === chosen) {
+                            btnClass += "bg-red-100 border-red-500 text-red-950 font-bold";
+                        } else {
+                            btnClass += "bg-slate-50 border-slate-200 text-slate-400";
+                        }
+                    }
+
+                    html += `
+                        <button onclick="selectQuizOption(${qIdx}, ${oIdx})" ${isAnswered ? 'disabled' : ''} class="${btnClass}">
+                            <span class="w-6 h-6 rounded-full border border-current flex items-center justify-center text-xs font-bold shrink-0">${labels[oIdx]}</span>
+                            <span>${optText}</span>
+                            ${isAnswered && optText === item.correctText ? '<span class="ml-auto text-emerald-600 font-black">✔ 正確</span>' : ''}
+                            ${isAnswered && optText === chosen && optText !== item.correctText ? '<span class="ml-auto text-red-600 font-black">✘ 誤選</span>' : ''}
+                        </button>
+                    `;
+                });
+
+                html += `</div>`;
+
+                // 即時作答回饋與詳解
+                if (isAnswered) {
+                    html += `
+                        <div class="mt-3 p-3 rounded-xl text-xs sm:text-sm ${isCorrect ? 'bg-emerald-50 text-emerald-900 border border-emerald-200' : 'bg-red-50 text-red-900 border border-red-200'}">
+                            <strong>${isCorrect ? '🎉 太棒了，答對囉！' : '💡 警長解析：'}</strong> ${item.explanation}
+                        </div>
+                    `;
+                }
+
+                html += `</div>`;
+            });
+
+            html += `</div>`;
+
+            // 底部結算與重新挑戰按鈕
+            const answeredCount = state.userAnswers.filter(a => a !== null).length;
+            const correctCount = state.currentQuizQuestions.reduce((acc, q, idx) => acc + (state.userAnswers[idx] === q.correctText ? 1 : 0), 0);
+
+            html += `
+                <div class="bg-amber-100/90 p-4 rounded-2xl border-2 border-amber-400 flex flex-wrap items-center justify-between gap-3">
+                    <div class="text-sm sm:text-base font-black text-red-900">
+                        作答進度：${answeredCount} / 10 題 ｜ 目前答對：<span class="text-emerald-700 text-lg">${correctCount}</span> 題
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="initQuizForIsland(${islandIdx})" class="px-4 py-2 rounded-xl bg-white border border-amber-500 text-amber-900 font-bold text-xs sm:text-sm hover:bg-amber-50 transition">
+                            🔄 重新隨機出題
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        function selectQuizOption(qIdx, optIdx) {
+            if (state.userAnswers[qIdx] !== null) return;
+            const chosenText = state.currentQuizQuestions[qIdx].options[optIdx];
+            state.userAnswers[qIdx] = chosenText;
+
+            const answeredCount = state.userAnswers.filter(a => a !== null).length;
+            const correctCount = state.currentQuizQuestions.reduce((acc, q, idx) => acc + (state.userAnswers[idx] === q.correctText ? 1 : 0), 0);
+
+            // 更新最高分紀錄
+            const islandIdx = state.activeModalIsland;
+            if (correctCount > state.bestScores[islandIdx]) {
+                state.bestScores[islandIdx] = correctCount;
+            }
+
+            // 檢查是否達成 8/10 過關條件
+            if (correctCount >= 8 && !state.passedIslands[islandIdx]) {
+                triggerIslandCleared(islandIdx);
+            } else if (answeredCount === 10 && correctCount < 8) {
+                showToast(`本次答對 ${correctCount} 題，差一點點就達 8 題過關囉！再試一次吧！`, "💪");
+            }
+
+            renderQuizUI();
+        }
+
+        // 單島過關特效與巨大「完成之星」
+        function triggerIslandCleared(islandIdx) {
+            state.passedIslands[islandIdx] = true;
+            const data = ISLAND_DATA[islandIdx];
+
+            // 1. 顯示 3D 巨大完成之星
+            if (completionStars[islandIdx]) {
+                completionStars[islandIdx].visible = true;
+            }
+
+            // 2. 更新頂部導覽列進度與星號
+            document.getElementById(`star-badge-${islandIdx}`).classList.remove('hidden');
+            const passedCount = state.passedIslands.filter(Boolean).length;
+            document.getElementById('progress-text').textContent = `${passedCount} / 4 島`;
+
+            showToast(`恭喜通過「${data.name}」試煉！天空升起巨大完成之星！`, "🌟");
+
+            // 3. 檢查是否全島過關
+            if (passedCount === 4) {
+                document.getElementById('cert-btn').classList.add('animate-pulse-glow', 'bg-amber-600/60');
+                setTimeout(() => {
+                    showToast("太神啦！四大資安仙島全部過關，榮譽證書已解鎖！", "🏆");
+                    openCertificateModal();
+                }, 1500);
+            }
+        }
+
+        // 開啟榮譽證書面板
+        function openCertificateModal() {
+            const modal = document.getElementById('certificate-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+
+            // 填入日期與時間
+            const now = new Date();
+            document.getElementById('cert-date').textContent = `${now.getFullYear()} 年 ${now.getMonth() + 1} 月 ${now.getDate()} 日`;
+            document.getElementById('cert-total-time').textContent = `累計學習時間：${document.getElementById('timer-text').textContent}`;
+
+            // 填入四座島嶼作答歷程
+            const grid = document.getElementById('cert-records-grid');
+            grid.innerHTML = ISLAND_DATA.map((isl, idx) => {
+                const passed = state.passedIslands[idx];
+                const score = state.bestScores[idx];
+                return `
+                    <div class="flex items-center justify-between p-2.5 rounded-lg bg-white border ${passed ? 'border-emerald-400' : 'border-amber-200'}">
+                        <span class="font-bold text-slate-800">${isl.emoji} ${isl.name}</span>
+                        <span class="font-black ${passed ? 'text-emerald-700' : 'text-amber-700'}">
+                            ${score} / 10 題 ${passed ? '⭐已通關' : '（未達8題）'}
+                        </span>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function closeCertificateModal() {
+            const modal = document.getElementById('certificate-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // 啟動 3D 世界
+        window.onload = function() {
+            init3D();
+            showToast("歡迎來到資安古典群島！操控柴犬警長探索四座學習閣樓吧！", "🐕");
+        };
+    </script>
+</body>
+</html>
