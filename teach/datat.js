@@ -1,4 +1,5 @@
 const linksData = [
+  { name: "python跑跑卡丁車", description: "python跑跑卡丁車", link: "python跑跑卡丁車.html" },
   { name: "資安防護3d古典群島", description: "資安防護測驗", link: "資安防護3d古典群島.html" },
   { name: "玩遊戲學二進位(易)", description: "CISCO推出二進位學習遊戲", link: "https://learningcontent.cisco.com/games/binary/index.html" },
   { name: "玩遊戲學二進位(中等)", description: "另外一個網路上的二進位好玩遊戲", link: "https://games.penjee.com/binary-bonanza/" },
